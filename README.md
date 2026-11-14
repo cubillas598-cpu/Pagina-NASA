@@ -6,6 +6,13 @@ Herramienta que compara sitios de aterrizaje del polo sur lunar por energia sola
 y ventana de comunicacion directa a Tierra, con una capa extra que clasifica un
 enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
 
+**Pregunta de investigacion**: ¿Que sitio candidato de aterrizaje del polo sur lunar
+(Peak Near Shackleton, cresta de Gerlache, o Malapert massif) ofrece la mejor
+combinacion de energia solar y continuidad de comunicacion con la Tierra -directa y
+con respaldo local (RF u optico)- al considerar el bloqueo real del terreno (datos
+LOLA) y la degradacion por polvo de un aterrizaje cercano? Se responde con el indice
+de conveniencia (S) del comparador, ver seccion "Indice de conveniencia" abajo.
+
 ## Fuentes y datos
 
 - Efemerides de Sol y Tierra: [JPL Horizons API](https://ssd.jpl.nasa.gov/horizons/)
@@ -34,6 +41,7 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 - [x] Horizonte local por sitio con DEM real de LOLA (NASA PGDA, 80 m/px)
 - [x] Clasificador de enlace local (reglas de demostracion, RF y optico)
 - [x] Pagina web (demo en `web/`, version de un solo archivo en `dist/`)
+- [x] Indice de conveniencia (Landing Site Suitability Score) por sitio
 
 ## Demo web
 
@@ -96,6 +104,26 @@ coordenada no esta confirmado letra por letra contra el texto original. Se marca
 Estructura: `web/js/model.js` (calculos puros, probados), `web/js/datos.js`
 (carga), `web/js/views/*` (una vista por panel), `web/css/tokens.css` (paleta y
 espaciado), `web/css/app.css` (componentes y responsive).
+
+## Indice de conveniencia
+
+En la vista "Comparador" de la demo, ademas de la tabla metrica por metrica, se
+muestra un indice unico S (0-100, mas alto es mejor) por sitio:
+
+```
+S = w1*E + w2*C + w3*R
+E = % horas con Sol visible (energia)
+C = % horas con vista directa a la Tierra (comunicacion)
+R = % horas con enlace local disponible, rapido o robusto (respaldo)
+w1=0.40, w2=0.35, w3=0.25 (pesos editables, deben sumar 1)
+```
+
+Si el enlace local esta desactivado, R no se mide y los dos pesos restantes se
+renormalizan (`S = (w1*E + w2*C) / (w1+w2)`) para que el indice siga en escala 0-100.
+
+**Es un indice propuesto por el equipo, NO un estandar oficial de NASA.** Implementado
+en `web/js/model.js` (`suitabilityScore`), probado en `tests/model.test.mjs`, visible
+en la tabla del comparador y en la columna `indice_conveniencia` del CSV exportado.
 
 ## Sitios candidatos
 

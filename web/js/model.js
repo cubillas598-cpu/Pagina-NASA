@@ -266,6 +266,28 @@ export function compararSitios(filas, enlaceActivo) {
   return { mejores, conclusiones };
 }
 
+/**
+ * Indice de conveniencia del sitio: S = w1*E + w2*C + w3*R.
+ * E = % horas con Sol visible, C = % horas con vista directa a la Tierra,
+ * R = % horas con enlace local disponible (rapido o robusto).
+ * Propuesto por el equipo para comparar sitios de un vistazo - NO es un
+ * estandar oficial de NASA. Pesos editables; deben sumar 1.
+ */
+export const PESOS_SUITABILITY = { energia: 0.40, comunicacion: 0.35, respaldo: 0.25 };
+
+export function suitabilityScore(metricas, enlaceActivo, pesos = PESOS_SUITABILITY) {
+  const E = metricas.pctSol;
+  const C = metricas.pctTierra;
+  if (!enlaceActivo) {
+    // Sin enlace local activo no hay R que medir: se renormaliza con los
+    // otros dos pesos para que el indice siga en escala 0-100.
+    const w = pesos.energia + pesos.comunicacion;
+    return (pesos.energia * E + pesos.comunicacion * C) / w;
+  }
+  const R = (100 * (metricas.enlace.rapido + metricas.enlace.robusto)) / metricas.horas;
+  return pesos.energia * E + pesos.comunicacion * C + pesos.respaldo * R;
+}
+
 function celdaCsv(v) {
   const s = v === null || v === undefined ? '' : String(v);
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -276,7 +298,7 @@ export function comparativoCsv(filas, contexto) {
     'sitio', 'nombre', 'primera_hora_utc', 'ultima_hora_utc', 'horas', 'pct_iluminacion',
     'pct_tierra_directa', 'enlace_local', 'tipo_enlace', 'evento_polvo',
     'horas_rapido', 'horas_robusto', 'horas_sin_enlace',
-    'mayor_intervalo_sin_comunicacion_h', 'horizonte',
+    'mayor_intervalo_sin_comunicacion_h', 'horizonte', 'indice_conveniencia',
   ];
   const lineas = [cab.join(',')];
   for (const { sitio, metricas: m } of filas) {
@@ -288,6 +310,7 @@ export function comparativoCsv(filas, contexto) {
       contexto.enlaceActivo && contexto.tipoEnlace === 'optico' && contexto.polvo ? 'si' : 'no',
       m.enlace ? m.enlace.rapido : '', m.enlace ? m.enlace.robusto : '', m.enlace ? m.enlace.sin_enlace : '',
       m.brecha.horas, contexto.modoHorizonte,
+      suitabilityScore(m, contexto.enlaceActivo).toFixed(1),
     ].map(celdaCsv).join(','));
   }
   return lineas.join('\n') + '\n';

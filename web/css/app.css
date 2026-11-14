@@ -206,6 +206,8 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
 .tabla td.mejor { background: rgba(125, 211, 252, 0.07); box-shadow: inset 2px 0 0 var(--cian); }
 .marca-mejor { display: inline-block; margin-left: var(--e-2); font-size: var(--t-xs); font-weight: 500; color: var(--cian); border: 1px solid rgba(125, 211, 252, 0.45); border-radius: var(--r-pastilla); padding: 0 8px; vertical-align: middle; }
 .tabla tr.sin-datos td { color: var(--texto-3); font-size: var(--t-sm); }
+.tabla tr.fila-score th, .tabla tr.fila-score td { border-bottom: 2px solid var(--vidrio-borde); background: rgba(255, 255, 255, 0.02); }
+.tabla tr.fila-score td strong { font-size: var(--t-xl, 1.3em); }
 .conclusiones { margin: var(--e-3) 0 var(--e-4); padding-left: 1.2em; display: grid; gap: var(--e-2); max-width: 75ch; }
 .aviso { font-size: var(--t-xs); color: var(--texto-3); }
 

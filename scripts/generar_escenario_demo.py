@@ -2,11 +2,10 @@
 Genera data/escenario_demo.json: los supuestos de la demo que todavia no
 vienen de una fuente real.
 
-- Horizonte por sitio y por punto de apoyo: perfil SINTETICO determinista
-  (misma semilla => mismos numeros). Se sustituye por LOLA skyline cuando P2
-  lo tenga: basta con reemplazar "elevacion_deg" (360 valores, 1 grado de
-  resolucion, azimut desde el norte local en sentido horario) y poner
-  "fuente": "lola_skyline".
+- Horizonte por sitio y por punto de apoyo: si el archivo ya trae un perfil
+  real (por ejemplo "fuente": "lola_skyline", escrito por scripts/horizonte.py),
+  se conserva tal cual. Solo si falta se usa un perfil SINTETICO determinista
+  (misma semilla => mismos numeros).
 - Punto de apoyo (relevo), umbrales del clasificador local y evento de polvo:
   supuestos de demostracion, elegidos por el equipo.
 
@@ -60,7 +59,7 @@ SITIOS = [
     {
         "id": "shackleton",
         "etiqueta": "Sitio A",
-        "nombre_corto": "Borde de Shackleton",
+        "nombre_corto": "Peak Near Shackleton",
         "efemerides": "data/shackleton.json",
         "mapa": {"x": 0.40, "y": 0.36},
         "horizonte": horizonte(
@@ -83,7 +82,7 @@ SITIOS = [
     {
         "id": "de_gerlache",
         "etiqueta": "Sitio B",
-        "nombre_corto": "Cresta Shackleton–de Gerlache",
+        "nombre_corto": "Cresta de Gerlache–Shackleton",
         "efemerides": "data/de_gerlache.json",
         "mapa": {"x": 0.72, "y": 0.30},
         "horizonte": horizonte(
@@ -129,12 +128,48 @@ SITIOS = [
 ]
 
 
+def conservar_horizontes_reales(sitios):
+    """Mantiene los perfiles que no sean sinteticos del archivo existente."""
+    if not SALIDA.exists():
+        return
+    try:
+        previo = json.loads(SALIDA.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as err:
+        raise SystemExit(f"No se pudo leer {SALIDA} para conservar sus horizontes: {err}")
+    por_id = {s["id"]: s for s in previo.get("sitios", [])}
+    for sitio in sitios:
+        viejo = por_id.get(sitio["id"])
+        if not viejo:
+            continue
+        if viejo.get("horizonte", {}).get("fuente", "sintetico") != "sintetico":
+            sitio["horizonte"] = viejo["horizonte"]
+        if viejo.get("relevo", {}).get("horizonte", {}).get("fuente", "sintetico") != "sintetico":
+            sitio["relevo"]["horizonte"] = viejo["relevo"]["horizonte"]
+
+
+def fuente_horizonte(sitios):
+    fuentes = {s["horizonte"]["fuente"] for s in sitios} | {s["relevo"]["horizonte"]["fuente"] for s in sitios}
+    if fuentes == {"lola_skyline"}:
+        return {
+            "nombre": "LOLA (DEM de 80 m/px, NASA PGDA)",
+            "estado": "en_uso",
+            "detalle": "Horizonte de cada sitio y de su punto de apoyo calculado con scripts/horizonte.py: rayos geodesicos de hasta 30 km sobre el DEM con correccion por curvatura. Tambien puede activarse el horizonte plano (0°).",
+        }
+    return {
+        "nombre": "LOLA skyline",
+        "estado": "prevista",
+        "detalle": "Mientras tanto se usa un perfil sintético de demostración; también puede activarse el horizonte plano (0°).",
+    }
+
+
 def main():
+    conservar_horizontes_reales(SITIOS)
     doc = {
         "_nota": (
-            "Supuestos de demostracion. Horizontes sinteticos deterministas "
-            "(generados por scripts/generar_escenario_demo.py) hasta integrar "
-            "LOLA skyline. Efemerides reales en data/<id>.json (JPL Horizons)."
+            "Generado por scripts/generar_escenario_demo.py. Horizontes: los escribe "
+            "scripts/horizonte.py (LOLA) y este script los conserva. Punto de apoyo, "
+            "umbrales y momento del evento de polvo: supuestos de demostracion. "
+            "Efemerides reales en data/<id>.json (JPL Horizons)."
         ),
         "version": 1,
         "fuentes": {
@@ -143,11 +178,7 @@ def main():
                 "estado": "en_uso",
                 "detalle": "Generadas por scripts/efemerides.py; la verificación manual contra la app de JPL sigue pendiente (docs/plan.md).",
             },
-            "horizonte": {
-                "nombre": "LOLA skyline",
-                "estado": "prevista",
-                "detalle": "Mientras tanto se usa un perfil sintético de demostración; también puede activarse el horizonte plano (0°).",
-            },
+            "horizonte": fuente_horizonte(SITIOS),
         },
         "sitios": SITIOS,
         "enlace_local": {
@@ -166,7 +197,7 @@ def main():
         },
     }
     try:
-        SALIDA.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+        SALIDA.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
     except OSError as err:
         raise SystemExit(f"No se pudo escribir {SALIDA}: {err}")
     print(f"Escrito {SALIDA}")

@@ -1,8 +1,10 @@
 import { cargarDatos } from './datos.js';
-import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo } from './model.js';
-import { isoDia, aleatorio, contorno, esc } from './format.js';
-import { ENLACE } from './views/estilos.js';
-import { renderKpis } from './views/kpis.js';
+import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
+import { isoDia, esc } from './format.js';
+import { ENLACE, etiquetaHorizonte, codigoHorizonte } from './views/estilos.js';
+import { renderFranja, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
+import { crearGraficaEvolucion } from './views/grafica-evolucion.js';
+import { renderHora, renderDestacada, renderEventos, renderPorque } from './views/panel-derecho.js';
 import { renderPanelEstado } from './views/panel-estado.js';
 import { renderMapa, leyendaMapa } from './views/mapa.js';
 import { renderGraficaHorizonte, leyendaHorizonte } from './views/grafica-horizonte.js';
@@ -10,18 +12,25 @@ import { crearLineaTiempo, leyendaTiempo } from './views/linea-tiempo.js';
 import { renderComparador } from './views/comparador.js';
 
 const $ = (sel) => document.querySelector(sel);
-const VISTAS = ['explorador', 'comparador', 'metodologia'];
+const VISTAS = ['resumen', 'sitios', 'comparador', 'enlace', 'metodologia'];
+const SUBTITULOS = {
+  resumen: 'Luz, comunicación y enlace local del sitio activo en el periodo elegido.',
+  sitios: 'Terreno conceptual y horizonte del sitio en la hora seleccionada.',
+  comparador: 'Los tres sitios sobre el mismo periodo y los mismos supuestos.',
+  enlace: 'Estado del enlace de respaldo hora por hora y por qué cambia.',
+  metodologia: 'Qué se calcula, con qué datos y qué límites tiene la demo.',
+};
 
-function estadoInicial(serieRef) {
+function estadoInicial(msRef) {
   return {
-    vista: 'explorador',
+    vista: 'resumen',
     sitioId: 'shackleton',
-    desde: isoDia(serieRef[0].ms),
-    hasta: isoDia(serieRef[serieRef.length - 1].ms),
+    desde: isoDia(msRef[0]),
+    hasta: isoDia(msRef[msRef.length - 1]),
     tipoEnlace: 'rf',
     enlaceActivo: true,
     polvo: false,
-    modoHorizonte: 'sintetico',
+    modoHorizonte: 'perfil',
     indice: 0,
     paso: 1,
   };
@@ -32,8 +41,8 @@ async function iniciar() {
   try {
     datos = await cargarDatos();
   } catch (err) {
-    $('#contenido').insertAdjacentHTML('afterbegin',
-      `<div class="vidrio panel" role="alert"><h2>No se pudieron cargar los datos</h2><p>${esc(err.message)} Abre la demo con un servidor local (ver README) o usa la versión empaquetada.</p></div>`);
+    $('.principal').insertAdjacentHTML('afterbegin',
+      `<div class="tarjeta" role="alert"><h2>No se pudieron cargar los datos</h2><p>${esc(err.message)} Abre la demo con un servidor local (ver README) o usa la versión empaquetada.</p></div>`);
     return;
   }
   const { escenario, efemerides } = datos;
@@ -41,8 +50,9 @@ async function iniciar() {
   const horasRef = efemerides[sitios[0].id];
   const msRef = horasRef.map((h) => parseUtc(h.t));
 
-  let estado = estadoInicial(horasRef.map((h, i) => ({ ms: msRef[i] })));
-  estado.vista = VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'explorador';
+  let estado = estadoInicial(msRef);
+  const vistaHash = location.hash.slice(1);
+  if (VISTAS.includes(vistaHash)) estado.vista = vistaHash;
 
   // ---- Derivados con caché: las series solo cambian con los supuestos del modelo.
   let claveSeries = '';
@@ -82,28 +92,54 @@ async function iniciar() {
     return [i0, i1];
   }
 
-  // ---- Controles
+  // ---- Controles del panel derecho
   const c = {
-    sitio: $('#c-sitio'), desde: $('#c-desde'), hasta: $('#c-hasta'), nota: $('#c-fechas-nota'),
-    rf: $('#c-rf'), optico: $('#c-optico'), enlace: $('#c-enlace'), polvo: $('#c-polvo'),
-    polvoEnv: $('#c-polvo-envoltura'), horizonte: $('#c-horizonte'),
+    sitio: $('#c-sitio'), rf: $('#c-rf'), optico: $('#c-optico'), enlace: $('#c-enlace'),
+    polvo: $('#c-polvo'), polvoEnv: $('#c-polvo-envoltura'), horizonte: $('#c-horizonte'),
   };
   c.sitio.innerHTML = sitios.map((s) => `<option value="${s.id}">${esc(s.etiqueta)}: ${esc(s.nombre_corto)}</option>`).join('');
   const minDia = isoDia(msRef[0]);
   const maxDia = isoDia(msRef[msRef.length - 1]);
-  for (const el of [c.desde, c.hasta]) { el.min = minDia; el.max = maxDia; }
+
+  // ---- Selectores de periodo (gráfica principal y comparador comparten estado)
+  const periodos = [...document.querySelectorAll('[data-periodo]')].map((caja, k) => {
+    caja.innerHTML = `
+      <span aria-hidden="true">Periodo UTC</span>
+      <label class="sr" for="p${k}-desde">Desde</label><input type="date" id="p${k}-desde" min="${minDia}" max="${maxDia}" required>
+      <span aria-hidden="true">a</span>
+      <label class="sr" for="p${k}-hasta">Hasta</label><input type="date" id="p${k}-hasta" min="${minDia}" max="${maxDia}" required>
+      <p class="periodo__nota" aria-live="polite"></p>`;
+    const desde = caja.querySelector(`#p${k}-desde`);
+    const hasta = caja.querySelector(`#p${k}-hasta`);
+    const nota = caja.querySelector('.periodo__nota');
+    const cambiar = () => {
+      let a = desde.value || minDia;
+      let b = hasta.value || maxDia;
+      const acotar = (v) => (v < minDia ? minDia : v > maxDia ? maxDia : v);
+      let texto = '';
+      if (a !== acotar(a) || b !== acotar(b)) texto = `Los datos disponibles van del ${minDia} al ${maxDia}; ajusté el periodo.`;
+      a = acotar(a); b = acotar(b);
+      if (a > b) { [a, b] = [b, a]; texto = 'La fecha final era anterior a la inicial; las intercambié.'; }
+      periodos.forEach((p) => { p.nota.textContent = texto; });
+      actualizar({ desde: a, hasta: b });
+    };
+    desde.addEventListener('change', cambiar);
+    hasta.addEventListener('change', cambiar);
+    return { desde, hasta, nota };
+  });
 
   function sincronizarControles() {
     c.sitio.value = estado.sitioId;
-    c.desde.value = estado.desde;
-    c.hasta.value = estado.hasta;
+    for (const p of periodos) { p.desde.value = estado.desde; p.hasta.value = estado.hasta; }
     c.rf.checked = estado.tipoEnlace === 'rf';
     c.optico.checked = estado.tipoEnlace === 'optico';
     c.rf.disabled = c.optico.disabled = !estado.enlaceActivo;
     c.enlace.checked = estado.enlaceActivo;
     c.polvo.checked = estado.polvo;
     c.polvoEnv.hidden = !(estado.enlaceActivo && estado.tipoEnlace === 'optico');
+    c.horizonte.options[0].textContent = etiquetaHorizonte('perfil', sitios.find((s) => s.id === estado.sitioId));
     c.horizonte.value = estado.modoHorizonte;
+    $('#t-paso').value = String(estado.paso);
   }
 
   function actualizar(cambios, { completo = true } = {}) {
@@ -114,25 +150,12 @@ async function iniciar() {
   }
 
   c.sitio.addEventListener('change', () => actualizar({ sitioId: c.sitio.value }));
-  function cambiarFechas() {
-    let desde = c.desde.value || minDia;
-    let hasta = c.hasta.value || maxDia;
-    const acotar = (v) => (v < minDia ? minDia : v > maxDia ? maxDia : v);
-    let nota = '';
-    if (desde !== acotar(desde) || hasta !== acotar(hasta)) nota = `Los datos disponibles van del ${minDia} al ${maxDia}; ajusté el periodo.`;
-    desde = acotar(desde); hasta = acotar(hasta);
-    if (desde > hasta) { [desde, hasta] = [hasta, desde]; nota = 'La fecha final era anterior a la inicial; las intercambié.'; }
-    c.nota.textContent = nota;
-    actualizar({ desde, hasta });
-  }
-  c.desde.addEventListener('change', cambiarFechas);
-  c.hasta.addEventListener('change', cambiarFechas);
   c.rf.addEventListener('change', () => actualizar({ tipoEnlace: 'rf' }));
   c.optico.addEventListener('change', () => actualizar({ tipoEnlace: 'optico' }));
   c.enlace.addEventListener('change', () => actualizar({ enlaceActivo: c.enlace.checked }));
   c.polvo.addEventListener('change', () => {
     const cambios = { polvo: c.polvo.checked };
-    // Al activar el polvo, llevar el cursor al inicio del evento si cae en el periodo.
+    // Al activar el polvo, llevar el cursor a la hora del evento si cae en el periodo.
     if (c.polvo.checked) {
       const ev = horasEventoPolvo(msRef.map((ms) => ({ ms })), escenario.evento_polvo);
       const [i0, i1] = rangoIndices();
@@ -143,10 +166,8 @@ async function iniciar() {
   c.horizonte.addEventListener('change', () => actualizar({ modoHorizonte: c.horizonte.value }));
   $('#c-reset').addEventListener('click', () => {
     detener();
-    c.nota.textContent = '';
-    const vista = estado.vista;
-    estado = { ...estadoInicial(msRef.map((ms) => ({ ms }))), vista };
-    $('#t-paso').value = '1';
+    periodos.forEach((p) => { p.nota.textContent = ''; });
+    estado = { ...estadoInicial(msRef), vista: estado.vista };
     render(true);
   });
 
@@ -160,43 +181,45 @@ async function iniciar() {
   $('#c-ayuda').addEventListener('click', () => dialogo.showModal());
 
   // ---- Metodología: fuentes y reglas desde el propio escenario.
-  const etiquetaEstado = { en_uso: ['En uso', 'var(--ok)'], prevista: ['Integración prevista', 'var(--ambar)'] };
+  const etiquetaEstado = { en_uso: ['En uso', 'var(--ok)'], prevista: ['Integración prevista', 'var(--amarillo)'] };
   $('#fuentes').innerHTML = Object.values(escenario.fuentes).map((f) => {
     const [txt, col] = etiquetaEstado[f.estado] || [f.estado, 'var(--texto-2)'];
     return `<div><dt>${esc(f.nombre)} <span class="estado-fuente" style="color:${col}">${txt}</span></dt><dd>${esc(f.detalle)}</dd></div>`;
-  }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--ambar)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
+  }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--amarillo)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
   const r = escenario.enlace_local;
   $('#reglas-enlace').innerHTML = `
     <li><strong>Radiofrecuencia:</strong> requiere línea de vista al punto de apoyo. Si el punto de apoyo queda en sombra opera con batería (robusto); tras ${r.rf.bateria_relevo_h} h en sombra se considera sin enlace.</li>
     <li><strong>Óptico:</strong> si el Sol queda a menos de ${r.optico.sep_robusto_deg}° de la línea de vista el enlace pasa a robusto; a menos de ${r.optico.sep_sin_enlace_deg}° queda sin enlace. El evento de polvo dura ${escenario.evento_polvo.duracion_s} s, calibrado con Apollo (10–12 s de polvo visible en el descenso final). Como cada muestra vale una hora, esa hora pasa a robusto; solo un evento de media hora o más la dejaría sin enlace. El momento del aterrizaje cercano es un supuesto.</li>`;
 
-  // ---- Navegación
+  // ---- Navegación lateral
   function mostrarVista() {
     for (const v of VISTAS) $(`#vista-${v}`).hidden = v !== estado.vista;
-    document.querySelectorAll('.nav__item').forEach((a) => {
+    document.querySelectorAll('.lateral__item').forEach((a) => {
       if (a.dataset.vista === estado.vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    $('#controles').hidden = estado.vista === 'metodologia';
+    $('#cab-sub').textContent = SUBTITULOS[estado.vista];
   }
   window.addEventListener('hashchange', () => {
     const v = location.hash.slice(1);
-    if (VISTAS.includes(v)) { estado.vista = v; mostrarVista(); render(true); }
+    if (VISTAS.includes(v)) { estado.vista = v; render(true); }
   });
 
-  // ---- Línea de tiempo y reproducción
-  const tiempo = crearLineaTiempo($('#tiempo'), $('#tooltip'), {
-    alCambiarIndice: (i) => { if (i !== estado.indice) actualizar({ indice: i }, { completo: false }); },
-  });
+  // ---- Tiempo: gráfica principal, línea de tiempo detallada y reproducción
+  const alCambiarIndice = (i) => { if (i !== estado.indice) actualizar({ indice: i }, { completo: false }); };
+  const evolucion = crearGraficaEvolucion($('#evolucion'), { alCambiarIndice });
+  const tiempo = crearLineaTiempo($('#tiempo'), $('#tooltip'), { alCambiarIndice });
   let temporizador = null;
   const btnPlay = $('#t-play');
   function detener() {
     clearInterval(temporizador); temporizador = null;
-    btnPlay.setAttribute('aria-pressed', 'false'); btnPlay.setAttribute('aria-label', 'Reproducir');
+    btnPlay.setAttribute('aria-pressed', 'false');
+    btnPlay.querySelector('.accion__texto').textContent = 'Reproducir';
   }
   function reproducir() {
     const [i0, i1] = rangoIndices();
     if (estado.indice >= i1) actualizar({ indice: i0 }, { completo: false });
-    btnPlay.setAttribute('aria-pressed', 'true'); btnPlay.setAttribute('aria-label', 'Pausar');
+    btnPlay.setAttribute('aria-pressed', 'true');
+    btnPlay.querySelector('.accion__texto').textContent = 'Pausar';
     temporizador = setInterval(() => {
       const [, fin] = rangoIndices();
       const sig = estado.indice + estado.paso;
@@ -209,17 +232,20 @@ async function iniciar() {
   $('#t-adelante').addEventListener('click', () => actualizar({ indice: estado.indice + estado.paso }, { completo: false }));
   $('#t-atras').addEventListener('click', () => actualizar({ indice: estado.indice - estado.paso }, { completo: false }));
   $('#t-inicio').addEventListener('click', () => actualizar({ indice: rangoIndices()[0] }, { completo: false }));
+  $('#ir-brecha').addEventListener('click', () => {
+    const d = derivar();
+    if (d.metricas.brecha.horas > 0) actualizar({ indice: d.metricas.brecha.desde }, { completo: false });
+  });
 
   // ---- CSV
   // Publicada en claude.ai, la página guarda con la capacidad `downloads`;
   // servida localmente o abierta como archivo, usa una descarga normal.
   const descargasHost = window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
-  const btnCsv = $('#exportar-csv');
-  btnCsv.addEventListener('click', async () => {
+  $('#exportar-csv').addEventListener('click', async () => {
     const d = derivar();
     const csv = '﻿' + comparativoCsv(d.filas, {
       inicio: `${d.serie[d.i0].t}Z`, fin: `${d.serie[d.i1].t}Z`, enlaceActivo: estado.enlaceActivo,
-      tipoEnlace: estado.tipoEnlace, polvo: estado.polvo, modoHorizonte: estado.modoHorizonte,
+      tipoEnlace: estado.tipoEnlace, polvo: estado.polvo, modoHorizonte: codigoHorizonte(estado.modoHorizonte, d.sitio),
     });
     const nombre = `comparativo-sitios_${estado.desde}_${estado.hasta}.csv`;
     const host = await descargasHost;
@@ -236,36 +262,45 @@ async function iniciar() {
   });
 
   // ---- Render
-  const irABrecha = () => {
-    const d = derivar();
-    if (d.metricas.brecha.horas > 0) {
-      actualizar({ indice: d.metricas.brecha.desde }, { completo: false });
-      $('#tiempo').scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-      $('#tiempo').focus({ preventScroll: true });
-    }
-  };
   const elegirSitio = (id) => actualizar({ sitioId: id });
+  let eventos = [];
 
   function render(completo) {
     const d = derivar();
     if (completo) {
       sincronizarControles();
       mostrarVista();
-      leyendaHorizonte($('#leyenda-horizonte'), estado);
-      leyendaTiempo($('#leyenda-tiempo'), estado);
+      eventos = eventosPeriodo(d.serie, d.i0, d.i1, estado.enlaceActivo);
     }
-    if (estado.vista === 'explorador') {
+    // Columna derecha: siempre visible.
+    renderHora($('#hora-utc'), $('#fecha-utc'), d.muestra);
+    renderDestacada($('#destacada'), d);
+    renderEventos($('#eventos'), $('#eventos-total'), d, eventos, (i) => actualizar({ indice: i }, { completo: false }));
+
+    if (estado.vista === 'resumen') {
       if (completo) {
-        renderKpis($('#kpis'), d, irABrecha);
-        tiempo.dibujar(d);
+        renderFranja($('#franja'), d);
+        renderDisponibilidad($('#disponibilidad'), d);
+        renderMiniComparativo($('#mini-comparativo'), d);
+        evolucion.dibujar(d);
       } else {
-        tiempo.moverCursor(d);
+        evolucion.moverCursor(d);
       }
+    } else if (estado.vista === 'sitios') {
+      if (completo) leyendaHorizonte($('#leyenda-horizonte'), estado);
       renderPanelEstado($('#estado'), d);
       renderMapa($('#mapa'), d, elegirSitio);
       renderGraficaHorizonte($('#grafica-horizonte'), d);
     } else if (estado.vista === 'comparador') {
-      renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);
+      if (completo) renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);
+    } else if (estado.vista === 'enlace') {
+      if (completo) {
+        leyendaTiempo($('#leyenda-tiempo'), estado);
+        tiempo.dibujar(d);
+      } else {
+        tiempo.moverCursor(d);
+      }
+      renderPorque($('#porque'), d);
     }
   }
 
@@ -280,17 +315,7 @@ async function iniciar() {
   });
 
   leyendaMapa($('#leyenda-mapa'));
-  dibujarFondo();
   render(true);
-}
-
-function dibujarFondo() {
-  const rnd = aleatorio(7);
-  const caminos = [];
-  for (const [cx, cy, rx, ry, n] of [[1050, 120, 260, 180, 7], [140, 720, 300, 200, 6]]) {
-    for (let k = 1; k <= n; k++) caminos.push(`<path d="${contorno(cx, cy, (rx * k) / n, (ry * k) / n, rnd, 0.1)}"/>`);
-  }
-  document.getElementById('fondo-topo-lineas').innerHTML = caminos.join('');
 }
 
 iniciar();

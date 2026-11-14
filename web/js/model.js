@@ -58,7 +58,7 @@ export function clasificar(factores) {
  * Serie horaria completa de un sitio.
  * @param sitio      entrada de escenario_demo.json
  * @param horas      lista de efemerides {t, sol_el, sol_az, tierra_el, tierra_az}
- * @param opciones   {modoHorizonte:'sintetico'|'plano', tipoEnlace:'rf'|'optico',
+ * @param opciones   {modoHorizonte:'perfil'|'plano', tipoEnlace:'rf'|'optico',
  *                    polvo:boolean, reglas, eventoPolvo}
  */
 export function calcularSerie(sitio, horas, opciones) {
@@ -190,11 +190,16 @@ export function metricasPeriodo(serie, i0, i1, enlaceActivo) {
   const horas = i1 - i0 + 1;
   let sol = 0;
   let tierra = 0;
+  let comunicacion = 0;
+  let ambas = 0;
   const enlace = { rapido: 0, robusto: 0, sin_enlace: 0 };
   for (let i = i0; i <= i1; i++) {
     const m = serie[i];
+    const com = hayComunicacion(m, enlaceActivo);
     if (m.sol.visible) sol++;
     if (m.tierra.visible) tierra++;
+    if (com) comunicacion++;
+    if (com && m.sol.visible) ambas++;
     enlace[m.enlace.estado]++;
   }
   const brecha = tramoMasLargo(serie, i0, i1, (m) => !hayComunicacion(m, enlaceActivo));
@@ -205,9 +210,49 @@ export function metricasPeriodo(serie, i0, i1, enlaceActivo) {
     horasTierra: tierra,
     pctSol: (100 * sol) / horas,
     pctTierra: (100 * tierra) / horas,
+    horasComunicacion: comunicacion,
+    horasAmbas: ambas,
+    pctComunicacion: (100 * comunicacion) / horas,
+    pctAmbas: (100 * ambas) / horas,
     enlace: enlaceActivo ? enlace : null,
     brecha,
   };
+}
+
+const TIPOS_EVENTO = {
+  sol: { inicio: 'Inicio de sombra', fin: 'Vuelve el Sol' },
+  tierra: { inicio: 'Tierra oculta', fin: 'Tierra visible' },
+  enlace: { inicio: 'Enlace local sin servicio', fin: 'Enlace local restablecido' },
+};
+
+/**
+ * Cambios de estado dentro de (i0, i1]: inicio/fin de sombra, pérdida y
+ * recuperación de la Tierra y, con el enlace activo, caídas del enlace local.
+ * Cada evento de inicio lleva la duración del tramo que abre (acotada al periodo).
+ */
+export function eventosPeriodo(serie, i0, i1, enlaceActivo) {
+  const fuentes = [
+    ['sol', (m) => m.sol.visible],
+    ['tierra', (m) => m.tierra.visible],
+  ];
+  if (enlaceActivo) fuentes.push(['enlace', (m) => m.enlace.estado !== 'sin_enlace']);
+  const eventos = [];
+  for (const [tipo, ok] of fuentes) {
+    for (let i = i0 + 1; i <= i1; i++) {
+      const antes = ok(serie[i - 1]);
+      const ahora = ok(serie[i]);
+      if (antes === ahora) continue;
+      const inicio = antes && !ahora;
+      let horas = null;
+      if (inicio) {
+        let j = i;
+        while (j <= i1 && !ok(serie[j])) j++;
+        horas = j - i;
+      }
+      eventos.push({ tipo, indice: i, inicio, horas, titulo: TIPOS_EVENTO[tipo][inicio ? 'inicio' : 'fin'] });
+    }
+  }
+  return eventos.sort((a, b) => a.indice - b.indice || a.tipo.localeCompare(b.tipo));
 }
 
 /** Segmentos contiguos con la misma clave (para dibujar franjas). */

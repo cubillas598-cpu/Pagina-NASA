@@ -107,7 +107,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     for (let i = i0; i <= i1; i++) {
       if (!serie[i].t.endsWith('T00:00')) continue;
       const xx = xi(i);
-      partes.push(`<line x1="${xx}" x2="${xx}" y1="${EJE - 8}" y2="${EJE + carriles.length * (ALTO_CARRIL + SEP)}" stroke="rgba(168,180,200,.1)"/>`);
+      partes.push(`<line x1="${xx}" x2="${xx}" y1="${EJE - 8}" y2="${EJE + carriles.length * (ALTO_CARRIL + SEP)}" stroke="rgba(255,245,235,.1)"/>`);
       if (dia % diasPorEtiqueta === 0) partes.push(`<text x="${xx + 3}" y="${EJE - 12}">${diaMesUtc(serie[i].ms)}</text>`);
       dia++;
     }
@@ -124,7 +124,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     });
     const yFin = EJE + carriles.length * (ALTO_CARRIL + SEP) + 4;
 
-    // Evento de polvo sintético.
+    // Evento de polvo (duración de Apollo, momento supuesto).
     const ev = d.escenario.evento_polvo;
     if (estado.enlaceActivo && estado.tipoEnlace === 'optico' && estado.polvo) {
       const rango = horasEventoPolvo(serie, ev);
@@ -155,7 +155,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
         <defs>${defsPatrones()}</defs>
         ${partes.join('')}
         <g id="cursor">
-          <rect class="cursor__marco" x="-7" y="${EJE - 4}" width="14" height="${yFin - EJE + 2}" rx="7" fill="rgba(125,211,252,.12)" stroke="rgba(125,211,252,.4)"/>
+          <rect class="cursor__marco" x="-7" y="${EJE - 4}" width="14" height="${yFin - EJE + 2}" rx="7" fill="rgba(245,130,42,.14)" stroke="rgba(255,165,82,.5)"/>
           <line class="cursor__linea" x1="0" x2="0" y1="${EJE - 4}" y2="${yFin - 2}" stroke="${COLOR.texto}" stroke-width="2"/>
         </g>
       </svg>`;
@@ -191,7 +191,7 @@ export function leyendaTiempo(cont, estado) {
   const items = [
     `<li><span class="muestra" style="background:${COLOR.ambar}"></span>Sol visible</li>`,
     `<li><span class="muestra" style="background:${COLOR.tierra}"></span>Tierra visible</li>`,
-    `<li><span class="muestra" style="background:${COLOR.sombra};border:1px solid rgba(168,180,200,.3)"></span>Sombra / Tierra oculta</li>`,
+    `<li><span class="muestra" style="background:${COLOR.sombra};border:1px solid rgba(255,245,235,.3)"></span>Sombra / Tierra oculta</li>`,
   ];
   if (estado.enlaceActivo) {
     items.push(

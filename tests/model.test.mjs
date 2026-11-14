@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
-  tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo,
+  tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
   suitabilityScore, PESOS_SUITABILITY,
 } from '../web/js/model.js';
 
@@ -18,7 +18,7 @@ function serieDe(id, extra = {}) {
   const sitio = escenario.sitios.find((s) => s.id === id);
   const horas = leer(sitio.efemerides).horas;
   return calcularSerie(sitio, horas, {
-    modoHorizonte: 'sintetico', tipoEnlace: 'rf', polvo: false,
+    modoHorizonte: 'perfil', tipoEnlace: 'rf', polvo: false,
     reglas: escenario.enlace_local, eventoPolvo: escenario.evento_polvo, ...extra,
   });
 }
@@ -147,9 +147,31 @@ test('suitabilityScore: sin enlace activo se renormaliza a energia y comunicacio
 test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
   const m = { horas: 2, pctSol: 50, pctTierra: 0, enlace: { rapido: 1, robusto: 1, sin_enlace: 0 }, brecha: { horas: 2 } };
   const csv = comparativoCsv([{ sitio: { etiqueta: 'Sitio A', nombre_corto: 'Borde, Shackleton' }, metricas: m }],
-    { inicio: 'x', fin: 'y', enlaceActivo: true, tipoEnlace: 'optico', polvo: true, modoHorizonte: 'sintetico' });
+    { inicio: 'x', fin: 'y', enlaceActivo: true, tipoEnlace: 'optico', polvo: true, modoHorizonte: 'lola_skyline' });
   const lineas = csv.trim().split('\n');
   assert.equal(lineas.length, 2);
   assert.ok(lineas[1].includes('"Borde, Shackleton"'));
-  assert.ok(lineas[1].includes(',si,1,1,0,2,sintetico'));
+  assert.ok(lineas[1].includes(',si,1,1,0,2,lola_skyline'));
+});
+
+test('disponibilidad combinada: comunicación y luz con comunicación', () => {
+  for (const activo of [false, true]) {
+    const serie = serieDe('malapert', { tipoEnlace: 'optico' });
+    const m = metricasPeriodo(serie, 0, serie.length - 1, activo);
+    const com = serie.filter((x) => x.tierra.visible || (activo && x.respaldoTierra)).length;
+    assert.equal(m.horasComunicacion, com);
+    assert.equal(m.horasAmbas, serie.filter((x) => x.sol.visible && (x.tierra.visible || (activo && x.respaldoTierra))).length);
+    assert.ok(m.horasAmbas <= Math.min(m.horasSol, m.horasComunicacion));
+  }
+});
+
+test('eventosPeriodo detecta cambios y la duración del tramo que abren', () => {
+  const mk = (sol, tierra) => ({ sol: { visible: sol }, tierra: { visible: tierra }, enlace: { estado: 'rapido' } });
+  const serie = [mk(1, 0), mk(1, 1), mk(0, 1), mk(0, 1), mk(1, 0)].map((m, i) => ({ ...m, sol: { visible: !!m.sol.visible }, tierra: { visible: !!m.tierra.visible }, i }));
+  const ev = eventosPeriodo(serie, 0, 4, false);
+  assert.deepEqual(ev.map((e) => [e.titulo, e.indice, e.horas]), [
+    ['Tierra visible', 1, null], ['Inicio de sombra', 2, 2], ['Vuelve el Sol', 4, null], ['Tierra oculta', 4, 1],
+  ]);
+  const real = serieDe('shackleton');
+  for (const e of eventosPeriodo(real, 0, real.length - 1, true)) assert.ok(e.indice > 0);
 });

@@ -22,7 +22,7 @@ function terreno() {
   // Pequeños cráteres.
   for (let k = 0; k < 18; k++) {
     const x = rnd() * MAPA_W, y = rnd() * MAPA_H, r = 4 + rnd() * 12;
-    capas.push(`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="rgba(7,11,20,.35)" stroke="rgba(168,180,200,.12)"/>`);
+    capas.push(`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="rgba(20,16,13,.35)" stroke="rgba(255,255,255,.12)"/>`);
   }
   return capas.join('');
 }
@@ -35,13 +35,13 @@ export function renderMapa(cont, d, alElegir) {
       <svg viewBox="0 0 ${MAPA_W} ${MAPA_H}" role="group" aria-label="Vista conceptual del terreno con los tres sitios candidatos">
         <defs>
           ${defsPatrones()}
-          <radialGradient id="g-suelo" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#1A2335"/><stop offset="1" stop-color="#0B111D"/></radialGradient>
-          <radialGradient id="g-crater" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#05080F"/><stop offset=".8" stop-color="#0A0F1A"/><stop offset="1" stop-color="#1A2335"/></radialGradient>
+          <radialGradient id="g-suelo" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#4a4038"/><stop offset="1" stop-color="#1f1a16"/></radialGradient>
+          <radialGradient id="g-crater" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#0d0b09"/><stop offset=".8" stop-color="#16120f"/><stop offset="1" stop-color="#4a4038"/></radialGradient>
           <filter id="f-brillo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
         </defs>
         <style>
-          .iso { fill: none; stroke: rgba(168,180,200,.14); stroke-width: 1; }
-          .iso--borde { stroke: rgba(168,180,200,.22); }
+          .iso { fill: none; stroke: rgba(255,240,225,.13); stroke-width: 1; }
+          .iso--borde { stroke: rgba(255,240,225,.22); }
           .etq { font: 500 15px var(--fuente); fill: ${COLOR.texto}; }
           .etq2 { font: 400 13px var(--fuente); fill: ${COLOR.texto2}; }
           .rosa text { font: 500 11px var(--fuente); fill: ${COLOR.texto2}; }
@@ -95,7 +95,7 @@ export function renderMapa(cont, d, alElegir) {
   const [tx, ty] = polar(ax, ay, R, m.tierra.az);
   const [nx, ny] = polar(ax, ay, R + 12, 0);
   capas.push(`<g class="rosa">
-    <circle cx="${ax}" cy="${ay}" r="${R}" fill="none" stroke="rgba(125,211,252,.28)" stroke-dasharray="2 5"/>
+    <circle cx="${ax}" cy="${ay}" r="${R}" fill="none" stroke="rgba(255,165,82,.35)" stroke-dasharray="2 5"/>
     <text x="${nx}" y="${ny + 4}" text-anchor="middle">N</text>
     <line x1="${ax}" y1="${ay}" x2="${sx}" y2="${sy}" stroke="${COLOR.ambar}" stroke-opacity="${m.sol.visible ? 0.7 : 0.25}"/>
     <circle cx="${sx}" cy="${sy}" r="9" fill="${m.sol.visible ? COLOR.ambar : 'none'}" stroke="${COLOR.ambar}" stroke-width="2"/>
@@ -111,7 +111,7 @@ export function renderMapa(cont, d, alElegir) {
     capas.push(`<g class="marcador" data-sitio="${s.id}" tabindex="0" role="button" aria-pressed="${sel}" aria-label="${esc(s.etiqueta)}: ${esc(s.nombre_corto)}">
       <circle cx="${x}" cy="${y}" r="44" fill="transparent"/>
       ${sel ? `<circle cx="${x}" cy="${y}" r="26" fill="${COLOR.cian}" opacity=".18" filter="url(#f-brillo)"/>` : ''}
-      <circle class="marcador__anillo" cx="${x}" cy="${y}" r="17" fill="${sel ? 'rgba(125,211,252,.18)' : 'rgba(16,24,39,.85)'}" stroke="${sel ? COLOR.cian : 'rgba(168,180,200,.5)'}" stroke-width="2"/>
+      <circle class="marcador__anillo" cx="${x}" cy="${y}" r="17" fill="${sel ? 'rgba(245,130,42,.25)' : 'rgba(42,35,30,.88)'}" stroke="${sel ? COLOR.cian : 'rgba(255,255,255,.45)'}" stroke-width="2"/>
       <text x="${x}" y="${y + 5}" text-anchor="middle" class="etq etq--letra">${letra}</text>
       <text x="${x}" y="${y + (sel ? 84 : 40)}" text-anchor="middle" class="etq2 etq--nombre" ${sel ? `fill="${COLOR.texto}"` : ''}>${esc(s.nombre_corto)}</text>
     </g>`);

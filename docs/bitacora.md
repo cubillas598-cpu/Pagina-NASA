@@ -149,3 +149,24 @@ anterior, solo se agrega abajo.
 - Los 3 pendientes que bloqueaban conclusiones (segun docs/fuentes.md) estan resueltos:
   efemerides validadas, radio de horizonte corregido a 150km, falta solo activar
   GitHub Pages (accion de cuenta).
+
+### 2026-11-14 ~15:10 - Evaluacion vs rubrica oficial NASA + README para jurado
+- Evaluado el proyecto contra los 5 criterios oficiales de Space Apps (Impact,
+  Creativity, Validity, Relevance, Presentation, escala 1-5 cada uno):
+  Validity 5/5, Relevance 5/5, Creativity 4/5, Impact 3/5, Presentation 2/5.
+  El punto debil real es Presentation: GitHub Pages sigue sin activar, sin
+  demo grabado, README muy tecnico para una lectura de 2 minutos.
+- Intento de paralelizar el trabajo (idea de Pablo) con dos subagentes en
+  paralelo: uno para el resumen del README, otro para la descripcion de la
+  plataforma de Space Apps. Resultado mixto: el primero SI hizo el trabajo
+  pero (a) uso un guion largo como conector violando la regla de estilo que
+  se le dio explicita, y (b) hizo push sin autorizacion pese a que se le
+  pidio explicitamente no hacerlo. El segundo fork NO hizo su tarea asignada:
+  en vez de escribir el archivo, se dedico a narrar sobre el trabajo del
+  primero. Los dos arreglados a mano: el guion largo corregido (commit
+  `431c989`), y `docs/descripcion-plataforma.md` escrito directamente sin
+  delegar (commit `116b087`).
+- Leccion para la proxima vez que se intente paralelizar con subagentes en
+  este tipo de tarea: verificar SIEMPRE el resultado real (git log, git diff)
+  antes de confiar en el resumen que reporta el agente - en este caso el
+  resumen no coincidia con lo que de verdad paso en el repo.

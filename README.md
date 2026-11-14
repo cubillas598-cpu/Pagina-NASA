@@ -31,7 +31,7 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 ## Estado
 
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos
-- [ ] Horizonte local por sitio (LOLA skyline). La demo usa un perfil sintetico mientras tanto
+- [x] Horizonte local por sitio con DEM real de LOLA (NASA PGDA, 80 m/px)
 - [x] Clasificador de enlace local (reglas de demostracion, RF y optico)
 - [x] Pagina web (demo en `web/`, version de un solo archivo en `dist/`)
 
@@ -61,16 +61,37 @@ Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
 | Pieza | Archivo | Estado |
 | --- | --- | --- |
 | Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; falta la verificacion manual del plan |
-| Horizonte por azimut del sitio y del punto de apoyo | `data/escenario_demo.json` | Sintetico determinista (`scripts/generar_escenario_demo.py`). Tambien hay modo horizonte plano |
+| Horizonte por azimut de los 3 sitios | `data/escenario_demo.json` (`horizonte.fuente = "lola_skyline"`) | **Real**, calculado con el DEM de LOLA (NASA PGDA, 80 m/px) via `scripts/horizonte.py`: raycasting geodesico (pyproj) con correccion por curvatura, 360 puntos/sitio |
+| Horizonte del punto de apoyo (relevo RF/optico) | `data/escenario_demo.json` (`relevo`) | Sintetico, pendiente de conectar a LOLA igual que los sitios |
 | Duracion del evento de polvo (12 s) | `data/escenario_demo.json` | Calibrada con Apollo (10-12 s); con muestras horarias degrada esa hora a robusto |
-| Punto de apoyo, umbrales RF/optico, momento del evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
+| Umbrales RF/optico, momento del evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
 | Posiciones del mapa | `data/escenario_demo.json` (`mapa`) | Ilustrativas ("Vista conceptual") |
 
-Para pasar a LOLA skyline: reemplazar `elevacion_deg` de cada `horizonte`
-(360 valores, 1 grado, azimut desde el norte local en sentido horario) y poner
-`"fuente": "lola_skyline"`. El resto de la pagina no cambia. Para otro rango de
-fechas, regenerar las efemerides con `scripts/efemerides.py`; el selector de
-fechas se limita solo a las horas disponibles.
+Para regenerar el horizonte real desde cero (otro DEM, otra resolucion):
+`python scripts/horizonte.py --todos` (requiere el DEM en `dem/LDEM_80S_80MPP_ADJ.TIF`,
+descargable de NASA PGDA producto 90). Escribe directo en `elevacion_deg` de cada
+sitio con `"fuente": "lola_skyline"`. Para otro rango de fechas, regenerar las
+efemerides con `scripts/efemerides.py`; el selector de fechas se limita solo a las
+horas disponibles.
+
+**Correccion importante (2026-11-14)**: el punto de Shackleton original (89°40'S,
+129°47'E, de Wikipedia) resulto ser el CENTRO/fondo del crater, no el borde — dio un
+horizonte de ~20 grados en todas direcciones, consistente con zona permanentemente en
+sombra (PSR), no con un sitio de aterrizaje. El de de Gerlache tampoco tenia cita a un
+paper real. Los dos se reemplazaron por sitios candidatos de literatura academica
+peer-reviewed (ver `sitios.json` para la cita completa de cada uno: Icarus 2024 para
+de Gerlache, iopscience/LPSC para Peak Near Shackleton). Regla aplicada de aqui en
+adelante en todo el proyecto: nunca Wikipedia como fuente de un dato que se presenta
+como hecho; siempre la mejor fuente academica disponible (paper peer-reviewed >
+organismo oficial > .edu > Wikipedia nunca). Los tres sitios ya dan horizontes
+comparables entre si (-8.5 a 6.7 grados).
+
+**Nota de honestidad (R37)**: los numeros exactos de coordenadas de los papers citados
+se obtuvieron via resumen de motor de busqueda, no via lectura directa del PDF/HTML
+primario (sciencedirect.com y agupubs.onlinelibrary.wiley.com devolvieron 403 en esta
+sesion). El paper en si es real y verificable por su DOI; el numero puntual de la
+coordenada no esta confirmado letra por letra contra el texto original. Se marca en
+`sitios.json`, campo `fuente`, para cada sitio.
 
 Estructura: `web/js/model.js` (calculos puros, probados), `web/js/datos.js`
 (carga), `web/js/views/*` (una vista por panel), `web/css/tokens.css` (paleta y
@@ -78,9 +99,9 @@ espaciado), `web/css/app.css` (componentes y responsive).
 
 ## Sitios candidatos
 
-Ver `sitios.json`. Shackleton (borde del crater), cresta Shackleton-de Gerlache,
-y Malapert massif, los tres candidatos oficiales de Artemis III finalizados por
-NASA en octubre de 2024.
+Ver `sitios.json` para coordenadas y cita completa de cada uno: Peak Near Shackleton
+(region candidata Artemis III cerca del borde del crater), sitio C1 en la cresta de
+Gerlache-Shackleton, y Malapert massif.
 
 ## Creditos de terceros
 

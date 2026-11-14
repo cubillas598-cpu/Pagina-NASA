@@ -3,19 +3,19 @@
   "sitios": [
     {
       "id": "shackleton",
-      "nombre": "Shackleton (borde del crater)",
-      "lat": -89.6667,
-      "lon": 129.783,
+      "nombre": "Peak Near Shackleton (borde del crater, region candidata Artemis III)",
+      "lat": -89.01701,
+      "lon": 126.27302,
       "elev_km": 0,
-      "fuente": "Wikipedia/USRA, verificado por busqueda web 2026-11-14: 89 40'S 129 47'E"
+      "fuente": "corregido 2026-11-14: la coordenada previa (89 40'S 129 47'E, Wikipedia) era el CENTRO/fondo del crater, no el borde - dio horizonte de ~20 grados en todas direcciones (consistente con zona permanentemente en sombra, PSR). Reemplazada por un sitio candidato real: 'Peak Near Shackleton', region candidata oficial Artemis III cerca del borde, ~90% de iluminacion anual, paper peer-reviewed via iopscience.org DOI 10.3847/PSJ/aca590. [PENDIENTE R37]: numero (-89.01701, 126.27302) llego via resumen del motor de busqueda, no via lectura directa del PDF - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
     },
     {
       "id": "de_gerlache",
-      "nombre": "Cresta Shackleton-de Gerlache (candidato de Gerlache Rim)",
-      "lat": -89.684,
-      "lon": 196.739,
+      "nombre": "Cresta de Gerlache-Shackleton, sitio C1 (region candidata Artemis III)",
+      "lat": -89.406,
+      "lon": 223.8,
       "elev_km": 0,
-      "fuente": "verificado por busqueda web 2026-11-14: interseccion de la cresta con el borde de Shackleton"
+      "fuente": "corregido 2026-11-14 (misma correccion que shackleton): el numero anterior (89.684S, 196.739E) no tenia cita a un paper real, salio de un resumen de busqueda sin fuente verificable. Reemplazado por el sitio C1 de un paper peer-reviewed en Icarus (abril 2024, 'Potential landing sites characterization on lunar south pole: De-Gerlache to Shackleton ridge region', DOI via ADS 2024Icar..41215988S). [PENDIENTE R37]: el numero exacto (-136.2, -89.406) llego via resumen del motor de busqueda, no se pudo leer el texto primario del paper (sciencedirect.com da 403 en esta sesion) - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
     },
     {
       "id": "malapert",
@@ -23,7 +23,7 @@
       "lat": -85.964,
       "lon": 357.681,
       "elev_km": 0,
-      "fuente": "Kring 2025, JGR Planets (sitio notional de NASA en el macizo Malapert) - verificado por busqueda web 2026-11-14"
+      "fuente": "Kring et al. 2025, JGR Planets, DOI 10.1029/2024JE008905 (sitio notional de NASA en el macizo Malapert). [PENDIENTE R37]: numero (-85.964, 357.681) llego via resumen del motor de busqueda; no se pudo leer el texto primario del paper (agupubs.onlinelibrary.wiley.com da 403 en esta sesion) - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
     }
   ]
 }

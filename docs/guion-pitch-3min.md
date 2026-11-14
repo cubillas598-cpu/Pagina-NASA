@@ -3,7 +3,10 @@
 Basado en el taller **"Elevator Pitch — NASA Space Apps Challenge"** (14-nov-2026,
 previo al concurso, impartido en la Universidad Tecnologica). Fuentes: transcripcion
 local del audio (44 min, faster-whisper, cobertura verificada) + 10 fotos reales de las
-slides del taller, ambas en este repo (`docs/taller-pitch-storytelling/`).
+slides del taller, ambas en este repo (`docs/taller-pitch-storytelling/`). El hook de
+esta version fusiona la pregunta retorica del borrador independiente "Speech 1" que
+Irvin escribio en el Google Doc de propuesta del equipo (14-nov-2026) con el resto del
+guion ya validado contra la estructura oficial del taller.
 
 **Estructura oficial del taller** (las slides usan dos nombres para los mismos 4 pasos):
 
@@ -34,10 +37,14 @@ no el producto 100% terminado).
 
 ---
 
-## 1. Hook / Conexion (10s)
+## 1. Hook / Conexion (12-15s)
 
-> "Hola, somos el equipo buhospace. Somos estudiantes de Hermosillo y creemos que
-> encontramos algo que casi nadie mas en este reto esta viendo."
+> "Hola, somos el equipo buhospace, estudiantes de Hermosillo. ¿Y si el exito de una
+> mision lunar no dependiera solo de llegar a la Luna, sino de elegir exactamente
+> donde aterrizar? Imaginen invertir años de investigacion y tecnologia para llegar
+> a nuestro satelite, y descubrir despues que el lugar elegido no tiene suficiente
+> luz solar o que se pierde la comunicacion con la Tierra. Creemos que encontramos
+> algo que casi nadie mas en este reto esta viendo."
 
 ## 2. Problema / Presentacion (30-40s)
 
@@ -71,9 +78,11 @@ no el producto 100% terminado).
 
 > "No buscamos tener un prototipo terminado. Buscamos demostrar que podemos
 > trabajar con datos reales de la NASA, encontrar nuestros propios errores, y
-> corregirlos con rigor. Eso es lo que les ofrecemos: no una idea bonita en el
-> papel, sino un equipo que ya demostro que sabe validar lo que construye. ¿Les
-> gustaria conocer mas detalles y explorar como podemos colaborar? Gracias."
+> corregirlos con rigor. Una mision lunar no empieza cuando el cohete despega de
+> la Tierra: empieza mucho antes, cuando elegimos donde queremos llegar. Eso es lo
+> que les ofrecemos: no una idea bonita en el papel, sino un equipo que ya demostro
+> que sabe validar lo que construye. ¿Les gustaria conocer mas detalles y explorar
+> como podemos colaborar? Somos el equipo de Lunar Landing Site Navigator. Gracias."
 
 ---
 

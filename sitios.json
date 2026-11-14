@@ -1,0 +1,29 @@
+{
+  "_nota": "Coordenadas selenograficas (lat sur negativa, lon este 0-360). Elevacion en km sobre la esfera de referencia de la Luna (radio 1737.4 km): PENDIENTE, placeholder en 0 hasta que P2 la saque de LOLA. No usar estos numeros como definitivos para el README sin refinar elevacion.",
+  "sitios": [
+    {
+      "id": "shackleton",
+      "nombre": "Shackleton (borde del crater)",
+      "lat": -89.6667,
+      "lon": 129.783,
+      "elev_km": 0,
+      "fuente": "Wikipedia/USRA, verificado por busqueda web 2026-11-14: 89 40'S 129 47'E"
+    },
+    {
+      "id": "de_gerlache",
+      "nombre": "Cresta Shackleton-de Gerlache (candidato de Gerlache Rim)",
+      "lat": -89.684,
+      "lon": 196.739,
+      "elev_km": 0,
+      "fuente": "verificado por busqueda web 2026-11-14: interseccion de la cresta con el borde de Shackleton"
+    },
+    {
+      "id": "malapert",
+      "nombre": "Malapert massif",
+      "lat": -85.964,
+      "lon": 357.681,
+      "elev_km": 0,
+      "fuente": "Kring 2025, JGR Planets (sitio notional de NASA en el macizo Malapert) - verificado por busqueda web 2026-11-14"
+    }
+  ]
+}

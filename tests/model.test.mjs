@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
-  tramoMasLargo, segmentar, compararSitios, comparativoCsv,
+  tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -77,14 +77,26 @@ test('el respaldo nunca alarga la mayor interrupción', () => {
   }
 });
 
-test('el evento de polvo solo degrada el enlace óptico', () => {
+test('el evento de polvo usa la duración de Apollo y solo afecta al óptico', () => {
   const ev = escenario.evento_polvo;
+  assert.ok(ev.duracion_s >= 10 && ev.duracion_s <= 12);
   const opt = serieDe('shackleton', { tipoEnlace: 'optico', polvo: true });
-  const i = opt.findIndex((m) => m.t === ev.inicio);
-  assert.equal(opt[i].enlace.estado, 'sin_enlace');
-  assert.ok(opt[i].enlace.limitantes.some((f) => f.clave === 'polvo'));
+  const [a, b] = horasEventoPolvo(opt, ev);
+  assert.equal(a, b, 'un evento de segundos ocupa una sola hora');
+  const polvo = opt[a].enlace.factores.find((f) => f.clave === 'polvo');
+  assert.equal(polvo.nivel, 1);
+  assert.equal(opt.filter((m) => m.enlace.factores.some((f) => f.clave === 'polvo')).length, 1);
   const rf = serieDe('shackleton', { tipoEnlace: 'rf', polvo: true });
-  assert.ok(!rf[i].enlace.factores.some((f) => f.clave === 'polvo'));
+  assert.ok(!rf[a].enlace.factores.some((f) => f.clave === 'polvo'));
+});
+
+test('segundosPolvoEnHora reparte el evento entre horas', () => {
+  const ini = Date.parse('2026-12-06T08:59:55Z');
+  const ev = { duracion_s: 12 };
+  assert.equal(segundosPolvoEnHora(ev, ini, Date.parse('2026-12-06T08:00:00Z')), 5);
+  assert.equal(segundosPolvoEnHora(ev, ini, Date.parse('2026-12-06T09:00:00Z')), 7);
+  assert.equal(segundosPolvoEnHora(ev, ini, Date.parse('2026-12-06T10:00:00Z')), 0);
+  assert.equal(segundosPolvoEnHora({ duracion_s: 2400 }, Date.parse('2026-12-06T08:00:00Z'), Date.parse('2026-12-06T08:00:00Z')), 2400);
 });
 
 test('horizonte plano: el Sol es visible siempre que su elevación sea positiva', () => {

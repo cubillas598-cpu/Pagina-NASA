@@ -70,7 +70,10 @@ fechas se limita solo a las horas disponibles.
 
 Estructura: `web/js/model.js` (calculos puros, probados), `web/js/datos.js`
 (carga), `web/js/views/*` (una vista por panel), `web/css/tokens.css` (paleta y
-espaciado), `web/css/app.css` (componentes y responsive).
+espaciado), `web/css/app.css` (componentes y responsive), `web/assets/fondo-estacion.svg`
+(fondo ambiental dibujado para la demo).
+
+Secciones (barra lateral): Resumen, Sitios, Comparador, Enlace local y Metodologia.
 
 ## Sitios candidatos
 
@@ -80,7 +83,8 @@ NASA en octubre de 2024.
 
 ## Creditos de terceros
 
-- IBM Plex Sans (SIL Open Font License 1.1), incluida en `web/fonts/`.
+- Poppins (SIL Open Font License 1.1), incluida en `web/fonts/`.
+- Diseño visual adaptado de "Glassmorphism Dashboard | UI DESIGN" de Oluwakemi Jegede (Behance, galeria 190227507), como referencia de composicion; no se reutilizan sus imagenes.
 
 ## Licencia
 

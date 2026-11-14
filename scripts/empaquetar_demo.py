@@ -23,7 +23,9 @@ MODULOS = [
     "js/format.js",
     "js/datos.js",
     "js/views/estilos.js",
-    "js/views/kpis.js",
+    "js/views/resumen.js",
+    "js/views/grafica-evolucion.js",
+    "js/views/panel-derecho.js",
     "js/views/panel-estado.js",
     "js/views/mapa.js",
     "js/views/grafica-horizonte.js",
@@ -39,12 +41,14 @@ EXPORT = re.compile(r"^export\s+(?=(async\s+)?function|const|let|class)", re.M)
 def css_con_fuentes(ruta):
     css = ruta.read_text(encoding="utf-8")
 
+    tipos = {".woff2": "font/woff2", ".svg": "image/svg+xml"}
+
     def incrustar(m):
         fuente = (ruta.parent / m.group(1)).resolve()
         datos = base64.b64encode(fuente.read_bytes()).decode("ascii")
-        return f'url("data:font/woff2;base64,{datos}")'
+        return f'url("data:{tipos[fuente.suffix]};base64,{datos}")'
 
-    return re.sub(r'url\("(\.\./fonts/[^"]+)"\)', incrustar, css)
+    return re.sub(r'url\("(\.\./(?:fonts|assets)/[^"]+)"\)', incrustar, css)
 
 
 def main():
@@ -81,7 +85,7 @@ def main():
         '<script type="module" src="js/main.js"></script>',
         f'<script type="application/json" id="datos-demo">{datos}</script>\n  <script type="module">\n{js}\n  </script>',
     )
-    if 'src="js/' in html or 'href="css/' in html:
+    if 'src="js/' in html or 'href="css/' in html or 'url("../' in html:
         raise SystemExit("Quedaron referencias externas sin incrustar.")
 
     SALIDA.parent.mkdir(exist_ok=True)

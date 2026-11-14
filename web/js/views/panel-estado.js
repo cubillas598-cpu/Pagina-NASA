@@ -52,5 +52,5 @@ export function renderPanelEstado(cont, d) {
     <p class="estado__fecha">${fechaUtc(m.ms)}</p>
     <ul class="estado__lista">${filas.join('')}</ul>
     <p class="estado__nota ${hayCom ? '' : 'c-error'}">${resumen}</p>
-    <p class="estado__nota">Los indicadores de arriba resumen todo el periodo; este panel describe solo la hora del cursor.</p>`;
+    <p class="estado__nota">Los indicadores del Resumen cubren todo el periodo; este panel describe solo la hora del cursor.</p>`;
 }

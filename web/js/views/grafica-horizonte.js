@@ -50,12 +50,12 @@ export function renderGraficaHorizonte(cont, d) {
   // Rejilla y ejes.
   for (let el = EL_MIN; el <= EL_MAX; el += 2) {
     const yy = y(el);
-    partes.push(`<line x1="${M.izq}" x2="${W - M.der}" y1="${yy}" y2="${yy}" stroke="rgba(168,180,200,${el === 0 ? 0.35 : 0.08})"/>`);
+    partes.push(`<line x1="${M.izq}" x2="${W - M.der}" y1="${yy}" y2="${yy}" stroke="rgba(255,245,235,${el === 0 ? 0.35 : 0.08})"/>`);
     partes.push(`<text x="${M.izq - 8}" y="${yy + 4}" text-anchor="end" class="g-eje">${el}°</text>`);
   }
   const cardinales = { 0: 'N', 90: 'E', 180: 'S', 270: 'O', 360: 'N' };
   for (let az = 0; az <= 360; az += 45) {
-    partes.push(`<line y1="${M.sup}" y2="${H - M.inf}" x1="${x(az)}" x2="${x(az)}" stroke="rgba(168,180,200,.08)"/>`);
+    partes.push(`<line y1="${M.sup}" y2="${H - M.inf}" x1="${x(az)}" x2="${x(az)}" stroke="rgba(255,245,235,.08)"/>`);
     partes.push(`<text x="${x(az)}" y="${H - M.inf + 18}" text-anchor="middle" class="g-eje">${az}°${cardinales[az] ? ` ${cardinales[az]}` : ''}</text>`);
   }
   partes.push(`<text x="${(M.izq + W - M.der) / 2}" y="${H - 6}" text-anchor="middle" class="g-titulo">Azimut (°)</text>`);
@@ -81,7 +81,7 @@ export function renderGraficaHorizonte(cont, d) {
     const r = sitio.relevo;
     const rx = x(r.az_deg), ry = yc(r.el_deg);
     partes.push(`<path d="M${rx},${ry - 9}l8,14h-16z" fill="${COLOR.superficie}" stroke="${COLOR.cian}" stroke-width="2"/>`);
-    partes.push(`<text x="${rx + 12}" y="${ry + 18}" class="g-etq" fill="${COLOR.cian}">Punto de apoyo</text>`);
+    partes.push(`<text x="${rx - 12}" y="${ry + 22}" text-anchor="end" class="g-etq" fill="${COLOR.cian}">Punto de apoyo</text>`);
   }
 
   partes.push(marcador(m.tierra.az, m.tierra.el, COLOR.tierra, m.tierra.visible, `Tierra ${grados(m.tierra.el)}`, m.tierra.horizonte));
@@ -89,7 +89,7 @@ export function renderGraficaHorizonte(cont, d) {
 
   cont.innerHTML = `
     <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Horizonte de ${esc(sitio.etiqueta)}: Sol a ${grados(m.sol.el)} de elevación, ${m.sol.visible ? 'visible' : 'tapado por el terreno'}; Tierra a ${grados(m.tierra.el)}, ${m.tierra.visible ? 'visible' : 'oculta'}.">
-      <defs><linearGradient id="g-terreno" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4558" stop-opacity=".95"/><stop offset="1" stop-color="#151D2C" stop-opacity=".95"/></linearGradient></defs>
+      <defs><linearGradient id="g-terreno" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b5e52" stop-opacity=".9"/><stop offset="1" stop-color="#2a231e" stop-opacity=".9"/></linearGradient></defs>
       <style>
         .g-eje { font: 400 12px var(--fuente); fill: ${COLOR.texto3}; }
         .g-titulo { font: 500 12px var(--fuente); fill: ${COLOR.texto2}; }
@@ -102,7 +102,7 @@ export function renderGraficaHorizonte(cont, d) {
 export function leyendaHorizonte(cont, estado) {
   const optico = estado.enlaceActivo && estado.tipoEnlace === 'optico';
   cont.innerHTML = `
-    <li><span class="muestra" style="background:#3A4558;border-top:2px solid ${COLOR.texto2}"></span>Terreno (elevación por azimut)</li>
+    <li><span class="muestra" style="background:#6b5e52;border-top:2px solid ${COLOR.texto2}"></span>Terreno (elevación por azimut)</li>
     <li><span class="muestra" style="background:${COLOR.ambar};border-radius:50%"></span>Sol: relleno si supera el horizonte</li>
     <li><span class="muestra" style="background:${COLOR.tierra};border-radius:50%"></span>Tierra: relleno si supera el horizonte</li>
     ${estado.enlaceActivo ? `<li><span class="muestra" style="border:2px solid ${COLOR.cian}"></span>Punto de apoyo</li>` : ''}

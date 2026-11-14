@@ -393,6 +393,8 @@ option { background: #2a231e; color: var(--texto); }
 .tabla td.mejor { background: rgba(245, 130, 42, 0.10); box-shadow: inset 2px 0 0 var(--naranja); }
 .marca-mejor { display: inline-block; margin-left: var(--e-2); font-size: var(--t-xs); font-weight: 600; color: #2b1606; background: linear-gradient(145deg, var(--naranja-claro), var(--naranja)); border-radius: var(--r-pastilla); padding: 0 8px; vertical-align: middle; }
 .tabla tr.sin-datos td { color: var(--texto-3); font-size: var(--t-sm); font-weight: 400; }
+.tabla tr.fila-score th, .tabla tr.fila-score td { border-bottom: 2px solid var(--borde); background: rgba(255, 255, 255, 0.03); }
+.tabla tr.fila-score td strong { font-size: var(--t-xl); }
 .conclusiones { margin: var(--e-3) 0 var(--e-4); padding-left: 1.2em; display: grid; gap: var(--e-2); font-size: var(--t-sm); }
 .aviso { font-size: var(--t-xs); color: var(--texto-3); }
 
@@ -1003,6 +1005,28 @@ function compararSitios(filas, enlaceActivo) {
   return { mejores, conclusiones };
 }
 
+/**
+ * Indice de conveniencia del sitio: S = w1*E + w2*C + w3*R.
+ * E = % horas con Sol visible, C = % horas con vista directa a la Tierra,
+ * R = % horas con enlace local disponible (rapido o robusto).
+ * Propuesto por el equipo para comparar sitios de un vistazo - NO es un
+ * estandar oficial de NASA. Pesos editables; deben sumar 1.
+ */
+const PESOS_SUITABILITY = { energia: 0.40, comunicacion: 0.35, respaldo: 0.25 };
+
+function suitabilityScore(metricas, enlaceActivo, pesos = PESOS_SUITABILITY) {
+  const E = metricas.pctSol;
+  const C = metricas.pctTierra;
+  if (!enlaceActivo) {
+    // Sin enlace local activo no hay R que medir: se renormaliza con los
+    // otros dos pesos para que el indice siga en escala 0-100.
+    const w = pesos.energia + pesos.comunicacion;
+    return (pesos.energia * E + pesos.comunicacion * C) / w;
+  }
+  const R = (100 * (metricas.enlace.rapido + metricas.enlace.robusto)) / metricas.horas;
+  return pesos.energia * E + pesos.comunicacion * C + pesos.respaldo * R;
+}
+
 function celdaCsv(v) {
   const s = v === null || v === undefined ? '' : String(v);
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1013,7 +1037,7 @@ function comparativoCsv(filas, contexto) {
     'sitio', 'nombre', 'primera_hora_utc', 'ultima_hora_utc', 'horas', 'pct_iluminacion',
     'pct_tierra_directa', 'enlace_local', 'tipo_enlace', 'evento_polvo',
     'horas_rapido', 'horas_robusto', 'horas_sin_enlace',
-    'mayor_intervalo_sin_comunicacion_h', 'horizonte',
+    'mayor_intervalo_sin_comunicacion_h', 'horizonte', 'indice_conveniencia',
   ];
   const lineas = [cab.join(',')];
   for (const { sitio, metricas: m } of filas) {
@@ -1025,6 +1049,7 @@ function comparativoCsv(filas, contexto) {
       contexto.enlaceActivo && contexto.tipoEnlace === 'optico' && contexto.polvo ? 'si' : 'no',
       m.enlace ? m.enlace.rapido : '', m.enlace ? m.enlace.robusto : '', m.enlace ? m.enlace.sin_enlace : '',
       m.brecha.horas, contexto.modoHorizonte,
+      suitabilityScore(m, contexto.enlaceActivo).toFixed(1),
     ].map(celdaCsv).join(','));
   }
   return lineas.join('\n') + '\n';
@@ -2019,9 +2044,22 @@ function renderComparador(tabla, meta, lista, d) {
   meta.textContent = `Periodo: ${fechaUtc(serie[i0].ms)} a ${fechaUtc(serie[i1].ms)} (${i1 - i0 + 1} h, UTC). `
     + `Enlace local: ${estado.enlaceActivo ? TIPO_ENLACE[estado.tipoEnlace].toLowerCase() : 'desactivado'}`
     + `${estado.enlaceActivo && estado.tipoEnlace === 'optico' && estado.polvo ? ', con evento de polvo' : ''}. `
-    + `Horizonte: ${etiquetaHorizonte(estado.modoHorizonte, d.sitio)}.`;
+    + `Horizonte: ${etiquetaHorizonte(estado.modoHorizonte, d.sitio)}. `
+    + `Índice de conveniencia: S = ${num(PESOS_SUITABILITY.energia, 2)}·iluminación + `
+    + `${num(PESOS_SUITABILITY.comunicacion, 2)}·comunicación directa`
+    + `${estado.enlaceActivo ? ` + ${num(PESOS_SUITABILITY.respaldo, 2)}·enlace local` : ''} `
+    + `(propuesto por el equipo, no es un estándar de NASA).`;
 
   const cab = `<thead><tr><th scope="col">Métrica</th>${filas.map((f) => `<th scope="col"><b>${esc(f.sitio.etiqueta)}</b>${esc(f.sitio.nombre_corto)}</th>`).join('')}</tr></thead>`;
+
+  const scores = filas.map((f) => suitabilityScore(f.metricas, estado.enlaceActivo));
+  const mejorScore = Math.max(...scores);
+  const filaScore = `<tr class="fila-score"><th scope="row"><strong>Índice de conveniencia (S)</strong>`
+    + `<br><small class="c-neutro">de 0 a 100 · más alto es mejor</small></th>`
+    + filas.map((f, k) => {
+      const esMejor = Math.abs(scores[k] - mejorScore) < 1e-9;
+      return `<td class="${esMejor ? 'mejor' : ''}"><strong>${num(scores[k], 1)}</strong>${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
+    }).join('') + `</tr>`;
 
   const cuerpo = METRICAS_COMPARADOR.map((def) => {
     if (def.enlace && !estado.enlaceActivo) {
@@ -2040,7 +2078,7 @@ function renderComparador(tabla, meta, lista, d) {
     return `<tr><th scope="row">${etiqueta}<br><small class="c-neutro">${criterio}</small></th>${celdas}</tr>`;
   }).join('');
 
-  tabla.innerHTML = `<caption class="sr">Comparación de los tres sitios en el periodo seleccionado</caption>${cab}<tbody>${cuerpo}</tbody>`;
+  tabla.innerHTML = `<caption class="sr">Comparación de los tres sitios en el periodo seleccionado</caption>${cab}<tbody>${filaScore}${cuerpo}</tbody>`;
   lista.innerHTML = comparacion.conclusiones.map((c) => `<li>${esc(c)}</li>`).join('');
 }
 

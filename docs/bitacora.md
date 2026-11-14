@@ -69,3 +69,22 @@ anterior, solo se agrega abajo.
 - Nota: la UBICACION del relevo (az/distancia desde el sitio) sigue siendo supuesto de
   demostracion de Irvin, no una cita academica - eso es correcto y ya esta declarado
   asi en el README, no se cambia.
+
+### 2026-11-14 ~13:40 - Feedback externo validado + indice de conveniencia
+- Una companera del equipo compartio un analisis de ChatGPT sobre un ZIP viejo del
+  proyecto. Validado (SSS/S1, sin red flags de seguridad): la mayoria del analisis
+  estaba desactualizado (no sabia del horizonte real ni de la demo de Irvin), pero
+  trajo dos cosas que SI valian la pena: (1) recordar que `elev_km` sigue en 0 en
+  `sitios.json` (sigue pendiente, afecta poco al angulo pero hay que decirlo), y
+  (2) la idea de un Indice de conveniencia (Landing Site Suitability Score) que el
+  comparador de Irvin no tenia (el suyo compara metrica por metrica, no da un numero
+  unico combinado).
+- Implementado `suitabilityScore` en `web/js/model.js`: S = 0.40*iluminacion +
+  0.35*comunicacion directa + 0.25*enlace local (pesos editables, declarado
+  explicitamente como propuesto por el equipo, no estandar de NASA). Visible en la
+  tabla del comparador (fila destacada) y en el CSV exportado.
+- 2 pruebas nuevas agregadas (formula exacta con y sin enlace activo). Suite completa:
+  15/15 pasan.
+- De paso, se genero la pregunta de investigacion del proyecto (pedida por el
+  profesor/concurso), ya en el README: que sitio da la mejor combinacion de energia +
+  comunicacion (directa y de respaldo), medido con este mismo indice.

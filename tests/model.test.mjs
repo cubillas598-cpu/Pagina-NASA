@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
+  suitabilityScore, PESOS_SUITABILITY,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -122,6 +123,25 @@ test('comparador marca empates y genera conclusiones prudentes', () => {
   assert.deepEqual(r.mejores.brecha, ['a', 'b']);
   assert.ok(r.conclusiones.includes('Sitio B presenta más horas de iluminación en el periodo seleccionado.'));
   assert.ok(!r.conclusiones.some((c) => /seguro|ideal/i.test(c)));
+});
+
+test('suitabilityScore: pesos suman 1 y la formula es exacta con enlace activo', () => {
+  const suma = PESOS_SUITABILITY.energia + PESOS_SUITABILITY.comunicacion + PESOS_SUITABILITY.respaldo;
+  assert.ok(Math.abs(suma - 1) < 1e-9);
+
+  const m = { pctSol: 80, pctTierra: 40, horas: 10, enlace: { rapido: 6, robusto: 2, sin_enlace: 2 } };
+  const esperado = PESOS_SUITABILITY.energia * 80 + PESOS_SUITABILITY.comunicacion * 40
+    + PESOS_SUITABILITY.respaldo * (100 * (6 + 2) / 10);
+  assert.ok(Math.abs(suitabilityScore(m, true) - esperado) < 1e-9);
+});
+
+test('suitabilityScore: sin enlace activo se renormaliza a energia y comunicacion', () => {
+  const m = { pctSol: 60, pctTierra: 20, horas: 10, enlace: null };
+  const w = PESOS_SUITABILITY.energia + PESOS_SUITABILITY.comunicacion;
+  const esperado = (PESOS_SUITABILITY.energia * 60 + PESOS_SUITABILITY.comunicacion * 20) / w;
+  assert.ok(Math.abs(suitabilityScore(m, false) - esperado) < 1e-9);
+  // El indice sin enlace sigue en escala 0-100 (promedio ponderado de dos porcentajes).
+  assert.ok(suitabilityScore(m, false) >= 0 && suitabilityScore(m, false) <= 100);
 });
 
 test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {

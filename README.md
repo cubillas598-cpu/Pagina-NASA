@@ -4,8 +4,8 @@ NASA Space Apps Challenge 2026, reto "Lunar Landing Site Navigator", sede Hermos
 
 > **Resumen de 30 segundos (para quien no tenga tiempo de leer todo):**
 > Comparamos 3 sitios reales candidatos de aterrizaje en el polo sur lunar (Peak Near
-> Shackleton, cresta de Gerlache, Malapert massif) con datos reales de NASA — JPL
-> Horizons para Sol/Tierra, LOLA para el relieve — validados a mano contra la
+> Shackleton, cresta de Gerlache, Malapert massif) con datos reales de NASA. JPL
+> Horizons para Sol/Tierra, LOLA para el relieve, validados a mano contra la
 > herramienta oficial de JPL (coincidencia exacta). Nuestro diferenciador: una capa de
 > enlace local de respaldo (radiofrecuencia u optico) cuando falla la vista directa a
 > la Tierra, y un **indice de conveniencia** (0-100) que resume todo en un solo numero

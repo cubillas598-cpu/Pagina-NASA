@@ -40,7 +40,9 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 
 Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
 
-- [ ] Validar las efemerides contra la herramienta de JPL (3 instantes por sitio)
+- [x] Validar las efemerides contra la herramienta de JPL: coincidencia exacta a 6
+      decimales en Sol y Tierra, 4 horas comparadas en Peak Near Shackleton.
+      Detalle en `docs/fuentes.md`.
 - [x] Sensibilidad del horizonte al radio: medido con `scripts/sensibilidad_horizonte.py`
       (30 vs 100 vs 150 km). Si cambiaba los % de Malapert/de Gerlache - si cambio
       (+3.4 a +4.4 grados en la direccion mas despejada). Datos de produccion ya

@@ -139,3 +139,13 @@ anterior, solo se agrega abajo.
   (son con datos fijos de prueba, no dependen del radio de produccion).
 - Pendientes que quedan: validar efemerides contra JPL visual (siguiente paso), y
   activar GitHub Pages (accion de cuenta, no ejecutable desde aqui).
+
+### 2026-11-14 ~14:55 - Pendiente resuelto: efemerides validadas contra JPL
+- Cotejado a mano en https://ssd.jpl.nasa.gov/horizons/app.html: Peak Near Shackleton,
+  4 horas (1-dic-2026 00:00 a 03:00 UTC), Sol y Tierra por separado.
+- Coincidencia EXACTA a 6 decimales en azimut y elevacion, las 8 comparaciones (4
+  horas x 2 cuerpos). Ejemplo: Sol 00:00 UTC -> az=153.798584, el=0.588174 en ambas
+  fuentes; Tierra 00:00 UTC -> az=240.420213, el=-2.095542 en ambas.
+- Los 3 pendientes que bloqueaban conclusiones (segun docs/fuentes.md) estan resueltos:
+  efemerides validadas, radio de horizonte corregido a 150km, falta solo activar
+  GitHub Pages (accion de cuenta).

@@ -14,6 +14,13 @@ enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
 - Precedente del enlace optico: sistema laser O2O de Artemis II; "horizon glow" de polvo
   lunar estudiado desde las misiones Apollo
 
+## Documentos
+
+- `docs/plan.md` — plan por bloques horarios, roles, riesgos y orden de recorte
+- `docs/propuesta.md` / `docs/propuesta.pdf` — propuesta completa: principio de
+  funcionamiento, arquitectura, riesgos con mitigacion, banco de preguntas
+  anticipadas
+
 ## Estado
 
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos

@@ -24,6 +24,10 @@ enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
   funcionamiento, arquitectura, riesgos con mitigacion, banco de preguntas
   anticipadas
 
+## Bitacora
+
+Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez.
+
 ## Estado
 
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos

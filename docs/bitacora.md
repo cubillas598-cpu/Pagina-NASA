@@ -170,3 +170,39 @@ anterior, solo se agrega abajo.
   este tipo de tarea: verificar SIEMPRE el resultado real (git log, git diff)
   antes de confiar en el resumen que reporta el agente - en este caso el
   resumen no coincidia con lo que de verdad paso en el repo.
+
+### 2026-11-14 ~15:30 - Guion de pitch afinado con slides reales del taller
+- Irvin mando 10 fotos reales de las slides del taller "Elevator Pitch - NASA Space
+  Apps Challenge" (confirmado explicito en una de las slides: es un taller dado
+  especificamente para equipos de este concurso). Guardadas en
+  `docs/taller-pitch-storytelling/`.
+- Las slides confirman y mejoran lo que se habia sacado del audio (44 min,
+  transcrito local con faster-whisper): dan la terminologia EXACTA. Estructura de
+  4 pasos (Hook/Conexion, Problema/Presentacion, Solucion/Valor, Impacto/Cierre) y
+  la taxonomia completa de tipos de historia (identidad y proposito; impacto y
+  validacion -con 3 subtipos-; vision y cambio -con 3 subtipos-).
+- `docs/guion-pitch-3min.md` reescrito con la terminologia oficial. Se eligio el
+  subtipo "Historia de superacion de crisis" (definicion de la slide: enfrentar un
+  error real y los aprendizajes que fortalecieron el proyecto) - encaja literal
+  con el bug de Shackleton encontrado y corregido hoy mismo, no hay que forzar
+  nada.
+
+### 2026-11-14 ~15:35 - MAPEO_LUNAR.html encontrado con datos falsos, corregido
+- Pablo compartio un mockup visual 3D (Three.js) de otro companero/IA, separado del
+  repo. Hallazgo serio: el badge de la interfaz decia "DEM LOLA-LRO" pero el
+  terreno era ruido procedural sintetico (funcion fbm tipo Perlin), no datos
+  reales. Las coordenadas de Shackleton eran las MISMAS que ya se corrigieron hoy
+  por estar mal (centro del crater, no borde). Los porcentajes del comparador
+  (87.8%, 99.4%, etc.) eran literales escritos a mano en el codigo, con un
+  comentario que decia "basado en DEM LOLA y efemerides Tierra-Luna" sin que
+  fuera cierto.
+- Confirmado con Pablo: lo genero un companero/IA aparte, sin saber de la
+  correccion de hoy - no es mala fe, es desfase de informacion.
+- Arreglado (no descartado, visual 3D si vale la pena): coordenadas de los 3
+  sitios actualizadas a las reales de `sitios.json`, badge cambiado a "VISTA
+  ILUSTRATIVA - relieve sintetico, no DEM real", texto de carga falso corregido,
+  comentarios de codigo re-escritos con aviso explicito de que los numeros son
+  ilustrativos y apuntan a `docs/fuentes.md` para los datos reales. Guardado como
+  `docs/mapeo-lunar-3d-ilustrativo.html`.
+- Leccion aplicada: mejor un hueco marcado ("ilustrativo") que un dato plausible
+  con cara de real.

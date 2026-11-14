@@ -77,7 +77,7 @@
       <div class="campo">
         <label for="c-horizonte">Horizonte</label>
         <select id="c-horizonte">
-          <option value="sintetico">Perfil sintético</option>
+          <option value="sintetico">Perfil del terreno (LOLA)</option>
           <option value="plano">Plano (0°)</option>
         </select>
       </div>
@@ -189,7 +189,7 @@
         </article>
         <article class="vidrio panel metodologia__ancho">
           <h3>Cómo sustituir los datos</h3>
-          <p>Las efemérides viven en <code>data/&lt;sitio&gt;.json</code> y se regeneran con <code>scripts/efemerides.py</code>. Los horizontes, el punto de apoyo, los umbrales y el evento de polvo viven en <code>data/escenario_demo.json</code>. Para usar LOLA skyline, reemplaza <code>elevacion_deg</code> de cada perfil (360 valores, 1° de resolución) y cambia <code>fuente</code> a <code>lola_skyline</code>.</p>
+          <p>Las efemérides viven en <code>data/&lt;sitio&gt;.json</code> y se regeneran con <code>scripts/efemerides.py</code>. Los horizontes de los 3 sitios y de sus puntos de apoyo ya son reales (DEM de LOLA, NASA PGDA 80 m/px, calculados con <code>scripts/horizonte.py</code>) y viven en <code>data/escenario_demo.json</code>, campo <code>horizonte.fuente = "lola_skyline"</code>. Los umbrales y el momento del evento de polvo siguen siendo supuestos de demostración. Para recalcular el horizonte con otro DEM o resolución: <code>python scripts/horizonte.py --todos</code>.</p>
         </article>
       </div>
     </section>

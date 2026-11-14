@@ -1,0 +1,57 @@
+@font-face { font-family: "Plex"; font-weight: 400; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plex"; font-weight: 500; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Plex"; font-weight: 600; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+
+:root {
+  color-scheme: dark;
+
+  /* Paleta Lunar Crystal */
+  --fondo: #070B14;
+  --superficie: #101827;
+  --texto: #F1F5F9;
+  --texto-2: #A8B4C8;
+  --texto-3: #7D8AA0;
+  --cian: #7DD3FC;
+  --ambar: #F4C76B;
+  --tierra: #8FB8F0;
+
+  --ok: #6FD3A0;
+  --aviso: #F2B66A;
+  --error: #F08A8A;
+  --neutro: #2A3447;
+
+  /* Cristal ahumado */
+  --vidrio-relleno: rgba(16, 24, 39, 0.72);
+  --vidrio-relleno-alto: rgba(20, 30, 48, 0.86);
+  --vidrio-borde: rgba(168, 180, 200, 0.16);
+  --vidrio-brillo: rgba(255, 255, 255, 0.06);
+  --vidrio-blur: 14px;
+  --sombra: 0 18px 40px -18px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.25);
+
+  /* Forma y espacio (retícula de 8 px) */
+  --r-panel: 20px;
+  --r-control: 12px;
+  --r-pastilla: 999px;
+  --e-1: 4px;
+  --e-2: 8px;
+  --e-3: 12px;
+  --e-4: 16px;
+  --e-5: 24px;
+  --e-6: 32px;
+  --e-7: 48px;
+
+  /* Tipografía */
+  --fuente: "Plex", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --t-xs: 0.8125rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.75rem;
+  --t-2xl: clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem);
+
+  --transicion: 200ms cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --transicion: 0ms linear; }
+}

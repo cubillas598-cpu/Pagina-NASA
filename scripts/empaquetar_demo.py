@@ -45,6 +45,8 @@ def css_con_fuentes(ruta):
 
     def incrustar(m):
         fuente = (ruta.parent / m.group(1)).resolve()
+        if fuente.suffix not in tipos:
+            raise SystemExit(f"{ruta.name}: no se sabe incrustar {fuente.name} (extension {fuente.suffix}).")
         datos = base64.b64encode(fuente.read_bytes()).decode("ascii")
         return f'url("data:{tipos[fuente.suffix]};base64,{datos}")'
 
@@ -96,5 +98,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, json.JSONDecodeError) as err:
-        raise SystemExit(f"No se pudo empaquetar la demo: {err}")
+    except (OSError, ValueError, KeyError) as err:
+        # ValueError cubre JSON invalido y texto con codificacion no UTF-8;
+        # KeyError, un sitio del escenario sin campo "efemerides".
+        raise SystemExit(f"No se pudo empaquetar la demo: {err!r}")

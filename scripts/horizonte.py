@@ -76,13 +76,12 @@ def muestrear_elevaciones(dataset, transformador, banda, lons, lats):
     return elevaciones
 
 
-def horizonte_de_sitio(dataset, banda, transformador, geod, sitio):
-    lon0, lat0 = sitio["lon"], sitio["lat"]
+def horizonte_en_punto(dataset, banda, transformador, geod, lon0, lat0, etiqueta):
     z0 = muestrear_elevaciones(dataset, transformador, banda, [lon0], [lat0])[0]
     if np.isnan(z0):
         raise RuntimeError(
-            f"El sitio {sitio['id']} cae fuera de la cobertura del DEM o en "
-            f"un pixel sin dato. Revisar coordenadas."
+            f"El punto {etiqueta} ({lat0}, {lon0}) cae fuera de la cobertura del "
+            f"DEM o en un pixel sin dato."
         )
 
     distancias = np.arange(PASO_DISTANCIA_M, RADIO_MAX_KM * 1000 + 1,
@@ -112,7 +111,12 @@ def horizonte_de_sitio(dataset, banda, transformador, geod, sitio):
         )
         elevacion_deg.append(round(float(np.max(angulo)), 2))
 
-    return elevacion_deg
+    return elevacion_deg, z0
+
+
+def punto_destino(geod, lon0, lat0, az_deg, distancia_km):
+    lon2, lat2, _ = geod.fwd(lon0, lat0, az_deg, distancia_km * 1000)
+    return lon2, lat2
 
 
 def main():
@@ -158,7 +162,10 @@ def main():
                 continue
             print(f"[{sitio['id']}] calculando horizonte real desde LOLA...",
                   file=sys.stderr)
-            elevacion_deg = horizonte_de_sitio(dataset, banda, transformador, geod, sitio)
+            lon0, lat0 = sitio["lon"], sitio["lat"]
+            elevacion_deg, _ = horizonte_en_punto(
+                dataset, banda, transformador, geod, lon0, lat0, sitio["id"]
+            )
 
             destino = sitios_por_id[sitio["id"]]
             destino["horizonte"] = {
@@ -170,6 +177,29 @@ def main():
             validos = [v for v in elevacion_deg if v is not None]
             print(f"[{sitio['id']}] horizonte real: min={min(validos):.2f} deg, "
                   f"max={max(validos):.2f} deg, {len(validos)}/360 puntos validos")
+
+            relevo = destino.get("relevo")
+            if relevo and "az_deg" in relevo and "distancia_km" in relevo:
+                lon_r, lat_r = punto_destino(
+                    geod, lon0, lat0, relevo["az_deg"], relevo["distancia_km"]
+                )
+                print(f"[{sitio['id']}] calculando horizonte del relevo "
+                      f"({relevo.get('nombre', '?')}) a {relevo['distancia_km']} km...",
+                      file=sys.stderr)
+                elevacion_relevo, _ = horizonte_en_punto(
+                    dataset, banda, transformador, geod, lon_r, lat_r,
+                    f"{sitio['id']}/relevo"
+                )
+                relevo["horizonte"] = {
+                    "fuente": "lola_skyline",
+                    "resolucion_deg": 1,
+                    "referencia_az": "norte local, sentido horario",
+                    "elevacion_deg": elevacion_relevo,
+                }
+                validos_r = [v for v in elevacion_relevo if v is not None]
+                print(f"[{sitio['id']}/relevo] horizonte real: "
+                      f"min={min(validos_r):.2f} deg, max={max(validos_r):.2f} deg, "
+                      f"{len(validos_r)}/360 puntos validos")
 
     with open(ESCENARIO_PATH, "w", encoding="utf-8") as f:
         json.dump(escenario, f, ensure_ascii=False, indent=2)

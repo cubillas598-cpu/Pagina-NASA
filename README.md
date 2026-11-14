@@ -62,7 +62,7 @@ Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
 | --- | --- | --- |
 | Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; falta la verificacion manual del plan |
 | Horizonte por azimut de los 3 sitios | `data/escenario_demo.json` (`horizonte.fuente = "lola_skyline"`) | **Real**, calculado con el DEM de LOLA (NASA PGDA, 80 m/px) via `scripts/horizonte.py`: raycasting geodesico (pyproj) con correccion por curvatura, 360 puntos/sitio |
-| Horizonte del punto de apoyo (relevo RF/optico) | `data/escenario_demo.json` (`relevo`) | Sintetico, pendiente de conectar a LOLA igual que los sitios |
+| Horizonte del punto de apoyo (relevo RF/optico) | `data/escenario_demo.json` (`relevo.horizonte`) | **Real**, mismo metodo LOLA que los sitios. La UBICACION del relevo (az/distancia desde el sitio) sigue siendo supuesto de demostracion de Irvin, no una cita academica |
 | Duracion del evento de polvo (12 s) | `data/escenario_demo.json` | Calibrada con Apollo (10-12 s); con muestras horarias degrada esa hora a robusto |
 | Umbrales RF/optico, momento del evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
 | Posiciones del mapa | `data/escenario_demo.json` (`mapa`) | Ilustrativas ("Vista conceptual") |

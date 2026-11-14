@@ -57,3 +57,15 @@ anterior, solo se agrega abajo.
   -7.3 a 6.7, Malapert -8.5 a 1.0.
 - Regla aplicada de aqui en adelante: nunca Wikipedia como fuente de un dato presentado
   como hecho en este proyecto; siempre la mejor fuente academica disponible.
+
+### 2026-11-14 ~13:10 - Enlace local: horizonte real en el relevo
+- El clasificador de enlace local (RF/optico) ya estaba completo, construido por Irvin
+  en `web/js/model.js` (separacion angular Sol/linea de vista, evento de polvo, estados
+  rapido/robusto/sin enlace, comparador, export CSV) - no se reconstruyo nada ahi.
+- Lo unico pendiente era el horizonte del punto de apoyo (relevo), que seguia siendo
+  sintetico. Extendido `scripts/horizonte.py` para calcular tambien el horizonte real
+  del relevo (usa az/distancia que ya definio Irvin + geodesia para ubicarlo, mismo
+  DEM de LOLA). Los 3 relevos ya tienen horizonte real conectado.
+- Nota: la UBICACION del relevo (az/distancia desde el sitio) sigue siendo supuesto de
+  demostracion de Irvin, no una cita academica - eso es correcto y ya esta declarado
+  asi en el README, no se cambia.

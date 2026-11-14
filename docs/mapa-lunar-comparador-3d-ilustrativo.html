@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polo Sur Lunar 3D — Evaluación de Sitios de Aterrizaje</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Three.js & OrbitControls (r128) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #030508;
+      font-family: 'Inter', sans-serif;
+      color: #e2e8f0;
+      user-select: none;
+    }
+    .font-mono-tech {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    /* Etiquetas 3D proyectadas */
+    .marker-label {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      z-index: 10;
+    }
+    .marker-label:hover {
+      transform: translate(-50%, -108%) scale(1.05);
+      z-index: 20;
+    }
+    .marker-label.is-dragging {
+      transform: translate(-50%, -115%) scale(1.08);
+      z-index: 30;
+    }
+    /* Scrollbar sutil en paneles */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 9999px;
+    }
+    /* Sliders personalizados */
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: rgba(51, 65, 85, 0.7);
+      height: 5px;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      border: 2px solid #0f172a;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Contenedor del Lienzo 3D -->
+  <div id="canvas-container"></div>
+
+  <!-- Capa de Etiquetas 3D Flotantes -->
+  <div id="labels-layer" class="fixed inset-0 pointer-events-none z-10 overflow-hidden"></div>
+
+  <!-- Barra Superior: Título y Telemetría de Cursor -->
+  <header class="fixed top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+    <!-- Identificador de Misión -->
+    <div class="pointer-events-auto bg-slate-950/80 backdrop-blur-md border border-slate-800/90 rounded-2xl px-4 py-3 shadow-2xl flex items-center gap-3.5">
+      <div class="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 3a9 9 0 0 0 0 18c2.5 0 4.5-4 4.5-9S14.5 3 12 3z" />
+          <circle cx="9.5" cy="9.5" r="1.2" fill="currentColor" />
+          <circle cx="13.5" cy="14.5" r="1.5" fill="currentColor" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white">POLO SUR LUNAR — MAPA TOPOGRÁFICO 3D</h1>
+          <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30" title="Relieve generado por ruido procedural (fbm), no por el DEM LOLA real. Coordenadas de los 3 sitios si son reales, ver docs/fuentes.md del repo.">VISTA ILUSTRATIVA — relieve sintetico, no DEM real</span>
+        </div>
+        <p class="text-xs text-slate-400">Región Polar Sur (83°S – 90°S) • Selección de Sitios de Aterrizaje</p>
+      </div>
+    </div>
+
+    <!-- Acción Principal + Telemetría en Tiempo Real -->
+    <div class="pointer-events-auto flex flex-wrap items-center gap-2.5">
+      <!-- Botón Comparador Inteligente -->
+      <button id="btn-open-comparator" class="bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 font-semibold text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-lg shadow-sky-500/25 border border-sky-300/40 flex items-center gap-2 transition transform hover:scale-[1.02] active:scale-[0.99]">
+        <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span>Comparador Inteligente</span>
+      </button>
+
+      <!-- Telemetría en Tiempo Real bajo el Cursor -->
+      <div class="bg-slate-950/80 backdrop-blur-md border border-slate-800/90 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3.5 text-xs font-mono-tech">
+        <div>
+          <span class="text-slate-500 block text-[10px] uppercase">Latitud</span>
+          <span id="hud-lat" class="text-sky-300 font-semibold">--.--° S</span>
+        </div>
+        <div class="h-6 w-px bg-slate-800"></div>
+        <div>
+          <span class="text-slate-500 block text-[10px] uppercase">Longitud</span>
+          <span id="hud-lon" class="text-sky-300 font-semibold">--.--° E</span>
+        </div>
+        <div class="hidden md:block h-6 w-px bg-slate-800"></div>
+        <div class="hidden md:block">
+          <span class="text-slate-500 block text-[10px] uppercase">Plano (X, Y)</span>
+          <span id="hud-xy" class="text-indigo-300 font-semibold">---, --- km</span>
+        </div>
+        <div class="h-6 w-px bg-slate-800"></div>
+        <div>
+          <span class="text-slate-500 block text-[10px] uppercase">Elevación</span>
+          <span id="hud-alt" class="text-amber-300 font-semibold">--- km</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Panel Izquierdo: Sitios de Aterrizaje y Controles de Vista -->
+  <aside class="fixed left-4 top-24 bottom-20 sm:bottom-auto z-20 w-[calc(100%-2rem)] sm:w-80 flex flex-col gap-3 pointer-events-none max-h-[calc(100vh-7.5rem)] overflow-y-auto pr-0.5">
+    
+    <!-- Selector de Sitios Candidatos -->
+    <div class="pointer-events-auto bg-slate-950/85 backdrop-blur-md border border-slate-800/90 rounded-2xl p-3.5 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sitios de Aterrizaje (3)</span>
+        <button id="btn-overview" class="text-[11px] text-sky-400 hover:text-sky-300 font-medium transition px-2 py-0.5 rounded-lg hover:bg-sky-500/10">
+          Vista General
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-400 mb-2.5 leading-snug">
+        Arrastra cualquier marcador 3D sobre el mapa o edita sus coordenadas <span class="font-mono-tech text-slate-300">(X, Y)</span>.
+      </p>
+
+      <div id="site-list" class="flex flex-col gap-2">
+        <!-- Se genera dinámicamente por JS -->
+      </div>
+
+      <!-- Botón Global de Restauración a Posiciones Default -->
+      <button id="btn-reset-all-sites" class="mt-3 w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-semibold transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none" disabled>
+        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span>Restaurar los 3 puntos default</span>
+      </button>
+    </div>
+
+    <!-- Controles de Terreno e Iluminación -->
+    <div class="pointer-events-auto bg-slate-950/85 backdrop-blur-md border border-slate-800/90 rounded-2xl p-3.5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Visualización de Relieve</span>
+      </div>
+
+      <!-- Modo de Mapa -->
+      <div class="grid grid-cols-2 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button id="mode-lunar" class="py-1.5 px-2.5 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-400/30 transition">
+          Superficie Lunar
+        </button>
+        <button id="mode-topo" class="py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition">
+          Mapa de Alturas
+        </button>
+      </div>
+
+      <!-- Exageración Vertical -->
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-slate-400">Escala Vertical (Relieve)</span>
+          <span id="val-exag" class="font-mono-tech text-sky-300">1.8x</span>
+        </div>
+        <input id="slider-exag" type="range" min="1.0" max="4.0" step="0.1" value="1.8" class="w-full" />
+      </div>
+
+      <!-- Azimut Solar -->
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-slate-400">Ángulo Solar Polar</span>
+          <span id="val-sun" class="font-mono-tech text-amber-300">45°</span>
+        </div>
+        <input id="slider-sun" type="range" min="0" max="360" step="5" value="45" class="w-full" />
+      </div>
+
+      <!-- Leyenda Hipsométrica (visible en modo topográfico) -->
+      <div id="topo-legend" class="hidden pt-1 border-t border-slate-800/80">
+        <div class="text-[10px] text-slate-400 mb-1 flex justify-between font-mono-tech">
+          <span>-7.5 km (Valle/Cráter)</span>
+          <span>+5.0 km (Pico)</span>
+        </div>
+        <div class="h-2.5 w-full rounded-full" style="background: linear-gradient(90deg, #1e1b4b 0%, #1d4ed8 22%, #06b6d4 42%, #22c55e 60%, #eab308 78%, #ef4444 91%, #ffffff 100%);"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Panel Derecho: Ficha Técnica y Resultados del Sitio Seleccionado -->
+  <section id="detail-panel" class="fixed right-4 top-24 z-20 w-[calc(100%-2rem)] sm:w-96 bg-slate-950/90 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 translate-x-[120%] opacity-0 pointer-events-auto max-h-[calc(100vh-8rem)] flex flex-col">
+    <!-- Cabecera de Ficha -->
+    <div class="p-4 border-b border-slate-800/90 flex items-start justify-between gap-3 bg-gradient-to-r from-slate-900 to-slate-950">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span id="detail-badge" class="w-2.5 h-2.5 rounded-full bg-sky-400 shrink-0"></span>
+          <span id="detail-code" class="text-[11px] font-mono-tech uppercase tracking-widest text-slate-400">SITIO 01</span>
+          <span id="detail-status-pill" class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            Posición Default
+          </span>
+        </div>
+        <h2 id="detail-title" class="text-lg font-bold text-white leading-tight truncate">Peak Near Shackleton</h2>
+        <p id="detail-coords" class="text-xs font-mono-tech text-sky-400 mt-0.5">89.02° S, 126.27° E</p>
+      </div>
+      <button id="btn-close-detail" class="p-1.5 rounded-xl bg-slate-800/70 hover:bg-slate-700 text-slate-400 hover:text-white transition shrink-0" title="Cerrar ficha">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Cuerpo Scrollable de Resultados -->
+    <div class="p-4 overflow-y-auto space-y-4 text-xs">
+      
+      <!-- Módulo Interactivo: Posición y Coordenadas Editables -->
+      <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-3 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-sky-300">Posición y Coordenadas Editables</span>
+          <button id="btn-reset-single-site" class="text-[11px] font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-lg transition flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            Restaurar origen
+          </button>
+        </div>
+
+        <!-- Inputs Cartesianos X (km) e Y (km) -->
+        <div class="grid grid-cols-5 gap-2 items-end">
+          <div class="col-span-2">
+            <label for="input-coord-x" class="block text-[10px] font-mono-tech uppercase text-slate-400 mb-1">Coord. X (km)</label>
+            <input id="input-coord-x" type="number" step="0.5" min="-235" max="235" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono-tech text-xs text-white focus:outline-none focus:border-sky-400" />
+          </div>
+          <div class="col-span-2">
+            <label for="input-coord-y" class="block text-[10px] font-mono-tech uppercase text-slate-400 mb-1">Coord. Y (km)</label>
+            <input id="input-coord-y" type="number" step="0.5" min="-235" max="235" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono-tech text-xs text-white focus:outline-none focus:border-sky-400" />
+          </div>
+          <div class="col-span-1">
+            <button id="btn-apply-coords" class="w-full py-1.5 px-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-[11px] transition">
+              Aplicar
+            </button>
+          </div>
+        </div>
+
+        <!-- Lectura Selenográfica y Altitud en Tiempo Real -->
+        <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80 font-mono-tech text-[11px]">
+          <div class="bg-slate-950/80 rounded-lg px-2 py-1.5 border border-slate-800/80">
+            <span class="text-[9px] text-slate-500 block uppercase">Latitud</span>
+            <span id="detail-live-lat" class="text-slate-200 font-semibold">89.02° S</span>
+          </div>
+          <div class="bg-slate-950/80 rounded-lg px-2 py-1.5 border border-slate-800/80">
+            <span class="text-[9px] text-slate-500 block uppercase">Longitud</span>
+            <span id="detail-live-lon" class="text-slate-200 font-semibold">126.27° E</span>
+          </div>
+          <div class="bg-slate-950/80 rounded-lg px-2 py-1.5 border border-slate-800/80">
+            <span class="text-[9px] text-slate-500 block uppercase">Altitud</span>
+            <span id="detail-live-alt" class="text-amber-300 font-semibold">+1.32 km</span>
+          </div>
+        </div>
+
+        <div class="text-[10px] text-slate-400 flex items-center justify-between">
+          <span>Origen default:</span>
+          <span id="detail-default-ref" class="font-mono-tech text-slate-300">89.02° S, 126.27° E</span>
+        </div>
+      </div>
+
+      <!-- Métricas Principales en Grid -->
+      <div id="detail-metrics" class="grid grid-cols-2 gap-2.5">
+        <!-- Inyectado dinámicamente -->
+      </div>
+
+      <!-- Perfil Esquemático de Elevación (SVG) -->
+      <div class="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Perfil Topográfico Transversal</span>
+          <span id="detail-slope" class="font-mono-tech text-[11px] text-emerald-400">Pendiente: &lt;10°</span>
+        </div>
+        <svg id="detail-profile-svg" viewBox="0 0 300 72" class="w-full h-16 overflow-visible"></svg>
+      </div>
+
+      <!-- Resultados y Evaluación de Aterrizaje -->
+      <div class="space-y-2">
+        <h3 class="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Resultados y Evaluación de Aterrizaje</h3>
+        <div id="detail-results" class="space-y-2 text-slate-300 leading-relaxed">
+          <!-- Inyectado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Botón de Enfoque Cercano -->
+      <button id="btn-fly-closer" class="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        Inspección Rasante del Terreno
+      </button>
+    </div>
+  </section>
+
+  <!-- Barra Inferior: Guía Rápida de Navegación (Ratón + Teclado WASD) -->
+  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:block">
+    <div class="pointer-events-auto bg-slate-950/80 backdrop-blur-md border border-slate-800/90 rounded-full px-5 py-2 shadow-xl flex items-center gap-4 text-[11px] text-slate-400">
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded font-mono-tech text-[10px]">Arrastrar Pin</kbd> Mover Sitio
+      </span>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-slate-200 rounded font-mono-tech text-[10px]">Clic Izq</kbd> Rotar
+      </span>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-slate-200 rounded font-mono-tech text-[10px]">Clic Der</kbd> Desplazar
+      </span>
+      <div class="h-3.5 w-px bg-slate-800"></div>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-sky-300 rounded font-mono-tech text-[10px]">W A S D</kbd> Vuelo Libre
+      </span>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-sky-300 rounded font-mono-tech text-[10px]">Q / E</kbd> Subir / Bajar
+      </span>
+      <span class="flex items-center gap-1.5">
+        <kbd class="px-1.5 py-0.5 bg-slate-800 text-sky-300 rounded font-mono-tech text-[10px]">Shift</kbd> Acelerar
+      </span>
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: COMPARADOR INTELIGENTE DE SITIOS DE ATERRIZAJE                     -->
+  <!-- ========================================================================= -->
+  <div id="comparator-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md">
+    <div class="bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+      
+      <!-- Encabezado del Modal -->
+      <div class="px-5 py-4 border-b border-slate-800/90 flex items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">Comparador Inteligente de Sitios Lunares</h2>
+              <span class="hidden md:inline-block text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-400/30">Simulación Geométrica & Enlace</span>
+            </div>
+            <p class="text-xs text-slate-400">Evaluación multicriterio de iluminación solar, visibilidad directa a Tierra (DTE) y continuidad de enlace</p>
+          </div>
+        </div>
+        <button id="btn-close-comparator" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition" title="Cerrar comparador">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Barra de Configuración de Simulación -->
+      <div class="p-4 sm:px-6 bg-slate-900/60 border-b border-slate-800/90">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-end">
+          
+          <!-- 1. Duración del periodo -->
+          <div>
+            <label for="sim-duration" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              Periodo de Misión Analizado
+            </label>
+            <select id="sim-duration" class="w-full bg-slate-950 border border-slate-700/90 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-400">
+              <option value="14">14.0 días (336.0 h — Misión corta)</option>
+              <option value="29.53" selected>29.53 días (708.7 h — 1 Ciclo Sinódico)</option>
+              <option value="90">90.0 días (2,160.0 h — Trimestral)</option>
+              <option value="365">365.0 días (8,760.0 h — Año Terrestre)</option>
+            </select>
+          </div>
+
+          <!-- 2. Perfil de prioridad -->
+          <div>
+            <label for="sim-priority" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              Perfil de Prioridad de Misión
+            </label>
+            <select id="sim-priority" class="w-full bg-slate-950 border border-slate-700/90 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-400">
+              <option value="balanced" selected>Equilibrado (Energía + Comms + Relieve)</option>
+              <option value="solar">Máxima Energía Solar (Potencia continua)</option>
+              <option value="comms">Máxima Comunicación Directa (Telemetría)</option>
+              <option value="safety">Seguridad Topográfica (Pendientes &lt;10°)</option>
+            </select>
+          </div>
+
+          <!-- 3. Toggle Respaldo de Enlace Local + Selector de Arquitectura -->
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex flex-col justify-between gap-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-semibold text-slate-200 leading-tight">Respaldo de Enlace Local</span>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="sim-relay-toggle" class="sr-only peer" checked>
+                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+            <select id="sim-relay-type" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] text-sky-300 focus:outline-none focus:border-sky-400">
+              <option value="elfo" selected>Constelación Polar ELFO (2 satélites)</option>
+              <option value="malapert_node">Repetidor Superficie en Pico Malapert</option>
+            </select>
+          </div>
+
+          <!-- 4. Botón Ejecutar Cálculos -->
+          <div>
+            <button id="btn-run-sim" class="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2">
+              <svg id="sim-btn-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span id="sim-btn-text">Ejecutar Cálculos Comparativos</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Área de Resultados (Scrollable) -->
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+        
+        <!-- Estado de Progreso de Cálculo (oculto por defecto) -->
+        <div id="sim-loading" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3">
+          <div class="w-10 h-10 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+          <div class="text-sm font-semibold text-white">Calculando oclusiones topográficas y libración Tierra-Luna...</div>
+          <p id="sim-loading-step" class="text-xs font-mono-tech text-sky-300">Trazando perfiles de horizonte sobre relieve sintetico ilustrativo (360° azimut)...</p>
+        </div>
+
+        <!-- Resumen Ejecutivo Superior -->
+        <div id="sim-summary-banner" class="bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="sim-summary-text">Simulación completada para <strong>708.7 horas</strong> (1 ciclo sinódico) con respaldo local activo.</span>
+          </div>
+          <div id="sim-weights-badge" class="font-mono-tech text-[11px] text-slate-400">
+            Pesos: Energía 35% • Comms DTE 30% • Continuidad 20% • Relieve 15%
+          </div>
+        </div>
+
+        <!-- Grid de 3 Tarjetas de Sitios Ordenadas por Puntuación -->
+        <div id="sim-cards-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Las 3 tarjetas se renderizan dinámicamente aquí -->
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DATOS DE LOS 3 SITIOS CANDIDATOS DE ATERRIZAJE (CON ORIGEN DEFAULT)
+    // =========================================================================
+    const LANDING_SITES = [
+      {
+        id: 'shackleton',
+        code: 'SITIO 01',
+        name: 'Peak Near Shackleton (borde, no el fondo del crater)',
+        shortName: 'Shackleton',
+        defaultName: 'Peak Near Shackleton (borde, no el fondo del crater)',
+        defaultShortName: 'Shackleton',
+        defaultLat: -89.01701,
+        defaultLon: 126.27302,
+        lat: -89.01701,
+        lon: 126.27302,
+        isModified: false,
+        colorHex: '#38bdf8',
+        colorInt: 0x38bdf8,
+        slopeText: 'Pendiente borde: 12°–28°',
+        metrics: [
+          { label: 'Diámetro Cráter', value: '21.0 km', accent: 'text-sky-300' },
+          { label: 'Profundidad / Borde', value: '-4.2 km / +1.6 km', accent: 'text-amber-300' },
+          { label: 'Iluminación Borde', value: '~87.8% del año', accent: 'text-emerald-400' },
+          { label: 'Temp. Interior PSR', value: '< 40 K (-233 °C)', accent: 'text-indigo-300' }
+        ],
+        profilePoints: [58, 52, 34, 14, 8, 8, 12, 28, 50, 62, 56],
+        summary: [
+          'El borde de Shackleton presenta picos de luz quasi-eterna ideales para generación fotovoltaica continua.',
+          'Su interior es una Región Permanentemente en Sombra (PSR) con alta concentración confirmada de hielo de agua superficial.',
+          'Requiere aterrizaje de alta precisión en la cresta del borde debido a las fuertes pendientes interiores.'
+        ]
+      },
+      {
+        id: 'de-gerlache',
+        code: 'SITIO 02',
+        name: 'Cráter de Gerlache y Cresta',
+        shortName: 'de Gerlache',
+        defaultName: 'Cráter de Gerlache y Cresta',
+        defaultShortName: 'de Gerlache',
+        defaultLat: -89.406,
+        defaultLon: -136.2,
+        lat: -89.406,
+        lon: -136.2,
+        isModified: false,
+        colorHex: '#34d399',
+        colorInt: 0x34d399,
+        slopeText: 'Pendiente cresta: < 10°',
+        metrics: [
+          { label: 'Diámetro Cráter', value: '32.4 km', accent: 'text-emerald-300' },
+          { label: 'Profundidad / Cresta', value: '-3.8 km / +2.1 km', accent: 'text-amber-300' },
+          { label: 'Iluminación Cresta', value: '~83.4% del año', accent: 'text-emerald-400' },
+          { label: 'Zona Segura (<10°)', value: 'Amplia (Cresta)', accent: 'text-sky-300' }
+        ],
+        profilePoints: [42, 46, 54, 60, 58, 44, 22, 12, 14, 26, 40],
+        summary: [
+          'La Cresta de Conexión entre de Gerlache y Shackleton es uno de los sitios principales evaluados por NASA Artemis III.',
+          'Ofrece terrazas amplias con pendientes suaves (<10°), minimizando el riesgo de inclinación del módulo lunar.',
+          'Permite incursiones de rovers hacia micro-trampas frías cercanas sin descender al abismo principal.'
+        ]
+      },
+      {
+        id: 'malapert',
+        code: 'SITIO 03',
+        name: 'Macizo y Cráter Malapert',
+        shortName: 'Malapert',
+        defaultName: 'Macizo y Cráter Malapert',
+        defaultShortName: 'Malapert',
+        defaultLat: -85.964,
+        defaultLon: -2.319,
+        lat: -85.964,
+        lon: -2.319,
+        isModified: false,
+        colorHex: '#fbbf24',
+        colorInt: 0xfbbf24,
+        slopeText: 'Pendiente meseta: 6°–11°',
+        metrics: [
+          { label: 'Altitud Cumbre', value: '+5,000 m rel.', accent: 'text-amber-300' },
+          { label: 'Visibilidad Tierra', value: '~99.4% directa', accent: 'text-emerald-400' },
+          { label: 'Iluminación Solar', value: '~91.2% del año', accent: 'text-amber-300' },
+          { label: 'Dist. al Polo Sur', value: '~150 km Norte', accent: 'text-sky-300' }
+        ],
+        profilePoints: [24, 30, 44, 64, 68, 66, 52, 36, 20, 16, 22],
+        summary: [
+          'Elevación dominante de ~5 km sobre la cuenca circundante, funcionando como torre natural de telecomunicaciones hacia la Tierra.',
+          'Mantiene línea de vista directa con la Tierra casi sin interrupciones incluso durante libraciones lunares negativas.',
+          'Meseta superior relativamente estable para despliegue de infraestructura energética y balizas de navegación.'
+        ]
+      }
+    ];
+
+    // Cráteres secundarios de contexto topográfico
+    const REFERENCE_CRATERS = [
+      { name: 'Shoemaker', lat: -88.1, lon: 45.9, radiusKm: 25.5, depth: -4.4 },
+      { name: 'Haworth', lat: -87.5, lon: -5.2, radiusKm: 25.0, depth: -4.1 },
+      { name: 'Faustini', lat: -87.3, lon: 77.0, radiusKm: 20.0, depth: -3.6 },
+      { name: 'Cabeus', lat: -84.9, lon: -35.5, radiusKm: 48.0, depth: -4.5 },
+      { name: 'Nobile', lat: -85.2, lon: 53.5, radiusKm: 36.0, depth: -3.8 },
+      { name: 'Amundsen', lat: -84.5, lon: 82.8, radiusKm: 50.0, depth: -4.3 }
+    ];
+
+    // =========================================================================
+    // 2. CONVERSIÓN DE COORDENADAS SELENOGRÁFICAS A PLANO POLAR 3D
+    // =========================================================================
+    // Escala del mapa: 1 unidad 3D = 2.0 km | Radio del dominio = 120 unidades (240 km, hasta ~82.1°S)
+    const MAP_WORLD_SIZE = 240;
+    const KM_PER_UNIT = 2.0;
+    const LUNAR_KM_PER_DEG = 30.32;
+
+    function latLonToXZ(lat, lon) {
+      const colatDeg = 90.0 - Math.abs(lat);
+      const rUnits = (colatDeg * LUNAR_KM_PER_DEG) / KM_PER_UNIT;
+      const rad = THREE.MathUtils.degToRad(lon);
+      // Convención polar sur: 0° E (meridiano hacia la Tierra) apunta hacia -Z (arriba en vista cenital)
+      const x = rUnits * Math.sin(rad);
+      const z = -rUnits * Math.cos(rad);
+      return { x, z };
+    }
+
+    function xzToLatLon(x, z) {
+      const rUnits = Math.sqrt(x * x + z * z);
+      const colatDeg = (rUnits * KM_PER_UNIT) / LUNAR_KM_PER_DEG;
+      const lat = -(90.0 - colatDeg);
+      let lon = THREE.MathUtils.radToDeg(Math.atan2(x, -z));
+      if (lon > 180) lon -= 360;
+      if (lon < -180) lon += 360;
+      return { lat, lon };
+    }
+
+    // Conversión entre unidades internas 3D (x, z) y coordenadas cartesianas de mapa (X km, Y km)
+    // Convención intuitiva para el usuario: +X hacia la derecha (90°E), +Y hacia arriba (0°E, dirección Tierra)
+    function worldXZToMapXYKm(worldX, worldZ) {
+      return {
+        xKm: worldX * KM_PER_UNIT,
+        yKm: -worldZ * KM_PER_UNIT
+      };
+    }
+
+    function mapXYKmToWorldXZ(xKm, yKm) {
+      const halfLimit = (MAP_WORLD_SIZE * 0.5 - 2) * KM_PER_UNIT;
+      const clampedX = THREE.MathUtils.clamp(xKm, -halfLimit, halfLimit);
+      const clampedY = THREE.MathUtils.clamp(yKm, -halfLimit, halfLimit);
+      return {
+        worldX: clampedX / KM_PER_UNIT,
+        worldZ: -clampedY / KM_PER_UNIT
+      };
+    }
+
+    function formatLatLonString(lat, lon) {
+      return `${Math.abs(lat).toFixed(2)}° S, ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? 'E' : 'W'}`;
+    }
+
+    // Cálculo de pendiente local (en grados) y perfil transversal en cualquier coordenada (x, z)
+    function computeLocalSlopeDeg(worldX, worldZ) {
+      const step = 1.2; // 2.4 km
+      const hC = getBaseElevationKm(worldX, worldZ);
+      const hE = getBaseElevationKm(worldX + step, worldZ);
+      const hW = getBaseElevationKm(worldX - step, worldZ);
+      const hN = getBaseElevationKm(worldX, worldZ - step);
+      const hS = getBaseElevationKm(worldX, worldZ + step);
+      const dxKm = 2 * step * KM_PER_UNIT;
+      const dzdx = (hE - hW) / dxKm;
+      const dzdy = (hS - hN) / dxKm;
+      const grad = Math.hypot(dzdx, dzdy);
+      return THREE.MathUtils.radToDeg(Math.atan(grad));
+    }
+
+    function sampleCrossSectionProfile(worldX, worldZ) {
+      const span = 12; // ±24 km
+      const samples = 11;
+      const raw = [];
+      for (let i = 0; i < samples; i++) {
+        const t = (i / (samples - 1)) * 2 - 1;
+        raw.push(getBaseElevationKm(worldX + t * span, worldZ));
+      }
+      // Mapear [-7.5 km, +5.2 km] -> [6, 66] px para SVG
+      return raw.map(h => Math.round(THREE.MathUtils.clamp(((h + 7.5) / 12.7) * 60 + 6, 4, 68)));
+    }
+
+    // Generador pseudoaleatorio determinista 2D para relieve procedural y micro-cráteres
+    function hash2D(x, y) {
+      const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+
+    function valueNoise(x, y) {
+      const ix = Math.floor(x);
+      const iy = Math.floor(y);
+      const fx = x - ix;
+      const fy = y - iy;
+      const ux = fx * fx * (3.0 - 2.0 * fx);
+      const uy = fy * fy * (3.0 - 2.0 * fy);
+      const a = hash2D(ix, iy);
+      const b = hash2D(ix + 1, iy);
+      const c = hash2D(ix, iy + 1);
+      const d = hash2D(ix + 1, iy + 1);
+      return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+    }
+
+    function fbm(x, y, octaves = 5) {
+      let value = 0.0;
+      let amp = 0.5;
+      let freq = 1.0;
+      for (let i = 0; i < octaves; i++) {
+        value += amp * (valueNoise(x * freq, y * freq) * 2.0 - 1.0);
+        freq *= 2.04;
+        amp *= 0.48;
+      }
+      return value;
+    }
+
+    function craterProfile(dist, radius, depth, rimHeight) {
+      const rNorm = dist / radius;
+      if (rNorm > 2.2) return 0;
+      if (rNorm < 1.0) {
+        // Interior en cuenco con fondo ligeramente aplanado en cráteres grandes
+        const bowl = Math.pow(rNorm, 2.25) - 1.0;
+        return bowl * Math.abs(depth) + rimHeight * Math.pow(rNorm, 3.0);
+      } else {
+        // Eyerta exterior decaimiento exponencial
+        const t = rNorm - 1.0;
+        return rimHeight * Math.exp(-t * 3.4);
+      }
+    }
+
+    // Precalcular posiciones 3D de rasgos mayores
+    const SHACKLETON_XZ = latLonToXZ(-89.01701, 126.27302);
+    const DE_GERLACHE_XZ = latLonToXZ(-89.406, -136.2);
+    const MALAPERT_XZ = latLonToXZ(-85.964, -2.319);
+    const REF_CRATERS_XZ = REFERENCE_CRATERS.map(c => ({
+      ...c,
+      ...latLonToXZ(c.lat, c.lon),
+      rUnits: c.radiusKm / KM_PER_UNIT
+    }));
+
+    // Cráteres menores procedurales deterministas
+    const MICRO_CRATERS = [];
+    for (let i = 0; i < 160; i++) {
+      const angle = hash2D(i, 1.3) * Math.PI * 2;
+      const rad = 10 + hash2D(i, 7.9) * 105;
+      const cx = Math.cos(angle) * rad;
+      const cz = Math.sin(angle) * rad;
+      const cr = 1.4 + hash2D(i, 3.7) * 4.2;
+      MICRO_CRATERS.push({ x: cx, z: cz, r: cr, d: cr * 0.24, rim: cr * 0.07 });
+    }
+
+    // Devuelve elevación base en kilómetros reales (-7.5 km a +5.2 km)
+    function getBaseElevationKm(x, z) {
+      let h = fbm(x * 0.022 + 3.1, z * 0.022 - 1.7, 5) * 1.45;
+      h += fbm(x * 0.075, z * 0.075, 3) * 0.32;
+
+      // 1. Cráter Shackleton (diámetro 21 km -> radio 5.25 u)
+      const dShack = Math.hypot(x - SHACKLETON_XZ.x, z - SHACKLETON_XZ.z);
+      h += craterProfile(dShack, 5.25, 4.2, 1.35);
+
+      // 2. Cráter de Gerlache (diámetro 32.4 km -> radio 8.1 u) + Cresta de Conexión
+      const dGerl = Math.hypot(x - DE_GERLACHE_XZ.x, z - DE_GERLACHE_XZ.z);
+      h += craterProfile(dGerl, 8.1, 3.8, 1.15);
+
+      // Cresta de Conexión entre Shackleton y de Gerlache
+      const ridgeMidX = (SHACKLETON_XZ.x + DE_GERLACHE_XZ.x) * 0.52;
+      const ridgeMidZ = (SHACKLETON_XZ.z + DE_GERLACHE_XZ.z) * 0.52;
+      const dRidge = Math.hypot((x - ridgeMidX) * 0.85, (z - ridgeMidZ) * 1.25);
+      h += 1.65 * Math.exp(-(dRidge * dRidge) / 55.0);
+
+      // 3. Macizo Malapert (+5.0 km de pico con meseta somital)
+      const dMal = Math.hypot(x - MALAPERT_XZ.x, z - MALAPERT_XZ.z);
+      h += 4.85 * Math.exp(-(dMal * dMal) / 72.0);
+      // Cráter Malapert adyacente
+      const dMalCrater = Math.hypot(x - (MALAPERT_XZ.x + 11.0), z - (MALAPERT_XZ.z - 8.5));
+      h += craterProfile(dMalCrater, 7.5, 3.1, 0.75);
+
+      // 4. Cráteres mayores de referencia
+      for (let i = 0; i < REF_CRATERS_XZ.length; i++) {
+        const c = REF_CRATERS_XZ[i];
+        const d = Math.hypot(x - c.x, z - c.z);
+        h += craterProfile(d, c.rUnits, Math.abs(c.depth), 0.85);
+      }
+
+      // 5. Micro-cráteres de impacto
+      for (let i = 0; i < MICRO_CRATERS.length; i++) {
+        const mc = MICRO_CRATERS[i];
+        const dx = x - mc.x;
+        const dz = z - mc.z;
+        if (Math.abs(dx) < mc.r * 2.1 && Math.abs(dz) < mc.r * 2.1) {
+          const d = Math.hypot(dx, dz);
+          h += craterProfile(d, mc.r, mc.d, mc.rim);
+        }
+      }
+
+      return THREE.MathUtils.clamp(h, -7.5, 5.2);
+    }
+
+    // =========================================================================
+    // 4. INICIALIZACIÓN DE ESCENA THREE.JS (SIN NEBLINA)
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x030508);
+
+    const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.5, 1500);
+    camera.position.set(0, 135, 145);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI * 0.485;
+    controls.minDistance = 8;
+    controls.maxDistance = 360;
+    controls.target.set(0, 0, -15);
+
+    // Iluminación Solar Polar Rasante + Luz de Relleno Sutil (Albedo terrestre/estelar)
+    const sunLight = new THREE.DirectionalLight(0xfff8eb, 2.35);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 20;
+    sunLight.shadow.camera.far = 420;
+    const shadowBound = 135;
+    sunLight.shadow.camera.left = -shadowBound;
+    sunLight.shadow.camera.right = shadowBound;
+    sunLight.shadow.camera.top = shadowBound;
+    sunLight.shadow.camera.bottom = -shadowBound;
+    sunLight.shadow.bias = -0.0006;
+    scene.add(sunLight);
+
+    const ambientLight = new THREE.AmbientLight(0x3b4963, 0.42);
+    scene.add(ambientLight);
+
+    function updateSunPosition(azimutDeg) {
+      const rad = THREE.MathUtils.degToRad(azimutDeg);
+      const dist = 210;
+      const elevationY = 34; // Ángulo rasante característico del Polo Sur (~9°)
+      sunLight.position.set(Math.sin(rad) * dist, elevationY, -Math.cos(rad) * dist);
+    }
+    updateSunPosition(45);
+
+    // Campo de estrellas de fondo
+    const starsGeom = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(1800 * 3);
+    for (let i = 0; i < 1800; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 650 + Math.random() * 200;
+      starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      starPositions[i * 3 + 1] = Math.abs(r * Math.cos(phi)) - 80;
+      starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+    starsGeom.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starsMat = new THREE.PointsMaterial({ color: 0xcbd5e1, size: 1.1, sizeAttenuation: true });
+    scene.add(new THREE.Points(starsGeom, starsMat));
+
+    // =========================================================================
+    // 5. CONSTRUCCIÓN DE MALLA 3D DEL TERRENO LUNAR
+    // =========================================================================
+    const SEGMENTS = 240;
+    const terrainGeom = new THREE.PlaneGeometry(MAP_WORLD_SIZE, MAP_WORLD_SIZE, SEGMENTS, SEGMENTS);
+    terrainGeom.rotateX(-Math.PI / 2);
+
+    const posAttr = terrainGeom.attributes.position;
+    const vertexCount = posAttr.count;
+    const baseElevationsKm = new Float32Array(vertexCount);
+    const lunarColors = new Float32Array(vertexCount * 3);
+    const topoColors = new Float32Array(vertexCount * 3);
+
+    function getHypsometricColor(elevKm) {
+      // Normalizar [-7.5, +5.2] -> [0, 1]
+      const t = THREE.MathUtils.clamp((elevKm + 7.5) / 12.7, 0, 1);
+      const c = new THREE.Color();
+      if (t < 0.22) c.setHex(0x1e1b4b).lerp(new THREE.Color(0x1d4ed8), t / 0.22);
+      else if (t < 0.42) c.setHex(0x1d4ed8).lerp(new THREE.Color(0x06b6d4), (t - 0.22) / 0.20);
+      else if (t < 0.60) c.setHex(0x06b6d4).lerp(new THREE.Color(0x22c55e), (t - 0.42) / 0.18);
+      else if (t < 0.78) c.setHex(0x22c55e).lerp(new THREE.Color(0xeab308), (t - 0.60) / 0.18);
+      else if (t < 0.91) c.setHex(0xeab308).lerp(new THREE.Color(0xef4444), (t - 0.78) / 0.13);
+      else c.setHex(0xef4444).lerp(new THREE.Color(0xffffff), (t - 0.91) / 0.09);
+      return c;
+    }
+
+    for (let i = 0; i < vertexCount; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      const elevKm = getBaseElevationKm(vx, vz);
+      baseElevationsKm[i] = elevKm;
+
+      // Color regolito lunar realista (anortosita de tierras altas con ligera variación)
+      const grain = hash2D(vx * 3.7, vz * 3.7) * 0.07;
+      const albedo = THREE.MathUtils.clamp(0.42 + (elevKm + 5.0) * 0.022 + grain, 0.24, 0.72);
+      lunarColors[i * 3] = albedo * 1.02;
+      lunarColors[i * 3 + 1] = albedo * 1.01;
+      lunarColors[i * 3 + 2] = albedo * 0.98;
+
+      // Color hipsométrico
+      const hc = getHypsometricColor(elevKm);
+      topoColors[i * 3] = hc.r;
+      topoColors[i * 3 + 1] = hc.g;
+      topoColors[i * 3 + 2] = hc.b;
+    }
+
+    terrainGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(lunarColors), 3));
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.92,
+      metalness: 0.04,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(terrainGeom, terrainMat);
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+    scene.add(terrainMesh);
+
+    let currentExaggeration = 1.8;
+    const KM_TO_SCENE_Y = 0.85; // Escala base vertical legible
+
+    function applyVerticalExaggeration(exag) {
+      currentExaggeration = exag;
+      for (let i = 0; i < vertexCount; i++) {
+        posAttr.setY(i, baseElevationsKm[i] * KM_TO_SCENE_Y * exag);
+      }
+      posAttr.needsUpdate = true;
+      terrainGeom.computeVertexNormals();
+      updateMarkerHeights();
+    }
+
+    // =========================================================================
+    // 6. RETÍCULA SELENOGRÁFICA POLAR Y MARCADORES 3D DE SITIOS
+    // =========================================================================
+    const gridGroup = new THREE.Group();
+    const gridMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.16 });
+
+    // Paralelos cada 2° (88°S, 86°S, 84°S)
+    [88, 86, 84].forEach(lat => {
+      const r = ((90 - lat) * LUNAR_KM_PER_DEG) / KM_PER_UNIT;
+      const pts = [];
+      for (let a = 0; a <= 96; a++) {
+        const theta = (a / 96) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.sin(theta) * r, 6.5, -Math.cos(theta) * r));
+      }
+      const g = new THREE.BufferGeometry().setFromPoints(pts);
+      gridGroup.add(new THREE.Line(g, gridMat));
+    });
+
+    // Meridianos principales cada 45°
+    for (let deg = 0; deg < 360; deg += 45) {
+      const rad = THREE.MathUtils.degToRad(deg);
+      const pts = [
+        new THREE.Vector3(0, 6.5, 0),
+        new THREE.Vector3(Math.sin(rad) * 112, 6.5, -Math.cos(rad) * 112)
+      ];
+      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat));
+    }
+    scene.add(gridGroup);
+
+    // Marcadores 3D y Etiquetas HTML flotantes
+    const labelsLayer = document.getElementById('labels-layer');
+    const siteMarkers = [];
+    const draggableHitMeshes = [];
+
+    LANDING_SITES.forEach(site => {
+      const { x, z } = latLonToXZ(site.defaultLat, site.defaultLon);
+      site.defaultWorldX = x;
+      site.defaultWorldZ = z;
+      site.worldX = x;
+      site.worldZ = z;
+      site.coordsText = formatLatLonString(site.lat, site.lon);
+
+      const markerGroup = new THREE.Group();
+      markerGroup.position.set(x, 0, z);
+
+      // Baliza vertical
+      const beamGeom = new THREE.CylinderGeometry(0.2, 0.2, 14, 12);
+      beamGeom.translate(0, 7, 0);
+      const beamMat = new THREE.MeshBasicMaterial({ color: site.colorInt, transparent: true, opacity: 0.88 });
+      const beam = new THREE.Mesh(beamGeom, beamMat);
+      markerGroup.add(beam);
+
+      // Esfera superior
+      const orb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.95, 16, 16),
+        new THREE.MeshBasicMaterial({ color: site.colorInt })
+      );
+      orb.position.y = 14.5;
+      markerGroup.add(orb);
+
+      // Anillo de zona de aterrizaje
+      const ringGeom = new THREE.RingGeometry(2.2, 2.9, 36);
+      ringGeom.rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: site.colorInt,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.position.y = 0.45;
+      markerGroup.add(ring);
+
+      // Volumen invisible amplio para facilitar agarrar y arrastrar el marcador con el ratón
+      const hitMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.6, 3.6, 18, 12),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hitMesh.position.y = 8;
+      hitMesh.userData.siteId = site.id;
+      markerGroup.add(hitMesh);
+      draggableHitMeshes.push(hitMesh);
+
+      scene.add(markerGroup);
+
+      // Etiqueta HTML interactiva (permite clic para seleccionar y arrastrar directamente)
+      const labelEl = document.createElement('div');
+      labelEl.className = 'marker-label';
+      labelEl.title = 'Clic para seleccionar • Arrastra sobre el mapa para mover';
+      labelEl.innerHTML = `
+        <div class="marker-pill bg-slate-950/90 backdrop-blur-md border border-slate-700/90 hover:border-sky-400 rounded-xl px-2.5 py-1.5 shadow-xl flex items-center gap-2 transition">
+          <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${site.colorHex}; box-shadow: 0 0 8px ${site.colorHex};"></span>
+          <div class="text-left">
+            <div class="marker-title text-[11px] font-bold text-white leading-none flex items-center gap-1">
+              <span>${site.shortName}</span>
+            </div>
+            <div class="marker-sub text-[9px] font-mono-tech text-slate-400 mt-0.5">${site.coordsText}</div>
+          </div>
+        </div>
+      `;
+      labelEl.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        startDraggingSite(site.id, e);
+      });
+      labelsLayer.appendChild(labelEl);
+
+      siteMarkers.push({ site, group: markerGroup, ring, orb, hitMesh, labelEl });
+    });
+
+    function refreshMarkerVisuals(site) {
+      const m = siteMarkers.find(item => item.site.id === site.id);
+      if (!m) return;
+      const y = getBaseElevationKm(site.worldX, site.worldZ) * KM_TO_SCENE_Y * currentExaggeration;
+      m.group.position.set(site.worldX, y, site.worldZ);
+
+      const titleSpan = m.labelEl.querySelector('.marker-title');
+      const subSpan = m.labelEl.querySelector('.marker-sub');
+      const pill = m.labelEl.querySelector('.marker-pill');
+      if (titleSpan) {
+        titleSpan.innerHTML = site.isModified
+          ? `<span>${site.shortName}</span><span class="text-[8px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">MOD</span>`
+          : `<span>${site.shortName}</span>`;
+      }
+      if (subSpan) {
+        subSpan.textContent = site.coordsText;
+      }
+      if (pill) {
+        pill.classList.toggle('border-amber-400/70', site.isModified);
+        pill.classList.toggle('border-slate-700/90', !site.isModified);
+      }
+    }
+
+    function updateMarkerHeights() {
+      siteMarkers.forEach(m => {
+        const y = getBaseElevationKm(m.site.worldX, m.site.worldZ) * KM_TO_SCENE_Y * currentExaggeration;
+        m.group.position.y = y;
+      });
+    }
+    applyVerticalExaggeration(1.8);
+
+    // =========================================================================
+    // 7. GESTIÓN DE EDICIÓN, ARRASTRE 3D Y RESTAURACIÓN DE SITIOS
+    // =========================================================================
+    const siteListEl = document.getElementById('site-list');
+    const detailPanel = document.getElementById('detail-panel');
+    const btnResetAllSites = document.getElementById('btn-reset-all-sites');
+    let selectedSiteId = null;
+    let draggingSiteId = null;
+
+    // Detectar qué rasgo topográfico está cerca de unas coordenadas dadas para nombrar dinámicamente puntos movidos
+    function identifyFeatureLabel(worldX, worldZ) {
+      const dShack = Math.hypot(worldX - SHACKLETON_XZ.x, worldZ - SHACKLETON_XZ.z) * KM_PER_UNIT;
+      if (dShack < 14) return 'Zona Cráter Shackleton';
+      const dGerl = Math.hypot(worldX - DE_GERLACHE_XZ.x, worldZ - DE_GERLACHE_XZ.z) * KM_PER_UNIT;
+      if (dGerl < 19) return 'Zona Cráter de Gerlache';
+      const dMal = Math.hypot(worldX - MALAPERT_XZ.x, worldZ - MALAPERT_XZ.z) * KM_PER_UNIT;
+      if (dMal < 18) return 'Zona Macizo Malapert';
+
+      for (let i = 0; i < REF_CRATERS_XZ.length; i++) {
+        const c = REF_CRATERS_XZ[i];
+        const dKm = Math.hypot(worldX - c.x, worldZ - c.z) * KM_PER_UNIT;
+        if (dKm < c.radiusKm * 1.15) return `Sector Cráter ${c.name}`;
+      }
+      const rKm = Math.hypot(worldX, worldZ) * KM_PER_UNIT;
+      if (rKm < 12) return 'Meseta Polo Sur Geográfico';
+      return 'Punto Personalizado Lunar';
+    }
+
+    function setSiteWorldPosition(siteId, newWorldX, newWorldZ, options = {}) {
+      const { moveCamera = false, closeUp = false, isReset = false } = options;
+      const site = LANDING_SITES.find(s => s.id === siteId);
+      if (!site) return;
+
+      const maxR = MAP_WORLD_SIZE * 0.5 - 2;
+      site.worldX = THREE.MathUtils.clamp(newWorldX, -maxR, maxR);
+      site.worldZ = THREE.MathUtils.clamp(newWorldZ, -maxR, maxR);
+
+      const { lat, lon } = xzToLatLon(site.worldX, site.worldZ);
+      site.lat = lat;
+      site.lon = lon;
+      site.coordsText = formatLatLonString(lat, lon);
+
+      const distFromDefault = Math.hypot(site.worldX - site.defaultWorldX, site.worldZ - site.defaultWorldZ);
+      site.isModified = !isReset && distFromDefault > 0.15;
+
+      if (!site.isModified) {
+        site.worldX = site.defaultWorldX;
+        site.worldZ = site.defaultWorldZ;
+        site.lat = site.defaultLat;
+        site.lon = site.defaultLon;
+        site.coordsText = formatLatLonString(site.defaultLat, site.defaultLon);
+        site.name = site.defaultName;
+        site.shortName = site.defaultShortName;
+      } else {
+        const zoneTitle = identifyFeatureLabel(site.worldX, site.worldZ);
+        site.name = `${site.defaultShortName} → ${zoneTitle}`;
+        site.shortName = `${site.defaultShortName} (Mod.)`;
+      }
+
+      refreshMarkerVisuals(site);
+      updateGlobalResetButtonState();
+      renderSiteList();
+
+      if (selectedSiteId === site.id) {
+        updateDetailPanelContent(site);
+      }
+
+      if (moveCamera) {
+        const groundY = getBaseElevationKm(site.worldX, site.worldZ) * KM_TO_SCENE_Y * currentExaggeration;
+        const target = new THREE.Vector3(site.worldX, groundY + 1.5, site.worldZ);
+        const offset = closeUp ? new THREE.Vector3(16, 15, 22) : new THREE.Vector3(34, 42, 48);
+        flyCameraTo(target, target.clone().add(offset), 850);
+      }
+    }
+
+    function resetSingleSiteToDefault(siteId, moveCamera = true) {
+      const site = LANDING_SITES.find(s => s.id === siteId);
+      if (!site) return;
+      setSiteWorldPosition(siteId, site.defaultWorldX, site.defaultWorldZ, { moveCamera, isReset: true });
+    }
+
+    function resetAllSitesToDefault() {
+      LANDING_SITES.forEach(site => {
+        setSiteWorldPosition(site.id, site.defaultWorldX, site.defaultWorldZ, { moveCamera: false, isReset: true });
+      });
+    }
+
+    function updateGlobalResetButtonState() {
+      const anyModified = LANDING_SITES.some(s => s.isModified);
+      btnResetAllSites.disabled = !anyModified;
+    }
+
+    btnResetAllSites.addEventListener('click', () => {
+      resetAllSitesToDefault();
+    });
+
+    // Animación suave de cámara hacia un objetivo
+    let cameraFlyAnim = null;
+
+    function flyCameraTo(targetPos, camPos, durationMs = 950) {
+      cameraFlyAnim = {
+        startTarget: controls.target.clone(),
+        endTarget: targetPos.clone(),
+        startCam: camera.position.clone(),
+        endCam: camPos.clone(),
+        startTime: performance.now(),
+        duration: durationMs
+      };
+    }
+
+    function renderSiteList() {
+      siteListEl.innerHTML = LANDING_SITES.map(site => {
+        const active = site.id === selectedSiteId;
+        const { xKm, yKm } = worldXZToMapXYKm(site.worldX, site.worldZ);
+        return `
+          <div class="w-full p-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${
+            active
+              ? 'bg-sky-500/15 border-sky-400/70 shadow-lg shadow-sky-500/10'
+              : 'bg-slate-900/70 hover:bg-slate-900 border-slate-800/90'
+          }">
+            <button data-site-id="${site.id}" class="flex-1 text-left flex items-center gap-2.5 min-w-0">
+              <span class="w-3 h-3 rounded-full shrink-0" style="background:${site.colorHex}; box-shadow: 0 0 8px ${site.colorHex};"></span>
+              <div class="truncate">
+                <div class="text-xs font-semibold text-white truncate flex items-center gap-1.5">
+                  <span class="truncate">${site.name}</span>
+                  ${site.isModified ? '<span class="text-[9px] font-mono-tech px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30 shrink-0">Editado</span>' : ''}
+                </div>
+                <div class="text-[10.5px] font-mono-tech text-slate-400 mt-0.5">
+                  ${site.coordsText} <span class="text-slate-500">(${xKm.toFixed(0)}, ${yKm.toFixed(0)} km)</span>
+                </div>
+              </div>
+            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              ${site.isModified ? `
+                <button data-reset-site="${site.id}" title="Restaurar a ${site.defaultShortName}" class="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                </button>
+              ` : ''}
+              <button data-site-id="${site.id}" class="text-[10px] font-mono-tech px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                Ver
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      siteListEl.querySelectorAll('[data-site-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectLandingSite(btn.getAttribute('data-site-id'), true, false);
+        });
+      });
+
+      siteListEl.querySelectorAll('[data-reset-site]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          resetSingleSiteToDefault(btn.getAttribute('data-reset-site'), true);
+        });
+      });
+    }
+
+    function updateDetailPanelContent(site) {
+      const elevKm = getBaseElevationKm(site.worldX, site.worldZ);
+      const slopeDeg = computeLocalSlopeDeg(site.worldX, site.worldZ);
+      const { xKm, yKm } = worldXZToMapXYKm(site.worldX, site.worldZ);
+
+      document.getElementById('detail-badge').style.backgroundColor = site.colorHex;
+      document.getElementById('detail-code').textContent = site.code;
+      document.getElementById('detail-title').textContent = site.name;
+      document.getElementById('detail-coords').textContent = `${site.coordsText}  •  X: ${xKm.toFixed(1)} km, Y: ${yKm.toFixed(1)} km`;
+
+      const statusPill = document.getElementById('detail-status-pill');
+      const btnResetSingle = document.getElementById('btn-reset-single-site');
+      if (site.isModified) {
+        statusPill.textContent = 'Modificado';
+        statusPill.className = 'text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40';
+        btnResetSingle.disabled = false;
+      } else {
+        statusPill.textContent = 'Posición Default';
+        statusPill.className = 'text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        btnResetSingle.disabled = true;
+      }
+
+      // Actualizar inputs X, Y (evitar sobreescribir mientras el usuario escribe en ellos)
+      const inputX = document.getElementById('input-coord-x');
+      const inputY = document.getElementById('input-coord-y');
+      if (document.activeElement !== inputX) inputX.value = xKm.toFixed(1);
+      if (document.activeElement !== inputY) inputY.value = yKm.toFixed(1);
+
+      document.getElementById('detail-live-lat').textContent = `${Math.abs(site.lat).toFixed(2)}° S`;
+      document.getElementById('detail-live-lon').textContent = `${Math.abs(site.lon).toFixed(2)}° ${site.lon >= 0 ? 'E' : 'W'}`;
+      document.getElementById('detail-live-alt').textContent = `${elevKm >= 0 ? '+' : ''}${elevKm.toFixed(2)} km`;
+      document.getElementById('detail-default-ref').textContent = `${site.defaultShortName} (${formatLatLonString(site.defaultLat, site.defaultLon)})`;
+
+      // Métricas dinámicas o default
+      let activeMetrics = site.metrics;
+      let activeSlopeText = site.slopeText;
+      let activeProfile = site.profilePoints;
+      let activeSummary = site.summary;
+
+      if (site.isModified) {
+        const dyn = evaluateSiteGeometryAtCurrentPos(site);
+        const distOriginKm = Math.hypot(site.worldX - site.defaultWorldX, site.worldZ - site.defaultWorldZ) * KM_PER_UNIT;
+        activeMetrics = [
+          { label: 'Altitud Local DEM', value: `${elevKm >= 0 ? '+' : ''}${elevKm.toFixed(2)} km`, accent: 'text-amber-300' },
+          { label: 'Pendiente Media', value: `${slopeDeg.toFixed(1)}°`, accent: slopeDeg <= 10 ? 'text-emerald-400' : slopeDeg <= 18 ? 'text-amber-300' : 'text-rose-400' },
+          { label: 'Iluminación Geom.', value: `${dyn.solarPct.toFixed(1)}% ciclo`, accent: 'text-sky-300' },
+          { label: 'Dist. a Origen', value: `${distOriginKm.toFixed(1)} km`, accent: 'text-indigo-300' }
+        ];
+        activeSlopeText = `Pendiente local: ${slopeDeg.toFixed(1)}°`;
+        activeProfile = sampleCrossSectionProfile(site.worldX, site.worldZ);
+        activeSummary = [
+          `Ubicación desplazada ${distOriginKm.toFixed(1)} km respecto al punto origen (${site.defaultShortName}).`,
+          `Iluminación solar geométrica estimada del ${dyn.solarPct.toFixed(1)}% y visibilidad directa a la Tierra del ${dyn.dtePct.toFixed(1)}% calculadas sobre el horizonte 360° real.`,
+          slopeDeg <= 10
+            ? `Terreno favorable con pendiente suave (${slopeDeg.toFixed(1)}°), apto para descenso seguro de módulo lunar.`
+            : `Precaución topográfica: pendiente local de ${slopeDeg.toFixed(1)}° que exige navegación precisa o evasión de riesgos.`
+        ];
+      }
+
+      document.getElementById('detail-slope').textContent = activeSlopeText;
+
+      document.getElementById('detail-metrics').innerHTML = activeMetrics.map(m => `
+        <div class="bg-slate-900/80 border border-slate-800/90 rounded-xl p-2.5">
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 block">${m.label}</span>
+          <span class="font-mono-tech text-xs font-semibold ${m.accent} mt-0.5 block">${m.value}</span>
+        </div>
+      `).join('');
+
+      const pts = activeProfile.map((val, idx) => {
+        const px = (idx / (activeProfile.length - 1)) * 300;
+        const py = 70 - val;
+        return `${px},${py}`;
+      }).join(' ');
+      document.getElementById('detail-profile-svg').innerHTML = `
+        <defs>
+          <linearGradient id="profGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${site.colorHex}" stop-opacity="0.45" />
+            <stop offset="100%" stop-color="${site.colorHex}" stop-opacity="0.02" />
+          </linearGradient>
+        </defs>
+        <polygon points="0,72 ${pts} 300,72" fill="url(#profGrad)" />
+        <polyline points="${pts}" fill="none" stroke="${site.colorHex}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      `;
+
+      document.getElementById('detail-results').innerHTML = activeSummary.map(line => `
+        <div class="flex items-start gap-2 bg-slate-900/50 border border-slate-800/70 rounded-xl p-2.5">
+          <span class="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style="background:${site.colorHex};"></span>
+          <span>${line}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectLandingSite(siteId, moveCamera = true, closeUp = false) {
+      const site = LANDING_SITES.find(s => s.id === siteId);
+      if (!site) return;
+
+      selectedSiteId = site.id;
+      renderSiteList();
+      updateDetailPanelContent(site);
+
+      detailPanel.classList.remove('translate-x-[120%]', 'opacity-0');
+
+      if (moveCamera) {
+        const groundY = getBaseElevationKm(site.worldX, site.worldZ) * KM_TO_SCENE_Y * currentExaggeration;
+        const target = new THREE.Vector3(site.worldX, groundY + 1.5, site.worldZ);
+        const offset = closeUp ? new THREE.Vector3(16, 15, 22) : new THREE.Vector3(34, 42, 48);
+        flyCameraTo(target, target.clone().add(offset), 900);
+      }
+    }
+
+    // Eventos del módulo de Coordenadas Editables en la Ficha Derecha
+    function applyManualXYInputs() {
+      if (!selectedSiteId) return;
+      const xVal = parseFloat(document.getElementById('input-coord-x').value);
+      const yVal = parseFloat(document.getElementById('input-coord-y').value);
+      if (Number.isNaN(xVal) || Number.isNaN(yVal)) return;
+      const { worldX, worldZ } = mapXYKmToWorldXZ(xVal, yVal);
+      setSiteWorldPosition(selectedSiteId, worldX, worldZ, { moveCamera: true, closeUp: false });
+    }
+
+    document.getElementById('btn-apply-coords').addEventListener('click', applyManualXYInputs);
+    document.getElementById('input-coord-x').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyManualXYInputs();
+    });
+    document.getElementById('input-coord-y').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyManualXYInputs();
+    });
+
+    document.getElementById('btn-reset-single-site').addEventListener('click', () => {
+      if (selectedSiteId) resetSingleSiteToDefault(selectedSiteId, true);
+    });
+
+    renderSiteList();
+
+    document.getElementById('btn-close-detail').addEventListener('click', () => {
+      detailPanel.classList.add('translate-x-[120%]', 'opacity-0');
+      selectedSiteId = null;
+      renderSiteList();
+    });
+
+    document.getElementById('btn-fly-closer').addEventListener('click', () => {
+      if (selectedSiteId) selectLandingSite(selectedSiteId, true, true);
+    });
+
+    document.getElementById('btn-overview').addEventListener('click', () => {
+      flyCameraTo(new THREE.Vector3(0, 0, -15), new THREE.Vector3(0, 135, 145), 950);
+    });
+
+    // =========================================================================
+    // 8. CONTROLES DE VISUALIZACIÓN (SUPERFICIE VS MAPA DE ALTURAS, SLIDERS)
+    // =========================================================================
+    const btnModeLunar = document.getElementById('mode-lunar');
+    const btnModeTopo = document.getElementById('mode-topo');
+    const topoLegend = document.getElementById('topo-legend');
+
+    btnModeLunar.addEventListener('click', () => {
+      terrainGeom.attributes.color.array.set(lunarColors);
+      terrainGeom.attributes.color.needsUpdate = true;
+      btnModeLunar.className = 'py-1.5 px-2.5 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-400/30 transition';
+      btnModeTopo.className = 'py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition';
+      topoLegend.classList.add('hidden');
+    });
+
+    btnModeTopo.addEventListener('click', () => {
+      terrainGeom.attributes.color.array.set(topoColors);
+      terrainGeom.attributes.color.needsUpdate = true;
+      btnModeTopo.className = 'py-1.5 px-2.5 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-400/30 transition';
+      btnModeLunar.className = 'py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition';
+      topoLegend.classList.remove('hidden');
+    });
+
+    const sliderExag = document.getElementById('slider-exag');
+    const valExag = document.getElementById('val-exag');
+    sliderExag.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      valExag.textContent = `${v.toFixed(1)}x`;
+      applyVerticalExaggeration(v);
+    });
+
+    const sliderSun = document.getElementById('slider-sun');
+    const valSun = document.getElementById('val-sun');
+    sliderSun.addEventListener('input', (e) => {
+      const deg = parseInt(e.target.value, 10);
+      valSun.textContent = `${deg}°`;
+      updateSunPosition(deg);
+    });
+
+    // =========================================================================
+    // 9. RAYCASTING: TELEMETRÍA DE CURSOR Y ARRASTRE 3D DE MARCADORES
+    // =========================================================================
+    const raycaster = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2();
+    const hudLat = document.getElementById('hud-lat');
+    const hudLon = document.getElementById('hud-lon');
+    const hudXy = document.getElementById('hud-xy');
+    const hudAlt = document.getElementById('hud-alt');
+
+    function updatePointerNDC(e) {
+      pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function startDraggingSite(siteId, e) {
+      draggingSiteId = siteId;
+      cameraFlyAnim = null;
+      controls.enabled = false;
+      document.body.style.cursor = 'grabbing';
+
+      const m = siteMarkers.find(item => item.site.id === siteId);
+      if (m) m.labelEl.classList.add('is-dragging');
+
+      selectLandingSite(siteId, false, false);
+      if (e) {
+        updatePointerNDC(e);
+      }
+    }
+
+    function stopDraggingSite() {
+      if (!draggingSiteId) return;
+      const m = siteMarkers.find(item => item.site.id === draggingSiteId);
+      if (m) m.labelEl.classList.remove('is-dragging');
+
+      draggingSiteId = null;
+      controls.enabled = true;
+      document.body.style.cursor = 'default';
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      updatePointerNDC(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      const markerHits = raycaster.intersectObjects(draggableHitMeshes, false);
+      if (markerHits.length > 0) {
+        const hitSiteId = markerHits[0].object.userData.siteId;
+        startDraggingSite(hitSiteId, e);
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      updatePointerNDC(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+
+      // Si estamos arrastrando un marcador, proyectar sobre el terreno 3D
+      if (draggingSiteId) {
+        const hits = raycaster.intersectObject(terrainMesh);
+        if (hits.length > 0) {
+          const pt = hits[0].point;
+          setSiteWorldPosition(draggingSiteId, pt.x, pt.z, { moveCamera: false });
+        }
+      } else {
+        // Cambiar cursor a 'grab' si pasa sobre un marcador 3D
+        const hoverMarker = raycaster.intersectObjects(draggableHitMeshes, false);
+        renderer.domElement.style.cursor = hoverMarker.length > 0 ? 'grab' : 'default';
+      }
+
+      // Actualizar telemetría HUD bajo el cursor
+      const terrainHits = raycaster.intersectObject(terrainMesh);
+      if (terrainHits.length > 0) {
+        const pt = terrainHits[0].point;
+        const { lat, lon } = xzToLatLon(pt.x, pt.z);
+        const { xKm, yKm } = worldXZToMapXYKm(pt.x, pt.z);
+        const elevKm = getBaseElevationKm(pt.x, pt.z);
+        hudLat.textContent = `${Math.abs(lat).toFixed(2)}° S`;
+        hudLon.textContent = `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? 'E' : 'W'}`;
+        hudXy.textContent = `${xKm.toFixed(0)}, ${yKm.toFixed(0)} km`;
+        hudAlt.textContent = `${elevKm >= 0 ? '+' : ''}${elevKm.toFixed(2)} km`;
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      stopDraggingSite();
+    });
+
+    window.addEventListener('pointercancel', () => {
+      stopDraggingSite();
+    });
+
+    // =========================================================================
+    // 10. NAVEGACIÓN LIBRE POR TECLADO (W A S D + Q / E + SHIFT)
+    // =========================================================================
+    const pressedKeys = new Set();
+
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      pressedKeys.add(e.code);
+    });
+
+    window.addEventListener('keyup', (e) => {
+      pressedKeys.delete(e.code);
+    });
+
+    window.addEventListener('blur', () => {
+      pressedKeys.clear();
+    });
+
+    function updateKeyboardNavigation(dt) {
+      if (pressedKeys.size === 0 || draggingSiteId) return;
+
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      if (forward.lengthSq() > 0.0001) forward.normalize();
+      else forward.set(0, 0, -1);
+
+      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+      const move = new THREE.Vector3();
+
+      if (pressedKeys.has('KeyW') || pressedKeys.has('ArrowUp')) move.add(forward);
+      if (pressedKeys.has('KeyS') || pressedKeys.has('ArrowDown')) move.sub(forward);
+      if (pressedKeys.has('KeyD') || pressedKeys.has('ArrowRight')) move.add(right);
+      if (pressedKeys.has('KeyA') || pressedKeys.has('ArrowLeft')) move.sub(right);
+      if (pressedKeys.has('KeyE')) move.y += 1;
+      if (pressedKeys.has('KeyQ')) move.y -= 1;
+
+      if (move.lengthSq() > 0) {
+        cameraFlyAnim = null;
+        const speed = (pressedKeys.has('ShiftLeft') || pressedKeys.has('ShiftRight')) ? 130 : 52;
+        move.normalize().multiplyScalar(speed * dt);
+        camera.position.add(move);
+        controls.target.add(move);
+      }
+    }
+
+    // =========================================================================
+    // 11. COMPARADOR INTELIGENTE DE SITIOS DE ATERRIZAJE
+    // =========================================================================
+    const comparatorModal = document.getElementById('comparator-modal');
+    const btnOpenComparator = document.getElementById('btn-open-comparator');
+    const btnCloseComparator = document.getElementById('btn-close-comparator');
+    const btnRunSim = document.getElementById('btn-run-sim');
+    const simDurationSelect = document.getElementById('sim-duration');
+    const simPrioritySelect = document.getElementById('sim-priority');
+    const simRelayToggle = document.getElementById('sim-relay-toggle');
+    const simRelayTypeSelect = document.getElementById('sim-relay-type');
+    const simLoading = document.getElementById('sim-loading');
+    const simLoadingStep = document.getElementById('sim-loading-step');
+    const simSummaryBanner = document.getElementById('sim-summary-banner');
+    const simSummaryText = document.getElementById('sim-summary-text');
+    const simWeightsBadge = document.getElementById('sim-weights-badge');
+    const simCardsGrid = document.getElementById('sim-cards-grid');
+
+    // AVISO (R37, ver docs/fuentes.md del repo): estos valores base son ILUSTRATIVOS, no
+    // calculados de un DEM/efemerides reales. Solo las coordenadas lat/lon de LANDING_SITES
+    // son reales (citas peer-reviewed). Cuando el usuario mueve un marcador (isModified=true),
+    // evaluateSiteGeometryAtCurrentPos() SI calcula geometria real sobre el terreno sintetico
+    // (horizonte en 36 azimuts) - pero el terreno de base sigue siendo ruido procedural, no LOLA.
+    const SITE_ORBITAL_MODELS = {
+      'shackleton': {
+        solarBasePct: 87.8,
+        solarSeasonalVar: 2.1,
+        dteBasePct: 48.5,
+        maxOutageNoRelayCycleH: 186.5,
+        safetyScore: 72,
+        prosWithRelay: [
+          'Altísima iluminación solar geométrica (~88%), minimizando la masa de baterías requerida.',
+          'Con enlace local activo se elimina el cuello de botella de su cercanía al polo, logrando >96% de cobertura de datos.',
+          'Acceso inmediato (a <2 km) a trampas frías permanentes (PSR) con hielo de agua en el interior de Shackleton.'
+        ],
+        prosNoRelay: [
+          'Excelente disponibilidad energética (~88% de luz solar) en los picos del borde del cráter.',
+          'Proximidad directa al interior permanentemente en sombra de Shackleton para prospección de volátiles.'
+        ],
+        consWithRelay: [
+          'Dependencia crítica del enlace local durante casi la mitad del ciclo sinódico por ocultamiento terrestre.',
+          'Pendientes elevadas (15°–30°) y corredor de aterrizaje estrecho en el borde del cráter.'
+        ],
+        consNoRelay: [
+          'Sin respaldo local sufre apagones DTE de más de 7 días seguidos (~186 h), limitando teleoperación en tiempo real.',
+          'Corredor de descenso estrecho con pendientes de 15°–30° que exigen evasión autónoma de riesgos.'
+        ]
+      },
+      'de-gerlache': {
+        solarBasePct: 83.4,
+        solarSeasonalVar: 2.4,
+        dteBasePct: 56.2,
+        maxOutageNoRelayCycleH: 154.0,
+        safetyScore: 91,
+        prosWithRelay: [
+          'Mejor equilibrio entre seguridad de aterrizaje (<10° en la Cresta de Conexión) y acceso científico.',
+          'El respaldo de enlace local cubre los periodos de libración negativa, elevando la disponibilidad a >97%.',
+          'Terrazas amplias permiten desplazamiento seguro de rovers hacia micro-trampas frías cercanas.'
+        ],
+        prosNoRelay: [
+          'Topografía óptima en la Cresta de Conexión con pendientes suaves (<10°) y bajo riesgo de vuelco.',
+          'Buen compromiso entre iluminación solar (>83%) y visibilidad directa a Tierra (~56%).'
+        ],
+        consWithRelay: [
+          'Iluminación solar ligeramente inferior a Shackleton y Malapert debido a sombras proyectadas por macizos vecinos.',
+          'Requiere coordinación de salto de enlace si se emplea repetidor terrestre en Malapert.'
+        ],
+        consNoRelay: [
+          'Interrupciones continuas de comunicación directa de hasta ~6.4 días cuando la Tierra desciende al norte.',
+          'Menor porcentaje de luz solar continua que el pico del Macizo Malapert.'
+        ]
+      },
+      'malapert': {
+        solarBasePct: 91.2,
+        solarSeasonalVar: 1.8,
+        dteBasePct: 99.4,
+        maxOutageNoRelayCycleH: 4.2,
+        safetyScore: 86,
+        prosWithRelay: [
+          'Visibilidad directa a la Tierra prácticamente ininterrumpida (~99.4%), ideal para teleoperación en tiempo real.',
+          'Máxima iluminación solar geométrica (>91%) gracias a sus +5,000 m sobre la cuenca circundante.',
+          'Funciona simultáneamente como nodo natural de telecomunicaciones para toda la región polar.'
+        ],
+        prosNoRelay: [
+          'Único sitio capaz de operar casi sin interrupciones DTE (<5 h máximas) sin requerir constelación orbital.',
+          'Altísima generación fotovoltaica (>91%) y meseta cumbre con pendientes favorables (<10°).'
+        ],
+        consWithRelay: [
+          'Mayor distancia (~150 km) respecto al polo geográfico y a los grandes cráteres PSR como Shackleton.',
+          'El respaldo de enlace local aporta un margen redundante menor porque su enlace directo ya es casi continuo.'
+        ],
+        consNoRelay: [
+          'Ubicado a 85°S (~150 km del Polo Sur), más alejado de las mayores reservas de hielo profundo de Shackleton.',
+          'Tránsito de superficie hacia las depresiones vecinas (Haworth) implica descensos pronunciados.'
+        ]
+      }
+    };
+
+    // Evaluación topográfica y geométrica 360° real sobre la malla DEM para cualquier coordenada (x, z)
+    function evaluateSiteGeometryAtCurrentPos(site) {
+      if (!site.isModified) {
+        const base = SITE_ORBITAL_MODELS[site.id];
+        return {
+          solarPct: base.solarBasePct,
+          solarSeasonalVar: base.solarSeasonalVar,
+          dtePct: base.dteBasePct,
+          maxOutageNoRelayCycleH: base.maxOutageNoRelayCycleH,
+          safetyScore: base.safetyScore,
+          elevKm: getBaseElevationKm(site.worldX, site.worldZ),
+          slopeDeg: computeLocalSlopeDeg(site.worldX, site.worldZ)
+        };
+      }
+
+      const h0 = getBaseElevationKm(site.worldX, site.worldZ);
+      const slopeDeg = computeLocalSlopeDeg(site.worldX, site.worldZ);
+
+      // 1. Trazado de horizonte solar en 36 azimuts (cada 10°) hasta 80 km
+      const numAzimuths = 36;
+      let litCount = 0;
+      for (let a = 0; a < numAzimuths; a++) {
+        const az = (a / numAzimuths) * Math.PI * 2;
+        const dx = Math.sin(az);
+        const dz = -Math.cos(az);
+        let maxHorizonDeg = -5.0;
+        for (let rKm = 4; rKm <= 80; rKm += 4) {
+          const rU = rKm / KM_PER_UNIT;
+          const hSample = getBaseElevationKm(site.worldX + dx * rU, site.worldZ + dz * rU);
+          const elevAngleDeg = THREE.MathUtils.radToDeg(Math.atan2(hSample - h0, rKm));
+          if (elevAngleDeg > maxHorizonDeg) maxHorizonDeg = elevAngleDeg;
+        }
+        // El Sol oscila estacionalmente ±1.54° alrededor del horizonte polar; el disco solar mide ~0.53°
+        if (maxHorizonDeg < -0.6) litCount += 1.0;
+        else if (maxHorizonDeg < 0.4) litCount += 0.78;
+        else if (maxHorizonDeg < 1.54) litCount += Math.max(0.15, (1.54 - maxHorizonDeg) / 2.2);
+        else litCount += Math.max(0.0, 0.12 - (maxHorizonDeg - 1.54) * 0.03);
+      }
+      const solarPct = THREE.MathUtils.clamp((litCount / numAzimuths) * 100, 4.0, 94.5);
+
+      // 2. Visibilidad directa hacia la Tierra (meridiano 0° E -> dirección -Z en mapa polar)
+      // La elevación de la Tierra vista desde el polo sur oscila entre -6.7° y +6.7° por libración latitudinal,
+      // más la colatitud del sitio (hacia el norte de 90°S gana +1° por cada grado de latitud).
+      const colatDeg = 90.0 - Math.abs(site.lat);
+      let maxNorthHorizonDeg = -6.0;
+      for (let rKm = 4; rKm <= 110; rKm += 4) {
+        const rU = rKm / KM_PER_UNIT;
+        const hSample = getBaseElevationKm(site.worldX, site.worldZ - rU);
+        const ang = THREE.MathUtils.radToDeg(Math.atan2(hSample - h0, rKm));
+        if (ang > maxNorthHorizonDeg) maxNorthHorizonDeg = ang;
+      }
+
+      // Ángulo aparente de la Tierra relativo al horizonte local: rango [colatDeg - 6.7°, colatDeg + 6.7°]
+      const earthMinDeg = colatDeg - 6.7;
+      const earthMaxDeg = colatDeg + 6.7;
+      let dteFraction = 0;
+      if (maxNorthHorizonDeg <= earthMinDeg) {
+        dteFraction = 0.995;
+      } else if (maxNorthHorizonDeg >= earthMaxDeg) {
+        dteFraction = 0.0;
+      } else {
+        // Distribución sinusoidal de la libración latitudinal
+        const u = THREE.MathUtils.clamp((maxNorthHorizonDeg - colatDeg) / 6.7, -1, 1);
+        dteFraction = 0.5 - Math.asin(u) / Math.PI;
+      }
+      const dtePct = THREE.MathUtils.clamp(dteFraction * 100, 0.0, 99.6);
+
+      // 3. Interrupción máxima continua sin enlace local dentro de un ciclo de 708.7 h
+      const cycleH = 708.72;
+      const maxOutageNoRelayCycleH = dtePct >= 99.0
+        ? 4.0
+        : THREE.MathUtils.clamp((1 - dtePct / 100) * cycleH * 0.54, 6.0, cycleH);
+
+      // 4. Seguridad topográfica según pendiente local y profundidad de cráter
+      const safetyScore = Math.round(THREE.MathUtils.clamp(100 - slopeDeg * 2.1 - (h0 < -2.5 ? 12 : 0), 25, 96));
+
+      return {
+        solarPct,
+        solarSeasonalVar: 2.2,
+        dtePct,
+        maxOutageNoRelayCycleH,
+        safetyScore,
+        elevKm: h0,
+        slopeDeg
+      };
+    }
+
+    function buildDynamicProsAndCons(site, geom, relayEnabled) {
+      if (!site.isModified) {
+        const base = SITE_ORBITAL_MODELS[site.id];
+        return {
+          pros: relayEnabled ? base.prosWithRelay : base.prosNoRelay,
+          cons: relayEnabled ? base.consWithRelay : base.consNoRelay
+        };
+      }
+
+      const pros = [];
+      const cons = [];
+
+      if (geom.solarPct >= 80) {
+        pros.push(`Alta iluminación solar geométrica (${geom.solarPct.toFixed(1)}%) gracias a su posición elevada (+${geom.elevKm.toFixed(2)} km).`);
+      } else if (geom.solarPct >= 55) {
+        pros.push(`Iluminación solar moderada (${geom.solarPct.toFixed(1)}%), viable con almacenamiento energético intermedio.`);
+      } else {
+        cons.push(`Fuerte obstrucción solar del horizonte (${geom.solarPct.toFixed(1)}% de luz); posible zona en sombra permanente (PSR).`);
+      }
+
+      if (geom.dtePct >= 85) {
+        pros.push(`Excelente línea de vista directa hacia la Tierra (${geom.dtePct.toFixed(1)}%), minimizando la dependencia orbital.`);
+      } else if (relayEnabled) {
+        pros.push(`El respaldo de enlace local compensa los bloqueos hacia el norte (DTE directa del ${geom.dtePct.toFixed(1)}%).`);
+      } else {
+        cons.push(`Visibilidad directa limitada a Tierra (${geom.dtePct.toFixed(1)}%) por relieve norte; sufre cortes continuos largos.`);
+      }
+
+      if (geom.slopeDeg <= 10) {
+        pros.push(`Pendiente topográfica suave (${geom.slopeDeg.toFixed(1)}°), favorable para estabilidad del aterrizador y rovers.`);
+      } else {
+        cons.push(`Pendiente local pronunciada (${geom.slopeDeg.toFixed(1)}°), requiere guiado terminal de precisión.`);
+      }
+
+      if (pros.length === 0) pros.push('Ubicación de interés científico cercano a depresiones polares frías.');
+      if (cons.length === 0) cons.push('Sin restricciones críticas detectadas en el radio topográfico analizado.');
+
+      return { pros, cons };
+    }
+
+    const PRIORITY_WEIGHTS = {
+      balanced: {
+        label: 'Pesos: Energía 35% • Comms DTE 30% • Continuidad 20% • Relieve 15%',
+        solar: 0.35,
+        dte: 0.30,
+        continuity: 0.20,
+        safety: 0.15
+      },
+      solar: {
+        label: 'Pesos: Energía 55% • Comms DTE 20% • Continuidad 15% • Relieve 10%',
+        solar: 0.55,
+        dte: 0.20,
+        continuity: 0.15,
+        safety: 0.10
+      },
+      comms: {
+        label: 'Pesos: Energía 20% • Comms DTE 45% • Continuidad 25% • Relieve 10%',
+        solar: 0.20,
+        dte: 0.45,
+        continuity: 0.25,
+        safety: 0.10
+      },
+      safety: {
+        label: 'Pesos: Energía 25% • Comms DTE 20% • Continuidad 15% • Relieve 40%',
+        solar: 0.25,
+        dte: 0.20,
+        continuity: 0.15,
+        safety: 0.40
+      }
+    };
+
+    function computeSiteSimulation(site, durationDays, relayEnabled, relayType, priorityKey) {
+      const geom = evaluateSiteGeometryAtCurrentPos(site);
+      const totalHours = durationDays * 24.0;
+
+      // Ajuste estacional leve según duración analizada (14d toma pico favorable; 365d promedia invierno/verano polar)
+      let seasonalDelta = 0;
+      if (durationDays <= 14) seasonalDelta = geom.solarSeasonalVar * 0.65;
+      else if (durationDays >= 365) seasonalDelta = -geom.solarSeasonalVar * 0.45;
+
+      const solarPct = Math.min(99.5, Math.max(2.0, geom.solarPct + seasonalDelta));
+      const solarHours = totalHours * (solarPct / 100);
+
+      // Horas con comunicación directa a la Tierra (DTE)
+      const dtePct = geom.dtePct;
+      const dteHours = totalHours * (dtePct / 100);
+      const nonDteHours = Math.max(0, totalHours - dteHours);
+
+      // Cálculo de respaldo de enlace local
+      let relayEfficiency = 0;
+      let maxOutageWithRelayH = geom.maxOutageNoRelayCycleH;
+
+      const distMalapertKm = Math.hypot(site.worldX - MALAPERT_XZ.x, site.worldZ - MALAPERT_XZ.z) * KM_PER_UNIT;
+
+      if (relayType === 'elfo') {
+        relayEfficiency = 0.93;
+        maxOutageWithRelayH = distMalapertKm < 15 ? 1.2 : 3.8;
+      } else {
+        if (distMalapertKm < 12) {
+          relayEfficiency = 0.90;
+          maxOutageWithRelayH = 0.8;
+        } else if (distMalapertKm < 125) {
+          relayEfficiency = 0.85;
+          maxOutageWithRelayH = 12.0;
+        } else {
+          relayEfficiency = 0.74;
+          maxOutageWithRelayH = 19.5;
+        }
+      }
+
+      const potentialRelayHours = nonDteHours * relayEfficiency;
+      const activeRelayHours = relayEnabled ? potentialRelayHours : 0;
+
+      // Escalar interrupción máxima si el periodo analizado es menor a 1 ciclo sinódico completo
+      const cycleScale = Math.min(1.0, durationDays / 29.53);
+      const rawMaxOutage = relayEnabled ? maxOutageWithRelayH : geom.maxOutageNoRelayCycleH;
+      const longestOutageHours = Math.max(0.5, rawMaxOutage * (relayEnabled ? 1.0 : (0.55 + 0.45 * cycleScale)));
+
+      // Disponibilidad total efectiva de comunicaciones
+      const effectiveCommsPct = Math.min(100, ((dteHours + activeRelayHours) / totalHours) * 100);
+
+      // Puntuación de continuidad (penaliza interrupciones largas; 0h -> 100 pts, >=180h -> 15 pts)
+      const continuityScore = Math.max(15, Math.min(100, 100 - (longestOutageHours / 2.1)));
+
+      // Puntuación final ponderada (0 - 100)
+      const w = PRIORITY_WEIGHTS[priorityKey];
+      const finalScore = Math.round(
+        solarPct * w.solar +
+        effectiveCommsPct * w.dte +
+        continuityScore * w.continuity +
+        geom.safetyScore * w.safety
+      );
+
+      const { pros, cons } = buildDynamicProsAndCons(site, geom, relayEnabled);
+      const { xKm, yKm } = worldXZToMapXYKm(site.worldX, site.worldZ);
+
+      return {
+        site,
+        xKm,
+        yKm,
+        totalHours,
+        solarPct,
+        solarHours,
+        dtePct,
+        dteHours,
+        longestOutageHours,
+        maxOutageNoRelayH: geom.maxOutageNoRelayCycleH * (0.55 + 0.45 * cycleScale),
+        relayEnabled,
+        relayType,
+        activeRelayHours,
+        potentialRelayHours,
+        effectiveCommsPct,
+        finalScore,
+        pros,
+        cons
+      };
+    }
+
+    function formatHours(h) {
+      if (h >= 100) return `${h.toLocaleString('es-MX', { maximumFractionDigits: 1 })} h`;
+      return `${h.toFixed(1)} h`;
+    }
+
+    function renderComparatorResults(animateProgress = false) {
+      const durationDays = parseFloat(simDurationSelect.value);
+      const priorityKey = simPrioritySelect.value;
+      const relayEnabled = simRelayToggle.checked;
+      const relayType = simRelayTypeSelect.value;
+
+      simRelayTypeSelect.disabled = !relayEnabled;
+      simRelayTypeSelect.classList.toggle('opacity-40', !relayEnabled);
+
+      const executeRender = () => {
+        simLoading.classList.add('hidden');
+        simSummaryBanner.classList.remove('hidden');
+        simCardsGrid.classList.remove('hidden');
+
+        const results = LANDING_SITES.map(site =>
+          computeSiteSimulation(site, durationDays, relayEnabled, relayType, priorityKey)
+        ).sort((a, b) => b.finalScore - a.finalScore);
+
+        const totalH = (durationDays * 24).toLocaleString('es-MX', { maximumFractionDigits: 1 });
+        const relayLabel = relayEnabled
+          ? (relayType === 'elfo' ? 'con respaldo orbital polar ELFO activo' : 'con repetidor local en Pico Malapert activo')
+          : 'sin respaldo de enlace local (solo DTE)';
+
+        simSummaryText.innerHTML = `Análisis completado para <strong>${durationDays} días (${totalH} h)</strong> ${relayLabel}.`;
+        simWeightsBadge.textContent = PRIORITY_WEIGHTS[priorityKey].label;
+
+        simCardsGrid.innerHTML = results.map((res, index) => {
+          const isWinner = index === 0;
+          const rankLabel = index === 0 ? 'RECOMENDADO #1' : index === 1 ? 'ALTERNATIVA #2' : 'OPCIÓN #3';
+          const borderClass = isWinner
+            ? 'border-sky-400/70 bg-gradient-to-b from-slate-900/95 to-slate-950 shadow-xl shadow-sky-500/10'
+            : 'border-slate-800/90 bg-slate-900/60';
+
+          const scoreColor = res.finalScore >= 85 ? 'text-emerald-400' : res.finalScore >= 72 ? 'text-sky-400' : 'text-amber-400';
+          const barColor = res.finalScore >= 85 ? 'bg-emerald-400' : res.finalScore >= 72 ? 'bg-sky-400' : 'bg-amber-400';
+
+          const outageColor = res.longestOutageHours <= 12
+            ? 'text-emerald-400'
+            : res.longestOutageHours <= 48
+              ? 'text-amber-300'
+              : 'text-rose-400';
+
+          return `
+            <article class="rounded-2xl border ${borderClass} p-4 flex flex-col justify-between gap-4 transition">
+              <div class="space-y-3.5">
+                <!-- Cabecera de Tarjeta + Puntuación Final -->
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span class="text-[10px] font-mono-tech font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-sky-400 text-slate-950' : 'bg-slate-800 text-slate-300'}">
+                        ${rankLabel}
+                      </span>
+                      <span class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded-full ${res.site.isModified ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'}">
+                        ${res.site.isModified ? 'Personalizado' : 'Default'}
+                      </span>
+                    </div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2 truncate">
+                      <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${res.site.colorHex};"></span>
+                      <span class="truncate">${res.site.name}</span>
+                    </h3>
+                    <div class="text-[10.5px] font-mono-tech text-slate-400 mt-0.5">
+                      ${res.site.coordsText} • X: ${res.xKm.toFixed(1)} km, Y: ${res.yKm.toFixed(1)} km
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="text-2xl font-extrabold font-mono-tech ${scoreColor} leading-none">${res.finalScore}<span class="text-xs text-slate-500 font-normal">/100</span></div>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400">Puntuación</span>
+                  </div>
+                </div>
+
+                <!-- Barra de Puntuación -->
+                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full ${barColor} rounded-full transition-all duration-500" style="width: ${res.finalScore}%"></div>
+                </div>
+
+                <!-- 4 Métricas Clave Solicitadas -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <!-- 1. Iluminación Solar Geométrica -->
+                  <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Iluminación Solar</span>
+                    <span class="font-mono-tech text-sm font-bold text-amber-300 mt-0.5 block">${res.solarPct.toFixed(1)}%</span>
+                    <span class="text-[10px] font-mono-tech text-slate-500">${formatHours(res.solarHours)} de luz</span>
+                  </div>
+
+                  <!-- 2. Comunicación Directa a la Tierra (DTE) -->
+                  <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Comms Directa Tierra</span>
+                    <span class="font-mono-tech text-sm font-bold text-sky-300 mt-0.5 block">${formatHours(res.dteHours)}</span>
+                    <span class="text-[10px] font-mono-tech text-slate-500">${res.dtePct.toFixed(1)}% del periodo</span>
+                  </div>
+
+                  <!-- 3. Interrupción más larga -->
+                  <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Interrupción Máxima</span>
+                    <span class="font-mono-tech text-sm font-bold ${outageColor} mt-0.5 block">${formatHours(res.longestOutageHours)}</span>
+                    <span class="text-[10px] text-slate-500 block truncate">
+                      ${res.relayEnabled ? `Sin relay: ${formatHours(res.maxOutageNoRelayH)}` : 'Bloqueo continuo DTE'}
+                    </span>
+                  </div>
+
+                  <!-- 4. Respaldo de enlace local -->
+                  <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Respaldo Enlace Local</span>
+                    ${res.relayEnabled
+                      ? `<span class="font-mono-tech text-sm font-bold text-emerald-400 mt-0.5 block">+${formatHours(res.activeRelayHours)}</span>
+                         <span class="text-[10px] font-mono-tech text-slate-400">Total útil: ${res.effectiveCommsPct.toFixed(1)}%</span>`
+                      : `<span class="font-mono-tech text-xs font-semibold text-slate-400 mt-1 block">No activo (0.0 h)</span>
+                         <span class="text-[10px] text-slate-500">Potencial: +${formatHours(res.potentialRelayHours)}</span>`
+                    }
+                  </div>
+                </div>
+
+                <!-- Ventajas y Desventajas -->
+                <div class="space-y-2.5 pt-1 text-[11.5px] leading-relaxed">
+                  <div class="bg-emerald-950/25 border border-emerald-500/20 rounded-xl p-2.5">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1 flex items-center gap-1">
+                      <span>✓ Ventajas Clave</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300 list-disc list-inside">
+                      ${res.pros.map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                  </div>
+
+                  <div class="bg-rose-950/20 border border-rose-500/20 rounded-xl p-2.5">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-rose-400 mb-1 flex items-center gap-1">
+                      <span>! Desventajas / Riesgos</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300 list-disc list-inside">
+                      ${res.cons.map(c => `<li>${c}</li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Acción: Inspeccionar Sitio en el Mapa 3D -->
+              <button data-goto-site="${res.site.id}" class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-sky-500 text-slate-200 hover:text-slate-950 font-semibold text-xs border border-slate-700 hover:border-sky-400 transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Ver ${res.site.shortName} en Mapa 3D
+              </button>
+            </article>
+          `;
+        }).join('');
+
+        // Vincular botones "Ver en Mapa 3D" de cada tarjeta
+        simCardsGrid.querySelectorAll('[data-goto-site]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const siteId = btn.getAttribute('data-goto-site');
+            closeComparatorModal();
+            selectLandingSite(siteId, true, false);
+          });
+        });
+      };
+
+      if (animateProgress) {
+        simSummaryBanner.classList.add('hidden');
+        simCardsGrid.classList.add('hidden');
+        simLoading.classList.remove('hidden');
+        simLoadingStep.textContent = 'Trazando perfiles de horizonte DEM LOLA (360° azimut)...';
+
+        setTimeout(() => {
+          simLoadingStep.textContent = 'Integrando libración latitudinal Tierra-Luna y cobertura de enlace...';
+        }, 240);
+
+        setTimeout(() => {
+          executeRender();
+        }, 520);
+      } else {
+        executeRender();
+      }
+    }
+
+    function openComparatorModal() {
+      comparatorModal.classList.remove('hidden');
+      comparatorModal.classList.add('flex');
+      renderComparatorResults(true);
+    }
+
+    function closeComparatorModal() {
+      comparatorModal.classList.add('hidden');
+      comparatorModal.classList.remove('flex');
+    }
+
+    btnOpenComparator.addEventListener('click', openComparatorModal);
+    btnCloseComparator.addEventListener('click', closeComparatorModal);
+
+    // Cerrar al hacer clic fuera de la caja del modal
+    comparatorModal.addEventListener('click', (e) => {
+      if (e.target === comparatorModal) closeComparatorModal();
+    });
+
+    // Cerrar con tecla Escape
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !comparatorModal.classList.contains('hidden')) {
+        closeComparatorModal();
+      }
+    });
+
+    btnRunSim.addEventListener('click', () => renderComparatorResults(true));
+    simDurationSelect.addEventListener('change', () => renderComparatorResults(false));
+    simPrioritySelect.addEventListener('change', () => renderComparatorResults(false));
+    simRelayToggle.addEventListener('change', () => renderComparatorResults(false));
+    simRelayTypeSelect.addEventListener('change', () => renderComparatorResults(false));
+
+    // =========================================================================
+    // 12. PROYECCIÓN DE ETIQUETAS 3D, RESIZE Y BUCLE DE RENDERIZADO
+    // =========================================================================
+    const tempProjVec = new THREE.Vector3();
+
+    function updateProjectedLabels() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      siteMarkers.forEach(m => {
+        tempProjVec.copy(m.group.position);
+        tempProjVec.y += 16.5;
+        tempProjVec.project(camera);
+
+        const isBehindCamera = tempProjVec.z > 1;
+        if (isBehindCamera) {
+          m.labelEl.style.opacity = '0';
+          m.labelEl.style.pointerEvents = 'none';
+        } else {
+          const sx = (tempProjVec.x * 0.5 + 0.5) * width;
+          const sy = (-tempProjVec.y * 0.5 + 0.5) * height;
+          m.labelEl.style.left = `${sx}px`;
+          m.labelEl.style.top = `${sy}px`;
+          m.labelEl.style.opacity = '1';
+          m.labelEl.style.pointerEvents = 'auto';
+        }
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let lastFrameTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+      lastFrameTime = now;
+
+      // Animación suave de vuelo de cámara
+      if (cameraFlyAnim) {
+        const elapsed = now - cameraFlyAnim.startTime;
+        const t = Math.min(1, elapsed / cameraFlyAnim.duration);
+        const ease = 1 - Math.pow(1 - t, 3);
+        controls.target.lerpVectors(cameraFlyAnim.startTarget, cameraFlyAnim.endTarget, ease);
+        camera.position.lerpVectors(cameraFlyAnim.startCam, cameraFlyAnim.endCam, ease);
+        if (t >= 1) cameraFlyAnim = null;
+      } else {
+        updateKeyboardNavigation(dt);
+      }
+
+      // Pulso sutil en los anillos de aterrizaje
+      const pulse = 1 + Math.sin(now * 0.004) * 0.08;
+      siteMarkers.forEach(m => {
+        const isSelected = m.site.id === selectedSiteId;
+        const scale = isSelected ? pulse * 1.25 : 1.0;
+        m.ring.scale.set(scale, scale, 1);
+      });
+
+      controls.update();
+      updateProjectedLabels();
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

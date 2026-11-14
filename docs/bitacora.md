@@ -206,3 +206,29 @@ anterior, solo se agrega abajo.
   `docs/mapeo-lunar-3d-ilustrativo.html`.
 - Leccion aplicada: mejor un hueco marcado ("ilustrativo") que un dato plausible
   con cara de real.
+
+### 2026-11-14 ~14:50 - Segundo mockup con el mismo bug (Mapa_Lunar2.html), mismo arreglo
+- El equipo mando un segundo archivo (`Mapa_Lunar2.html`, UI mas elaborada:
+  marcadores arrastrables, coordenadas editables, vuelo libre WASD, calculo
+  geometrico de horizonte en 36 azimuts cuando se mueve un sitio). Mismo badge
+  falso "DEM LOLA-LRO", mismo terreno `fbm()` sintetico, y el mismo
+  `SITE_ORBITAL_MODELS` con los identicos porcentajes fabricados de
+  MAPEO_LUNAR.html (87.8/83.4/91.2% solar, 48.5/56.2/99.4% DTE) - confirma que
+  ambos mockups salen de la misma herramienta/plantilla. Repetia tambien el
+  mismo bug de coordenada de Shackleton (-89.67, 129.78 = fondo del crater).
+- Arreglado igual que el anterior: las 3 coordenadas a los valores reales de
+  `sitios.json`, badge a "VISTA ILUSTRATIVA", texto de carga y comentario de
+  `SITE_ORBITAL_MODELS` corregidos con aviso explicito. Verificado visualmente
+  sirviendo el archivo en localhost: renderiza, el comparador corre sin error,
+  y con los pesos balanceados Malapert vuelve a salir primero (95/100) -
+  consistente con el indice de conveniencia S ya calculado con datos reales en
+  el comparador del repo. Guardado como
+  `docs/mapa-lunar-comparador-3d-ilustrativo.html`.
+- Tambien se reviso `trekOBJ.zip` (malla+textura real exportada de
+  trek.nasa.gov/moon, 64 MB) que el equipo penso que era "el pedazo de Luna" de
+  uno de nuestros sitios: la textura muestra un mapa de unidades geologicas sin
+  relacion visible con el polo sur, y el link de origen en el Google Doc de
+  Irvin apunta a lon~23E lat~-21S (zona media, lejos de los -89/-90S de
+  Shackleton/de Gerlache/Malapert). Es dato real de NASA pero del lugar
+  equivocado - no se uso. Pendiente: re-exportar desde trek.nasa.gov centrado en
+  los 3 sitios reales si se quiere una malla 3D real para el visualizador.

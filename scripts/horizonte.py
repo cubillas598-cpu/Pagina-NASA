@@ -44,7 +44,10 @@ REPO_PAGINA = Path(r"D:/PROYECTOS CLAUDE/Pagina-NASA")
 ESCENARIO_PATH = REPO_PAGINA / "data" / "escenario_demo.json"
 
 RADIO_MOON_M = 1737400.0
-RADIO_MAX_KM = 30.0
+RADIO_MAX_KM = 150.0  # subido de 30km: la prueba de sensibilidad mostro que
+# terreno mas alla de 30km si bloquea en algunas direcciones (de Gerlache
+# +3.4 grados, Malapert +4.4 grados en la direccion mas despejada; 0 huecos
+# de cobertura hasta 150km). Ver docs/fuentes.md.
 PASO_DISTANCIA_M = 240.0  # 3 pixeles del DEM de 80 m
 
 

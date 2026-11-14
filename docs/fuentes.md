@@ -19,7 +19,7 @@ Fecha de acceso de todas las URL: 14 de noviembre de 2026.
 
 | Cálculo | Método | Dónde | Pruebas |
 |---|---|---|---|
-| Horizonte por azimut (360 valores, 1°) | Rayos geodésicos (pyproj) cada 240 m hasta 30 km, con corrección por curvatura d²/2R; ángulo máximo del terreno; observador a ras de suelo | `scripts/horizonte.py` | Ninguna automática todavía |
+| Horizonte por azimut (360 valores, 1°) | Rayos geodésicos (pyproj) cada 240 m hasta 150 km (subido de 30 km tras la prueba de sensibilidad, ver pendiente #2 resuelto abajo), con corrección por curvatura d²/2R; ángulo máximo del terreno; observador a ras de suelo | `scripts/horizonte.py`, `scripts/sensibilidad_horizonte.py` | Ninguna automática todavía |
 | Sol o Tierra visibles | `elevación > horizonte(azimut)`, con interpolación circular entre grados; la igualdad cuenta como bloqueado | `web/js/model.js` (`calcularSerie`, `horizonteEn`) | `tests/model.test.mjs`, incluido el cruce 359°→0° |
 | Métricas del periodo | Conteo de muestras horarias: %, ventanas continuas, mayor sombra, mayor interrupción, Sol y Tierra a la vez | `web/js/model.js` (`metricasPeriodo`) | Sí |
 | Respaldo hacia la Tierra | Tramo local con servicio y Tierra sobre el horizonte del punto de apoyo, con las efemérides del lander | `web/js/model.js` | Sí |
@@ -51,6 +51,6 @@ Estos precedentes inspiran el modelo; ninguno aporta cifras a los cálculos.
 ## Pendientes de verificación
 
 1. **Efemérides:** cotejar 3 instantes por sitio (inicio, mitad y fin) en https://ssd.jpl.nasa.gov/horizons/app.html con los mismos parámetros. La documentación de la API no declara de forma explícita la escala por defecto de las tablas de observador (permite UT o TT; su ejemplo usa UT), así que conviene fijar `TIME_TYPE='UT'` en `scripts/efemerides.py`.
-2. **Radio del horizonte:** en sitios elevados (Malapert) el corte a 30 km puede omitir relieve más lejano. Hay que repetir con 100–150 km y comparar los porcentajes.
+2. **Radio del horizonte — RESUELTO 2026-11-14.** Medido con `scripts/sensibilidad_horizonte.py`: la dirección más despejada de cada sitio empeora al extender el radio de 30 a 150 km (Shackleton +0.00°, de Gerlache +3.42°, Malapert +4.38°), con 360/360 puntos válidos en los tres (sin huecos de cobertura del DEM hasta 150 km). Confirma que 30 km subestimaba el bloqueo. Datos de producción regenerados a 150 km; los números del comparador (incluida la ventaja de Malapert) ya reflejan esto.
 3. **Marcos de referencia:** el DEM usa MOON_ME (DE421); falta confirmar qué marco lunar usa Horizons para `coord@301` y si la diferencia afecta a la escala de 80 m/px.
 4. **Licencia del DEM:** la página del producto pide citar el artículo, pero no nombra una licencia específica.

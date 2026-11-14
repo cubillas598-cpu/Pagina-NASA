@@ -124,3 +124,18 @@ anterior, solo se agrega abajo.
   yo estaba editando. El indice de conveniencia (`suitabilityScore`) y sus 2 pruebas
   sobrevivieron el merge automatico sin tocar nada. Suite completa tras el merge:
   17/17 pasan (15 propias + 2 nuevas de Irvin sobre disponibilidad combinada).
+
+### 2026-11-14 ~14:40 - Pendiente resuelto: sensibilidad del horizonte al radio
+- Irvin ya habia dejado documentado en `docs/fuentes.md` que el corte a 30km podia
+  omitir relieve mas lejano, sobre todo en Malapert. Medido con
+  `scripts/sensibilidad_horizonte.py` (nuevo, no escribe nada, solo compara): a 30,
+  100 y 150 km, sin huecos de cobertura del DEM en ningun caso.
+- Resultado real: la direccion mas despejada de cada sitio empeora con mas radio -
+  Shackleton +0.00 grados, de Gerlache +3.42, Malapert +4.38. Confirma que 30km
+  subestimaba el bloqueo, sobre todo en los dos sitios que mas dependen de tener
+  una buena direccion despejada.
+- Regenerados los datos reales de produccion con radio de 150km (mismo script,
+  `scripts/horizonte.py`, solo cambio la constante). 22/22 pruebas siguen pasando
+  (son con datos fijos de prueba, no dependen del radio de produccion).
+- Pendientes que quedan: validar efemerides contra JPL visual (siguiente paso), y
+  activar GitHub Pages (accion de cuenta, no ejecutable desde aqui).

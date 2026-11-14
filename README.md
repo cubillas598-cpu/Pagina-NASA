@@ -41,8 +41,10 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
 
 - [ ] Validar las efemerides contra la herramienta de JPL (3 instantes por sitio)
-- [ ] Sensibilidad del horizonte al radio de 30 km de `scripts/horizonte.py`
-      (repetir con 100-150 km; puede cambiar los % de Malapert)
+- [x] Sensibilidad del horizonte al radio: medido con `scripts/sensibilidad_horizonte.py`
+      (30 vs 100 vs 150 km). Si cambiaba los % de Malapert/de Gerlache - si cambio
+      (+3.4 a +4.4 grados en la direccion mas despejada). Datos de produccion ya
+      regenerados a 150 km, sin huecos de cobertura. Detalle en `docs/fuentes.md`.
 - [ ] Activar GitHub Pages (Settings > Pages > rama `main`, carpeta raiz)
 
 

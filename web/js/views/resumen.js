@@ -24,7 +24,7 @@ export function renderFranja(cont, d) {
     enlace = indicador(ICONO.enlace, 'var(--texto-3)', 'Enlace local', 'Desactivado', '');
   }
   cont.innerHTML =
-    indicador(ICONO.sol, 'var(--naranja-claro)', 'Iluminación solar', `${num(m.pctSol, 0)} %`, `${m.horasSol} de ${m.horas} h`)
+    indicador(ICONO.sol, 'var(--acento-claro)', 'Iluminación solar', `${num(m.pctSol, 0)} %`, `${m.horasSol} de ${m.horas} h`)
     + indicador(ICONO.tierra, 'var(--tierra)', 'Visibilidad de la Tierra', `${num(m.pctTierra, 0)} %`, `${m.horasTierra} de ${m.horas} h`)
     + enlace;
 }

@@ -8,6 +8,13 @@ export const ESTADOS_ENLACE = {
 };
 const ESTADO_POR_NIVEL = ['sin_enlace', 'robusto', 'rapido'];
 
+const FORMATO_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+/** true si t tiene la forma AAAA-MM-DDTHH:MM y es una fecha real. */
+export function esMarcaHoraria(t) {
+  return typeof t === 'string' && FORMATO_HORA.test(t) && !Number.isNaN(Date.parse(`${t}:00Z`));
+}
+
 export function parseUtc(t) {
   return Date.parse(`${t}:00Z`);
 }
@@ -25,7 +32,7 @@ export function problemasEfemerides(horas, id = 'sitio') {
   let previo = null;
   for (let k = 0; k < horas.length && problemas.length < 5; k++) {
     const h = horas[k];
-    const ms = h && typeof h.t === 'string' ? parseUtc(h.t) : NaN;
+    const ms = h && esMarcaHoraria(h.t) ? parseUtc(h.t) : NaN;
     if (Number.isNaN(ms)) { problemas.push(`${id}: la muestra ${k} no tiene una fecha válida.`); continue; }
     if (previo !== null && ms - previo !== 3600e3) problemas.push(`${id}: hay un salto en los datos antes de ${h.t}.`);
     previo = ms;
@@ -37,6 +44,54 @@ export function problemasEfemerides(horas, id = 'sitio') {
         break;
       }
     }
+  }
+  return problemas;
+}
+
+function problemasPerfil(perfil, etiqueta) {
+  if (!perfil || !Array.isArray(perfil.elevacion_deg)) return [`${etiqueta}: falta el perfil de horizonte.`];
+  const res = perfil.resolucion_deg;
+  if (typeof res !== 'number' || !(res > 0) || Math.abs(360 / res - Math.round(360 / res)) > 1e-9) {
+    return [`${etiqueta}: resolución de horizonte no válida.`];
+  }
+  const v = perfil.elevacion_deg;
+  if (v.length !== Math.round(360 / res)) return [`${etiqueta}: el horizonte debe tener ${Math.round(360 / res)} valores y tiene ${v.length}.`];
+  const malo = v.findIndex((x) => typeof x !== 'number' || !Number.isFinite(x) || Math.abs(x) > 90);
+  return malo >= 0 ? [`${etiqueta}: valor de horizonte no válido en el azimut ${malo * res}°.`] : [];
+}
+
+/**
+ * Revisa el escenario antes de usarlo: perfiles de horizonte completos y
+ * numéricos (un null no puede convertirse en 0°), geometría del punto de
+ * apoyo, umbrales y evento de polvo. Devuelve la lista de problemas.
+ */
+export function problemasEscenario(escenario) {
+  const problemas = [];
+  const num = (x) => typeof x === 'number' && Number.isFinite(x);
+  if (!escenario || !Array.isArray(escenario.sitios) || escenario.sitios.length === 0) return ['El escenario no tiene sitios.'];
+  for (const s of escenario.sitios) {
+    const id = s && s.id ? s.id : 'sitio sin id';
+    problemas.push(...problemasPerfil(s.horizonte, id));
+    const r = s.relevo;
+    if (!r || ![r.az_deg, r.el_deg, r.distancia_km].every(num)) problemas.push(`${id}: el punto de apoyo necesita azimut, elevación y distancia numéricos.`);
+    else problemas.push(...problemasPerfil(r.horizonte, `${id}/punto de apoyo`));
+  }
+  const e = escenario.enlace_local;
+  if (!e || !num(e.rf?.bateria_relevo_h) || !num(e.optico?.sep_sin_enlace_deg) || !num(e.optico?.sep_robusto_deg)) {
+    problemas.push('Faltan umbrales numéricos del enlace local.');
+  }
+  const p = escenario.evento_polvo;
+  if (!p || !esMarcaHoraria(p.inicio) || !num(p.duracion_s) || p.duracion_s < 0) problemas.push('El evento de polvo necesita inicio y duración válidos.');
+  return problemas;
+}
+
+/** Coordenadas por sitio: latitud y longitud este numéricas y en rango. */
+export function problemasCoordenadas(escenario, coordenadas) {
+  const problemas = [];
+  for (const s of escenario.sitios) {
+    const c = coordenadas && coordenadas[s.id];
+    const ok = c && Number.isFinite(c.lat) && Number.isFinite(c.lon) && Math.abs(c.lat) <= 90 && c.lon >= 0 && c.lon < 360;
+    if (!ok) problemas.push(`${s.id}: faltan latitud o longitud válidas.`);
   }
   return problemas;
 }

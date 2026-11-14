@@ -1,9 +1,11 @@
 import { fechaUtc, horaUtc, diaMesUtc, horasTexto, esc } from '../format.js';
 import { ENLACE, ICONO, TIPO_ENLACE } from './estilos.js';
 
-const SI = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#2a1505"/><path d="M4.8 8.2 7 10.3l4.2-4.6" fill="none" stroke="#FFD45C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const NO = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="#2a1505" stroke-width="1.6"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="#2a1505" stroke-width="1.6" stroke-linecap="round"/></svg>';
-const MEDIO = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="#2a1505" stroke-width="1.6"/><path d="M8 1a7 7 0 0 1 0 14z" fill="#2a1505"/></svg>';
+const SI = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="currentColor" opacity=".2"/><path d="M4.8 8.2 7 10.3l4.2-4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const NO = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+const MEDIO = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1a7 7 0 0 1 0 14z" fill="currentColor"/></svg>';
+const icono = (estado) => ({ si: SI, no: NO, medio: MEDIO }[estado]);
+const fila = (estado, texto) => `<li class="${estado}">${icono(estado)}${texto}</li>`;
 
 /** Hora y fecha UTC del cursor bajo el selector de sitio. */
 export function renderHora(horaEl, fechaEl, m) {
@@ -15,14 +17,14 @@ export function renderHora(horaEl, fechaEl, m) {
 export function renderDestacada(cont, d) {
   const { sitio, muestra: m, estado } = d;
   const filas = [
-    `<li>${m.sol.visible ? SI : NO}${m.sol.visible ? 'Sol visible' : 'Sombra'}</li>`,
-    `<li>${m.tierra.visible ? SI : NO}${m.tierra.visible ? 'Tierra visible' : 'Tierra oculta'}</li>`,
+    fila(m.sol.visible ? 'si' : 'no', m.sol.visible ? 'Sol visible' : 'Sombra'),
+    fila(m.tierra.visible ? 'si' : 'no', m.tierra.visible ? 'Tierra visible' : 'Tierra oculta'),
   ];
   if (estado.enlaceActivo) {
     const e = m.enlace.estado;
-    filas.push(`<li>${e === 'rapido' ? SI : e === 'robusto' ? MEDIO : NO}Enlace ${TIPO_ENLACE[estado.tipoEnlace].toLowerCase()}: ${ENLACE[e].texto}</li>`);
+    filas.push(fila(e === 'rapido' ? 'si' : e === 'robusto' ? 'medio' : 'no', `Enlace ${TIPO_ENLACE[estado.tipoEnlace].toLowerCase()}: ${ENLACE[e].texto}`));
   } else {
-    filas.push(`<li>${NO}Enlace local desactivado</li>`);
+    filas.push(fila('no', 'Enlace local desactivado'));
   }
   const hora = horaUtc(m.ms).replace(' UTC', '');
   cont.innerHTML = `
@@ -38,7 +40,7 @@ export function renderDestacada(cont, d) {
 }
 
 const ICONO_EVENTO = { sol: [ICONO.eclipse, ICONO.sol], tierra: [ICONO.tierra, ICONO.tierra], enlace: [ICONO.enlace, ICONO.enlace] };
-const COLOR_EVENTO = { sol: 'var(--naranja-claro)', tierra: 'var(--tierra)', enlace: 'var(--error)' };
+const COLOR_EVENTO = { sol: 'var(--acento-claro)', tierra: 'var(--tierra)', enlace: 'var(--error)' };
 
 /**
  * Eventos calculados del periodo. Muestra los próximos a partir del cursor

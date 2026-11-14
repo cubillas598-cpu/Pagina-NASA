@@ -38,6 +38,18 @@
       <p class="cab__sub" id="cab-sub">Lunar Landing Site Navigator, polo sur lunar</p>
     </header>
 
+    <section class="tarjeta luna-tarjeta" id="luna-tarjeta" aria-labelledby="t-luna">
+      <header class="tarjeta__cab">
+        <div>
+          <h2 id="t-luna">Polo sur lunar</h2>
+          <p class="tarjeta__sub">Elige un sitio para acercarte. Las posiciones salen de sitios.json; textura y luz son solo visuales.</p>
+        </div>
+        <div class="luna-sitios" id="luna-sitios" role="group" aria-label="Elegir sitio"></div>
+      </header>
+      <div class="luna-visor" id="luna"></div>
+      <div class="luna-ficha" id="luna-ficha" aria-live="polite"></div>
+    </section>
+
     <main class="principal">
       <section class="vista" id="vista-resumen" data-vista="resumen" aria-label="Resumen">
         <div class="franja" id="franja" aria-live="polite"></div>
@@ -74,12 +86,11 @@
 
       <section class="vista" id="vista-sitios" data-vista="sitios" aria-label="Sitios" hidden>
         <div class="seccion__cab">
-          <h2>Terreno y horizonte</h2>
-          <span class="chip chip--aviso">Vista conceptual</span>
+          <h2>Ubicación y horizonte</h2>
         </div>
         <div class="sitios-rejilla">
           <article class="tarjeta">
-            <header class="tarjeta__cab"><h3>Polo sur</h3><span class="tarjeta__sub">Pulsa un sitio para elegirlo</span></header>
+            <header class="tarjeta__cab"><h3>Mapa polar sur</h3><span class="tarjeta__sub">Coordenadas reales; pulsa un sitio para elegirlo</span></header>
             <div class="mapa" id="mapa"></div>
             <ul class="leyenda" id="leyenda-mapa"></ul>
           </article>
@@ -111,7 +122,7 @@
         <article class="tarjeta">
           <header class="tarjeta__cab">
             <p class="tarjeta__sub" id="comparador-meta"></p>
-            <button type="button" class="boton boton--naranja" id="exportar-csv">Exportar CSV</button>
+            <button type="button" class="boton boton--acento" id="exportar-csv">Exportar CSV</button>
           </header>
           <div class="tabla-scroll"><table class="tabla" id="tabla-comparador"></table></div>
         </article>
@@ -230,7 +241,7 @@
   </div>
 
   <footer class="pie">
-    <p>NASA Space Apps Challenge 2026, Hermosillo. Efemérides: JPL Horizons. Tipografía Poppins (OFL). Licencia Apache 2.0.</p>
+    <p>NASA Space Apps Challenge 2026, Hermosillo. Efemérides: JPL Horizons. Relieve: LOLA (Barker et al. 2023). Visor 3D: Three.js (MIT). Tipografía Poppins (OFL). Licencia Apache 2.0.</p>
   </footer>
 
   <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
@@ -239,9 +250,9 @@
     <h2 id="ayuda-titulo">Qué significa cada estado</h2>
     <dl class="ayuda-estados" id="ayuda-estados"></dl>
     <p class="aviso">La ubicación del punto de apoyo, los umbrales y el momento del evento de polvo son supuestos de demostración.</p>
-    <form method="dialog"><button class="boton boton--naranja" autofocus>Entendido</button></form>
+    <form method="dialog"><button class="boton boton--acento" autofocus>Entendido</button></form>
   </dialog>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="build/app.js"></script>
 </body>
 </html>

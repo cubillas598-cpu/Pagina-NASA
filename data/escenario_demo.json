@@ -5,12 +5,12 @@
     "efemerides": {
       "nombre": "JPL Horizons",
       "estado": "en_uso",
-      "detalle": "Generadas por scripts/efemerides.py; la verificación manual contra la app de JPL sigue pendiente (docs/plan.md)."
+      "detalle": "Generadas por scripts/efemerides.py. Cotejadas a mano contra la app de JPL en Peak Near Shackleton (1 dic 2026, 00:00 a 03:00 UTC, Sol y Tierra): 8 comparaciones iguales hasta la sexta cifra decimal. Los otros dos sitios no se cotejaron por separado."
     },
     "horizonte": {
       "nombre": "LOLA (DEM de 80 m/px, NASA PGDA)",
       "estado": "en_uso",
-      "detalle": "Horizonte de cada sitio y de su punto de apoyo calculado con scripts/horizonte.py: rayos geodesicos de hasta 30 km sobre el DEM con correccion por curvatura. Tambien puede activarse el horizonte plano (0°)."
+      "detalle": "Horizonte de cada sitio y de su punto de apoyo calculado con scripts/horizonte.py: rayos geodesicos de hasta 150 km sobre el DEM con correccion por curvatura. Tambien puede activarse el horizonte plano (0°)."
     }
   },
   "sitios": [

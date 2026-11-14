@@ -2,12 +2,76 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lunar Landing Site Navigator</title>
-  <meta http-equiv="refresh" content="0; url=web/">
+  <meta name="description" content="NASA Space Apps Challenge 2026 - comparador de 3 sitios reales de aterrizaje en el polo sur lunar, con datos de JPL Horizons y LOLA.">
   <link rel="canonical" href="web/">
+  <style>
+    :root { color-scheme: dark light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #06080f;
+      color: #e8ecf4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    main {
+      max-width: 640px;
+      width: 100%;
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.3rem; }
+    p.sub { color: #9aa5b8; margin: 0 0 1.5rem; }
+    .tarjetas { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
+    @media (min-width: 560px) { .tarjetas { grid-template-columns: 1fr 1fr; } }
+    a.tarjeta {
+      display: block;
+      padding: 1rem 1.1rem;
+      border-radius: 0.9rem;
+      border: 1px solid #263046;
+      background: #0e1320;
+      color: #e8ecf4;
+      text-decoration: none;
+    }
+    a.tarjeta:hover, a.tarjeta:focus { border-color: #4fa8ff; }
+    a.tarjeta strong { display: block; font-size: 1rem; margin-bottom: 0.2rem; }
+    a.tarjeta span { font-size: 0.82rem; color: #9aa5b8; }
+    .principal { border-color: #4fa8ff; background: #0f1b33; }
+    .nota { font-size: 0.78rem; color: #6b7690; margin-top: 1.5rem; }
+    .nota a { color: #9aa5b8; }
+  </style>
 </head>
 <body>
-  <p><a href="web/">Abrir la demo del Lunar Landing Site Navigator</a>.</p>
-  <p>El esqueleto inicial de la página sigue disponible en <a href="esqueleto.html">esqueleto.html</a>.</p>
+  <main>
+    <h1>Lunar Landing Site Navigator</h1>
+    <p class="sub">NASA Space Apps Challenge 2026 - equipo buhospace</p>
+    <div class="tarjetas">
+      <a class="tarjeta principal" href="web/">
+        <strong>Demo en vivo</strong>
+        <span>Comparador real: 3 sitios, datos de JPL Horizons y LOLA, indice de conveniencia.</span>
+      </a>
+      <a class="tarjeta" href="README.md">
+        <strong>Resumen del proyecto</strong>
+        <span>Pregunta de investigacion, metodologia, fuentes.</span>
+      </a>
+      <a class="tarjeta" href="docs/mapeo-lunar-3d-ilustrativo.html">
+        <strong>Vista 3D ilustrativa - sitios</strong>
+        <span>Mapa 3D del polo sur con los 3 sitios candidatos (relieve sintetico, coordenadas reales).</span>
+      </a>
+      <a class="tarjeta" href="docs/mapa-lunar-comparador-3d-ilustrativo.html">
+        <strong>Vista 3D ilustrativa - comparador</strong>
+        <span>Mapa 3D interactivo con comparador de sitios integrado (relieve sintetico, coordenadas reales).</span>
+      </a>
+    </div>
+    <p class="nota">
+      Las dos vistas 3D usan relieve ilustrativo (no el DEM real de LOLA) - ver
+      <a href="docs/fuentes.md">docs/fuentes.md</a> para que dato es real de NASA y cual es ilustrativo.
+      Codigo en <a href="https://github.com/cubillas598-cpu/Pagina-NASA">GitHub</a>.
+    </p>
+  </main>
 </body>
 </html>

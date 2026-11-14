@@ -88,3 +88,39 @@ anterior, solo se agrega abajo.
 - De paso, se genero la pregunta de investigacion del proyecto (pedida por el
   profesor/concurso), ya en el README: que sitio da la mejor combinacion de energia +
   comunicacion (directa y de respaldo), medido con este mismo indice.
+
+### 2026-11-14 ~14:10 - Imagenes del proyecto + bug de etiqueta encontrado y corregido
+- Irvin mando una imagen real (orbital, con los craters Shackleton/de Gerlache/
+  Shoemaker etiquetados) - guardada en `docs/imagenes/`. Estilo consistente con
+  mosaicos NASA/GSFC/ASU (LROC); no se confirmo la URL exacta del original (llego
+  por WhatsApp) - queda marcado `[PENDIENTE R37]` para buscar la fuente precisa
+  antes de la entrega final.
+- **Bug encontrado al intentar tomar capturas**: el selector "Horizonte" de la demo
+  decia "Perfil sintetico" pero el codigo de Irvin (`calcularSerie`) lee directo
+  `sitio.horizonte.elevacion_deg` sin revisar el campo `fuente` - o sea que desde que
+  se conecto el horizonte real de LOLA, esa opcion YA mostraba datos reales bajo una
+  etiqueta que decia "sintetico". Corregido: la opcion ahora dice "Perfil del terreno
+  (LOLA)" en `web/index.html`, `web/js/views/estilos.js`, y el parrafo de metodologia
+  que daba instrucciones ya viejas de "como conectar LOLA" se actualizo para reflejar
+  que ya esta conectado. 15/15 pruebas siguen pasando.
+- Tambien se encontro que GitHub Pages NO esta realmente activa pese a que el README
+  decia "publicada" (el dominio no resuelve, timeout). `[PENDIENTE]`: activarla en
+  Settings > Pages del repo (accion de cuenta de Irvin o Pablo).
+- Capturas reales de la demo corriendo en servidor local (no mockups) guardadas en
+  `docs/capturas/`: explorador con Sitio A, y comparador con el indice de conveniencia
+  ya funcionando (Malapert 87.9, de Gerlache 56.4, Shackleton 55.2 - Malapert da 97.9%
+  iluminacion y 100% vista a Tierra, coincide con su fama de "pico casi-permanentemente
+  iluminado" en la literatura, buena senal cruzada de que el calculo esta bien).
+
+### 2026-11-14 ~14:25 - Rediseño visual de Irvin + merge
+- Irvin hizo en paralelo un rediseno visual completo de la demo (referencia Behance,
+  tipografia Poppins, nueva navegacion lateral, nuevas vistas Resumen/Sitios/Comparador/
+  Enlace local/Metodologia) y de paso corrigio el MISMO bug de la etiqueta "sintetico"
+  que se encontro arriba - su arreglo es mas completo: renombro la clave interna
+  (`modoHorizonte: 'sintetico'` -> `'perfil'`), no solo el texto visible.
+- Merge con conflictos en `web/index.html` y `web/js/views/estilos.js` (los dos
+  arreglamos el mismo selector por caminos distintos). Resuelto tomando la version de
+  Irvin completa en esos dos archivos - su rediseno reemplaza la estructura vieja que
+  yo estaba editando. El indice de conveniencia (`suitabilityScore`) y sus 2 pruebas
+  sobrevivieron el merge automatico sin tocar nada. Suite completa tras el merge:
+  17/17 pasan (15 propias + 2 nuevas de Irvin sobre disponibilidad combinada).

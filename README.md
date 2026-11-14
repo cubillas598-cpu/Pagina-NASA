@@ -155,6 +155,17 @@ Ver `sitios.json` para coordenadas y cita completa de cada uno: Peak Near Shackl
 (region candidata Artemis III cerca del borde del crater), sitio C1 en la cresta de
 Gerlache-Shackleton, y Malapert massif.
 
+## Imagenes del proyecto
+
+- `docs/capturas/` — capturas reales de la demo funcionando (explorador, comparador
+  con el indice de conveniencia), tomadas directo del navegador, no mockups.
+- `docs/imagenes/sitios-shackleton-de-gerlache-shoemaker.jpeg` — imagen de referencia
+  de los craters Shackleton, de Gerlache y Shoemaker vistos desde orbita (compartida
+  por Irvin). Estilo consistente con mosaicos NASA/GSFC/Arizona State University
+  (LROC), igual que usa el atlas oficial del polo sur lunar (LPI). `[PENDIENTE R37]`:
+  no se confirmo la URL exacta del original (llego reenviada por WhatsApp) - buscar
+  la fuente precisa antes de citarla en la entrega final.
+
 ## Creditos de terceros
 
 - Poppins (SIL Open Font License 1.1), incluida en `web/fonts/`.

@@ -1,0 +1,12 @@
+{
+  "name": "lunar-landing-site-navigator",
+  "private": true,
+  "description": "Demo web estatica: sin dependencias. Node solo se usa para pruebas.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "datos": "python3 scripts/generar_escenario_demo.py",
+    "empaquetar": "python3 scripts/empaquetar_demo.py",
+    "servir": "python3 -m http.server 8000"
+  },
+  "license": "Apache-2.0"
+}

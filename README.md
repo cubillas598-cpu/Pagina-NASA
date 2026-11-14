@@ -27,15 +27,57 @@ enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
 ## Estado
 
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos
-- [ ] Horizonte local por sitio
-- [ ] Clasificador de enlace local
-- [ ] Pagina web
+- [ ] Horizonte local por sitio (LOLA skyline). La demo usa un perfil sintetico mientras tanto
+- [x] Clasificador de enlace local (reglas de demostracion, RF y optico)
+- [x] Pagina web (demo en `web/`, version de un solo archivo en `dist/`)
+
+## Demo web
+
+Pagina estatica sin dependencias ni build (HTML, CSS y modulos JS). Lee los JSON
+de `data/` y calcula todo en el navegador.
+
+```bash
+python3 -m http.server 8000      # desde la raiz del repo
+# abrir http://localhost:8000/web/
+```
+
+Version de respaldo para el jurado, un solo HTML que abre con doble clic y sin
+internet (fuentes y datos incrustados):
+
+```bash
+python3 scripts/empaquetar_demo.py   # escribe dist/lunar-navigator-demo.html
+```
+
+Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
+
+### Que es real y que es supuesto
+
+| Pieza | Archivo | Estado |
+| --- | --- | --- |
+| Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; falta la verificacion manual del plan |
+| Horizonte por azimut del sitio y del punto de apoyo | `data/escenario_demo.json` | Sintetico determinista (`scripts/generar_escenario_demo.py`). Tambien hay modo horizonte plano |
+| Punto de apoyo, umbrales RF/optico, evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
+| Posiciones del mapa | `data/escenario_demo.json` (`mapa`) | Ilustrativas ("Vista conceptual") |
+
+Para pasar a LOLA skyline: reemplazar `elevacion_deg` de cada `horizonte`
+(360 valores, 1 grado, azimut desde el norte local en sentido horario) y poner
+`"fuente": "lola_skyline"`. El resto de la pagina no cambia. Para otro rango de
+fechas, regenerar las efemerides con `scripts/efemerides.py`; el selector de
+fechas se limita solo a las horas disponibles.
+
+Estructura: `web/js/model.js` (calculos puros, probados), `web/js/datos.js`
+(carga), `web/js/views/*` (una vista por panel), `web/css/tokens.css` (paleta y
+espaciado), `web/css/app.css` (componentes y responsive).
 
 ## Sitios candidatos
 
 Ver `sitios.json`. Shackleton (borde del crater), cresta Shackleton-de Gerlache,
 y Malapert massif, los tres candidatos oficiales de Artemis III finalizados por
 NASA en octubre de 2024.
+
+## Creditos de terceros
+
+- IBM Plex Sans (SIL Open Font License 1.1), incluida en `web/fonts/`.
 
 ## Licencia
 

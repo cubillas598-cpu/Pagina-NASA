@@ -34,7 +34,7 @@ La capa extra toma esa misma hora y clasifica un enlace local entre el lander y 
 - **Radiofrecuencia**: el punto de apoyo es un relevo en terreno alto. Precedente real: el concepto de relevo LunaNet / Lunar Communications Relay de NASA, pensado exactamente para craters del polo sur sin vista directa a la Tierra.
 - **Optico**: el enlace se degrada si el angulo del Sol cae cerca de la linea de vista, o si hay un evento de polvo levantado por el penacho de un aterrizaje cercano. Precedente real: el "horizon glow" de polvo lunar estudiado desde Apollo, y el sistema laser O2O de Artemis II.
 
-Limite del principio, dicho con claridad: el evento de polvo de la capa optica es una regla sintetica, no una medicion real de ningun aterrizaje documentado. El punto de relevo de la capa de radiofrecuencia se elige por criterio del equipo, no por una optimizacion geometrica real.
+Limite del principio, dicho con claridad: el evento de polvo de la capa optica es una regla calibrada con datos historicos reales, no una medicion directa de ninguno de los tres sitios elegidos. Se apoya en dos datos documentados de las misiones Apollo: polvo visible en camara durante 10 a 12 segundos en el descenso final (bajo unos 60-70 pies de altura), y un hueco real de telemetria en el ascenso del Apolo 11 causado por su propio penacho de escape (documentado por Brian O'Brien). La duracion del evento sintetico en el clasificador usa esa ventana de 10-12 segundos como referencia, no un numero inventado. El punto de relevo de la capa de radiofrecuencia se elige por criterio del equipo, no por una optimizacion geometrica real.
 
 ## Arquitectura
 
@@ -107,7 +107,7 @@ Encuadre honesto: esta capa no sustituye un analisis de enlace de verdad (no hay
 **Respuesta:** el codigo y los datos son nuevos, escritos para este reto; lo unico que se reutiliza es la forma de pensar el problema (clasificador de tres estados), que es exactamente lo que la guia de entrega permite al pedir citar fuentes e inspiraciones, no prohibirlas.
 
 **Pregunta:** el evento de polvo esta basado en datos reales de algun aterrizaje.
-**Respuesta:** no. Es una regla sintetica inspirada en el fenomeno real documentado desde Apollo (polvo levantado por el penacho), pero no mide ningun aterrizaje especifico. Se dice asi en el README.
+**Respuesta:** no mide ninguno de los tres sitios en especifico, pero la duracion y la logica del evento si vienen de datos reales de Apollo: 10-12 segundos de polvo visible en descenso, y un hueco de telemetria real en el ascenso del Apolo 11 por su propio penacho. No es un numero inventado, es una referencia historica documentada aplicada a un sitio nuevo.
 
 **Pregunta:** por que dos tipos de enlace y no solo uno.
 **Respuesta:** porque cada tipo tiene su propio precedente real de NASA (RF con LunaNet, optico con Artemis II), y el costo de tener los dos es bajo; si falta tiempo, se recorta a uno solo primero, antes de tocar cualquier otra parte del proyecto.

@@ -13,6 +13,9 @@ enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
 - Precedente del enlace RF: concepto de relevo LunaNet / Lunar Communications Relay de NASA
 - Precedente del enlace optico: sistema laser O2O de Artemis II; "horizon glow" de polvo
   lunar estudiado desde las misiones Apollo
+- Duracion del evento de polvo calibrada con datos reales de Apollo: 10-12 segundos de
+  polvo visible en descenso final, y hueco de telemetria real en el ascenso del Apolo 11
+  por su propio penacho de escape (documentado por Brian O'Brien)
 
 ## Documentos
 

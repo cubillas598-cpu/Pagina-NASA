@@ -232,3 +232,33 @@ anterior, solo se agrega abajo.
   Shackleton/de Gerlache/Malapert). Es dato real de NASA pero del lugar
   equivocado - no se uso. Pendiente: re-exportar desde trek.nasa.gov centrado en
   los 3 sitios reales si se quiere una malla 3D real para el visualizador.
+
+### 2026-11-14 ~15:40 - Guion fusionado, hallazgo critico de la guia de entrega, cierre de bloque
+- `docs/guion-pitch-3min.md`: hook y cierre del "Speech 1" independiente que Irvin
+  escribio en el Google Doc de propuesta fusionados con el guion ya validado (RF/optico,
+  bug de Shackleton, indice S, validacion JPL se mantienen). Commit `ebe75c6`.
+- Intento de delegar investigacion a opencode (T2) via `invocar-opencode.ps1`: **fallo
+  confirmado, API key de OpenCode Console expirada** (mismo bloqueo ya documentado en
+  `mesh/opencode-key-expirada` de PENDIENTES.md del cerebro desde 05-nov, smoke test de
+  hoy lo reconfirma). Se cayo a lectura manual (curl + WebFetch) sin bloquear la tarea.
+- **Hallazgo critico, leido completo de la pagina oficial**
+  (spaceappschallenge.org/resources/project-submission-guide/): el "Project Demo" de la
+  entrega global tiene limite DURO de **30 segundos de video O 7 slides maximo** (nunca
+  mas, nunca ambos), todo en ingles, **deadline domingo 15-nov 23:59 hora local del
+  Evento Local**. Esto es DISTINTO del pitch de 3 min en vivo (`guion-pitch-3min.md`,
+  en español, para el Evento Local). Documentado en `docs/submission-guide-resumen.md` +
+  deck de 7 slides en ingles ya armado con datos ya verificados del repo en
+  `docs/submission-demo-en.md`. Commit `76dd320`.
+- Intento de delegar el armado de esos 2 documentos a Codex: su sandbox solo puede
+  escribir en `C:\PROYECTOS CLAUDE\cerebro`, rechazo escribir en este repo. Se escribio
+  directo en vez de reintentar.
+- Empezado (no terminado) un deck en Canva para el pitch en vivo de 3 min: plantilla
+  "Proyecto de Tecnologia" (tema espacio oscuro), portada lista (Lunar Landing Site
+  Navigator, equipo buhospace), reducido de 13 a 9 slides borrando las paginas sin uso,
+  slide 2 (Los 3 sitios) con el titulo editado pero el texto se ve encimado - falta
+  limpiar eso y llenar el resto del contenido. Link del diseño:
+  canva.com/design/DAHa7bcDs_s/YyRIDw2jCFHf3-NNhRdN6g/edit (en la cuenta de Pablo).
+- Cierre de sesion por limite de uso de Claude: **git limpio en Pagina-NASA y en
+  cerebro, todo pusheado a origin/main, cero commits ni cambios sin subir.** Se
+  continua con Codex. Pendiente real mas urgente: terminar el deck de Canva O decidir
+  grabar el video de 30s, y activar GitHub Pages (accion de cuenta de Irvin).

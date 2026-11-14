@@ -45,7 +45,7 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 
 ## Demo web
 
-En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio muestra el esqueleto de `index.html`.
+En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio redirige a la demo; el esqueleto inicial quedo en `esqueleto.html`.
 
 Pagina estatica sin dependencias ni build (HTML, CSS y modulos JS). Lee los JSON
 de `data/` y calcula todo en el navegador.

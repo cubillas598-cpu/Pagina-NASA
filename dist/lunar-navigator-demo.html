@@ -498,7 +498,7 @@ option { background: #2a231e; color: var(--texto); }
           <header class="tarjeta__cab">
             <div>
               <h3>Sol y Tierra sobre el horizonte</h3>
-              <p class="tarjeta__sub">Margen de elevación por hora (UTC). Por encima de 0° el astro es visible.</p>
+              <p class="tarjeta__sub">Margen de elevación por hora (UTC). Por encima de 0° el astro es visible. Resolución horaria: los cambios se ubican con un margen de ±1 h.</p>
             </div>
             <ul class="leyenda-puntos">
               <li><span style="background:var(--naranja)"></span>Sol</li>
@@ -598,7 +598,8 @@ option { background: #2a231e; color: var(--texto); }
           <article class="tarjeta">
             <h3>Qué se calcula</h3>
             <p>Para cada sitio y cada hora (UTC) se compara la elevación del Sol y de la Tierra con la elevación del horizonte en ese mismo azimut. Si el astro queda por encima, cuenta como visible.</p>
-            <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora.</p>
+            <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora, así que el inicio y el fin de cada ventana tienen un margen de ±1 h. JPL Horizons entrega las horas en UT, que difiere de UTC en menos de un segundo; la página las muestra como UTC.</p>
+            <p>El índice de conveniencia S = 0.40·iluminación + 0.35·Tierra directa + 0.25·respaldo es una propuesta del equipo, no un estándar de NASA. El respaldo solo cuenta las horas en que el tramo local funciona y el punto de apoyo ve la Tierra; con el enlace desactivado se usan solo los dos primeros factores. No evalúa pendiente, rocas ni riesgos de descenso.</p>
           </article>
           <article class="tarjeta">
             <h3>Fuentes</h3>
@@ -704,6 +705,35 @@ const ESTADO_POR_NIVEL = ['sin_enlace', 'robusto', 'rapido'];
 
 function parseUtc(t) {
   return Date.parse(`${t}:00Z`);
+}
+
+const CAMPOS_EFEMERIDE = ['sol_el', 'sol_az', 'tierra_el', 'tierra_az'];
+
+/**
+ * Revisa una serie de efemérides antes de usarla: marcas de tiempo válidas y
+ * consecutivas cada hora, y ángulos numéricos dentro de rango. Devuelve la
+ * lista de problemas (vacía si la serie es válida); nunca rellena huecos.
+ */
+function problemasEfemerides(horas, id = 'sitio') {
+  const problemas = [];
+  if (!Array.isArray(horas) || horas.length === 0) return [`${id}: no hay muestras horarias.`];
+  let previo = null;
+  for (let k = 0; k < horas.length && problemas.length < 5; k++) {
+    const h = horas[k];
+    const ms = h && typeof h.t === 'string' ? parseUtc(h.t) : NaN;
+    if (Number.isNaN(ms)) { problemas.push(`${id}: la muestra ${k} no tiene una fecha válida.`); continue; }
+    if (previo !== null && ms - previo !== 3600e3) problemas.push(`${id}: hay un salto en los datos antes de ${h.t}.`);
+    previo = ms;
+    for (const c of CAMPOS_EFEMERIDE) {
+      const v = h[c];
+      const fuera = c.endsWith('_el') ? Math.abs(v) > 90 : v < 0 || v > 360;
+      if (typeof v !== 'number' || !Number.isFinite(v) || fuera) {
+        problemas.push(`${id}: ${c} no es un ángulo válido en ${h.t}.`);
+        break;
+      }
+    }
+  }
+  return problemas;
 }
 
 function normalizarAz(az) {
@@ -886,6 +916,8 @@ function metricasPeriodo(serie, i0, i1, enlaceActivo) {
   let tierra = 0;
   let comunicacion = 0;
   let ambas = 0;
+  let solTierra = 0;
+  let respaldo = 0;
   const enlace = { rapido: 0, robusto: 0, sin_enlace: 0 };
   for (let i = i0; i <= i1; i++) {
     const m = serie[i];
@@ -894,6 +926,8 @@ function metricasPeriodo(serie, i0, i1, enlaceActivo) {
     if (m.tierra.visible) tierra++;
     if (com) comunicacion++;
     if (com && m.sol.visible) ambas++;
+    if (m.sol.visible && m.tierra.visible) solTierra++;
+    if (enlaceActivo && m.respaldoTierra) respaldo++;
     enlace[m.enlace.estado]++;
   }
   const brecha = tramoMasLargo(serie, i0, i1, (m) => !hayComunicacion(m, enlaceActivo));
@@ -908,6 +942,13 @@ function metricasPeriodo(serie, i0, i1, enlaceActivo) {
     horasAmbas: ambas,
     pctComunicacion: (100 * comunicacion) / horas,
     pctAmbas: (100 * ambas) / horas,
+    horasSolTierra: solTierra,
+    pctSolTierra: (100 * solTierra) / horas,
+    horasRespaldo: enlaceActivo ? respaldo : null,
+    pctRespaldo: enlaceActivo ? (100 * respaldo) / horas : null,
+    ventanaSol: tramoMasLargo(serie, i0, i1, (m) => m.sol.visible),
+    ventanaTierra: tramoMasLargo(serie, i0, i1, (m) => m.tierra.visible),
+    sombraMax: tramoMasLargo(serie, i0, i1, (m) => !m.sol.visible),
     enlace: enlaceActivo ? enlace : null,
     brecha,
   };
@@ -966,6 +1007,14 @@ const METRICAS_COMPARADOR = [
     frase: (s) => `${s} presenta más horas de iluminación en el periodo seleccionado.` },
   { clave: 'pctTierra', etiqueta: 'Horas con vista directa a la Tierra', unidad: '%', mejor: 'max',
     frase: (s) => `${s} mantiene más horas de vista directa a la Tierra.` },
+  { clave: 'pctSolTierra', etiqueta: 'Horas con Sol y Tierra visibles a la vez', unidad: '%', mejor: 'max',
+    frase: (s) => `${s} tiene más horas con Sol y vista directa a la Tierra al mismo tiempo.` },
+  { clave: 'ventanaTierra', etiqueta: 'Mayor ventana continua con la Tierra visible', unidad: 'h', mejor: 'max',
+    frase: (s) => `${s} ofrece la ventana continua más larga con la Tierra visible.` },
+  { clave: 'sombraMax', etiqueta: 'Mayor periodo continuo en sombra', unidad: 'h', mejor: 'min',
+    frase: (s) => `${s} tiene el periodo en sombra más corto.` },
+  { clave: 'pctRespaldo', etiqueta: 'Horas con respaldo que llega a la Tierra', unidad: '%', mejor: 'max', enlace: true,
+    frase: (s) => `${s} tiene más horas de respaldo efectivo hacia la Tierra.` },
   { clave: 'rapido', etiqueta: 'Enlace local rápido', unidad: 'h', mejor: 'max', enlace: true,
     frase: (s) => `${s} acumula más horas de enlace local rápido.` },
   { clave: 'robusto', etiqueta: 'Enlace local robusto', unidad: 'h', mejor: null, enlace: true },
@@ -976,8 +1025,8 @@ const METRICAS_COMPARADOR = [
 ];
 
 function valorMetrica(met, clave) {
-  if (clave === 'pctSol' || clave === 'pctTierra') return met[clave];
-  if (clave === 'brecha') return met.brecha.horas;
+  if (['pctSol', 'pctTierra', 'pctSolTierra', 'pctRespaldo'].includes(clave)) return met[clave];
+  if (['brecha', 'ventanaTierra', 'sombraMax', 'ventanaSol'].includes(clave)) return met[clave].horas;
   return met.enlace ? met.enlace[clave] : null;
 }
 
@@ -1008,7 +1057,9 @@ function compararSitios(filas, enlaceActivo) {
 /**
  * Indice de conveniencia del sitio: S = w1*E + w2*C + w3*R.
  * E = % horas con Sol visible, C = % horas con vista directa a la Tierra,
- * R = % horas con enlace local disponible (rapido o robusto).
+ * R = % horas con respaldo que llega a la Tierra: tramo local con servicio
+ *     (rapido o robusto) y punto de apoyo con la Tierra visible. Un tramo
+ *     local que funciona sin vista a la Tierra no cuenta como respaldo.
  * Propuesto por el equipo para comparar sitios de un vistazo - NO es un
  * estandar oficial de NASA. Pesos editables; deben sumar 1.
  */
@@ -1023,7 +1074,7 @@ function suitabilityScore(metricas, enlaceActivo, pesos = PESOS_SUITABILITY) {
     const w = pesos.energia + pesos.comunicacion;
     return (pesos.energia * E + pesos.comunicacion * C) / w;
   }
-  const R = (100 * (metricas.enlace.rapido + metricas.enlace.robusto)) / metricas.horas;
+  const R = metricas.pctRespaldo;
   return pesos.energia * E + pesos.comunicacion * C + pesos.respaldo * R;
 }
 
@@ -1038,6 +1089,7 @@ function comparativoCsv(filas, contexto) {
     'pct_tierra_directa', 'enlace_local', 'tipo_enlace', 'evento_polvo',
     'horas_rapido', 'horas_robusto', 'horas_sin_enlace',
     'mayor_intervalo_sin_comunicacion_h', 'horizonte', 'indice_conveniencia',
+    'pct_sol_y_tierra', 'pct_respaldo_tierra', 'mayor_ventana_tierra_h', 'mayor_sombra_h',
   ];
   const lineas = [cab.join(',')];
   for (const { sitio, metricas: m } of filas) {
@@ -1050,6 +1102,8 @@ function comparativoCsv(filas, contexto) {
       m.enlace ? m.enlace.rapido : '', m.enlace ? m.enlace.robusto : '', m.enlace ? m.enlace.sin_enlace : '',
       m.brecha.horas, contexto.modoHorizonte,
       suitabilityScore(m, contexto.enlaceActivo).toFixed(1),
+      m.pctSolTierra.toFixed(1), m.pctRespaldo === null ? '' : m.pctRespaldo.toFixed(1),
+      m.ventanaTierra.horas, m.sombraMax.horas,
     ].map(celdaCsv).join(','));
   }
   return lineas.join('\n') + '\n';
@@ -1119,6 +1173,7 @@ function polar(cx, cy, r, az) {
 }
 
 // ---- js/datos.js
+
 // Carga de datos locales. En la versión empaquetada (un solo HTML) los datos
 // vienen incrustados en <script type="application/json" id="datos-demo">.
 
@@ -1146,7 +1201,8 @@ function validar(escenario, efemerides) {
   const ref = efemerides[ids[0]];
   for (const id of ids) {
     const h = efemerides[id];
-    if (!Array.isArray(h) || h.length === 0) throw new Error(`Faltan efemérides para ${id}.`);
+    const problemas = problemasEfemerides(h, id);
+    if (problemas.length) throw new Error(`Datos de efemérides no válidos. ${problemas.join(' ')}`);
     if (h.length !== ref.length || h[0].t !== ref[0].t || h[h.length - 1].t !== ref[ref.length - 1].t) {
       throw new Error(`Las efemérides de ${id} no cubren las mismas horas que ${ids[0]}.`);
     }
@@ -1247,7 +1303,7 @@ function renderFranja(cont, d) {
   if (m.enlace) {
     const disponibles = m.enlace.rapido + m.enlace.robusto;
     enlace = indicador(ICONO.enlace, 'var(--ok)', `Enlace local, ${TIPO_ENLACE[estado.tipoEnlace].toLowerCase()}`,
-      `${num((100 * disponibles) / m.horas, 0)} %`, `${horasTexto(m.enlace.sin_enlace)} sin enlace`);
+      `${num((100 * disponibles) / m.horas, 0)} %`, `${horasTexto(m.horasRespaldo)} llega a la Tierra`);
   } else {
     enlace = indicador(ICONO.enlace, 'var(--texto-3)', 'Enlace local', 'Desactivado', '');
   }
@@ -1263,9 +1319,9 @@ function renderDisponibilidad(cont, d) {
   const via = estado.enlaceActivo ? 'directa o respaldo' : 'solo directa';
   cont.innerHTML = `
     <div class="meta">
-      <div class="meta__valor">${num(m.pctAmbas, 0)} %</div>
-      <div class="barra" aria-hidden="true"><span style="width:${m.pctAmbas}%"></span></div>
-      <div class="meta__etq">Luz y comunicación<br>${m.horasAmbas} h a la vez</div>
+      <div class="meta__valor">${num(m.pctSolTierra, 0)} %</div>
+      <div class="barra" aria-hidden="true"><span style="width:${m.pctSolTierra}%"></span></div>
+      <div class="meta__etq">Sol y Tierra visibles<br>${m.horasSolTierra} h a la vez</div>
     </div>
     <div class="meta">
       <div class="meta__valor">${num(m.pctComunicacion, 0)} %</div>
@@ -1277,8 +1333,8 @@ function renderDisponibilidad(cont, d) {
 /** Resumen comparativo de los tres sitios en el mismo periodo. */
 function renderMiniComparativo(cont, d) {
   const { filas, sitio } = d;
-  const mejor = filas.reduce((a, b) => (b.metricas.pctAmbas > a.metricas.pctAmbas ? b : a));
-  const empate = filas.filter((f) => Math.abs(f.metricas.pctAmbas - mejor.metricas.pctAmbas) < 1e-9).length > 1;
+  const mejor = filas.reduce((a, b) => (b.metricas.pctSolTierra > a.metricas.pctSolTierra ? b : a));
+  const empate = filas.filter((f) => Math.abs(f.metricas.pctSolTierra - mejor.metricas.pctSolTierra) < 1e-9).length > 1;
   cont.innerHTML = filas.map(({ sitio: s, metricas: m }) => `
     <div class="mini-fila">
       <span class="mini-fila__nombre ${s.id === sitio.id ? 'activo' : ''}">${esc(s.etiqueta)}</span>
@@ -1289,7 +1345,7 @@ function renderMiniComparativo(cont, d) {
       <span class="mini-fila__valor">${num(m.pctSol, 0)} % luz<br>${num(m.pctTierra, 0)} % Tierra</span>
     </div>`).join('') + `
     <div class="mini-pie">
-      <span>${empate ? 'Empate en luz con comunicación.' : `Más luz con comunicación: ${esc(mejor.sitio.etiqueta)}`}</span>
+      <span>${empate ? 'Empate en horas con Sol y Tierra.' : `Más horas con Sol y Tierra: ${esc(mejor.sitio.etiqueta)}`}</span>
       <a href="#comparador">Ver comparador</a>
     </div>`;
 }
@@ -2048,7 +2104,9 @@ function renderComparador(tabla, meta, lista, d) {
     + `Índice de conveniencia: S = ${num(PESOS_SUITABILITY.energia, 2)}·iluminación + `
     + `${num(PESOS_SUITABILITY.comunicacion, 2)}·comunicación directa`
     + `${estado.enlaceActivo ? ` + ${num(PESOS_SUITABILITY.respaldo, 2)}·enlace local` : ''} `
-    + `(propuesto por el equipo, no es un estándar de NASA).`;
+    + `(propuesto por el equipo, no es un estándar de NASA)`
+    + `${estado.enlaceActivo ? '; R solo cuenta horas en que el respaldo llega a la Tierra' : ''}. `
+    + 'Resolución horaria: cada cambio se ubica con un margen de ±1 h.';
 
   const cab = `<thead><tr><th scope="col">Métrica</th>${filas.map((f) => `<th scope="col"><b>${esc(f.sitio.etiqueta)}</b>${esc(f.sitio.nombre_corto)}</th>`).join('')}</tr></thead>`;
 
@@ -2072,7 +2130,8 @@ function renderComparador(tabla, meta, lista, d) {
       const v = valorMetrica(f.metricas, def.clave);
       const esMejor = mejores.includes(f.sitio.id);
       const texto = def.unidad === '%' ? `${num(v, 1)} %` : `${v} h`;
-      const extra = def.unidad === '%' ? `<small> ${def.clave === 'pctSol' ? f.metricas.horasSol : f.metricas.horasTierra} h</small>` : '';
+      const HORAS = { pctSol: 'horasSol', pctTierra: 'horasTierra', pctSolTierra: 'horasSolTierra', pctRespaldo: 'horasRespaldo' };
+      const extra = def.unidad === '%' ? `<small> ${f.metricas[HORAS[def.clave]]} h</small>` : '';
       return `<td class="${esMejor ? 'mejor' : ''}">${texto}${extra}${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
     }).join('');
     return `<tr><th scope="row">${etiqueta}<br><small class="c-neutro">${criterio}</small></th>${celdas}</tr>`;

@@ -394,6 +394,7 @@ export function comparativoCsv(filas, contexto) {
     'pct_tierra_directa', 'enlace_local', 'tipo_enlace', 'evento_polvo',
     'horas_rapido', 'horas_robusto', 'horas_sin_enlace',
     'mayor_intervalo_sin_comunicacion_h', 'horizonte', 'indice_conveniencia',
+    'pct_sol_y_tierra', 'pct_respaldo_tierra', 'mayor_ventana_tierra_h', 'mayor_sombra_h',
   ];
   const lineas = [cab.join(',')];
   for (const { sitio, metricas: m } of filas) {
@@ -406,6 +407,8 @@ export function comparativoCsv(filas, contexto) {
       m.enlace ? m.enlace.rapido : '', m.enlace ? m.enlace.robusto : '', m.enlace ? m.enlace.sin_enlace : '',
       m.brecha.horas, contexto.modoHorizonte,
       suitabilityScore(m, contexto.enlaceActivo).toFixed(1),
+      m.pctSolTierra.toFixed(1), m.pctRespaldo === null ? '' : m.pctRespaldo.toFixed(1),
+      m.ventanaTierra.horas, m.sombraMax.horas,
     ].map(celdaCsv).join(','));
   }
   return lineas.join('\n') + '\n';

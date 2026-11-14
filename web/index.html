@@ -50,7 +50,7 @@
           <header class="tarjeta__cab">
             <div>
               <h3>Sol y Tierra sobre el horizonte</h3>
-              <p class="tarjeta__sub">Margen de elevación por hora (UTC). Por encima de 0° el astro es visible.</p>
+              <p class="tarjeta__sub">Margen de elevación por hora (UTC). Por encima de 0° el astro es visible. Resolución horaria: los cambios se ubican con un margen de ±1 h.</p>
             </div>
             <ul class="leyenda-puntos">
               <li><span style="background:var(--naranja)"></span>Sol</li>
@@ -150,7 +150,8 @@
           <article class="tarjeta">
             <h3>Qué se calcula</h3>
             <p>Para cada sitio y cada hora (UTC) se compara la elevación del Sol y de la Tierra con la elevación del horizonte en ese mismo azimut. Si el astro queda por encima, cuenta como visible.</p>
-            <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora.</p>
+            <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora, así que el inicio y el fin de cada ventana tienen un margen de ±1 h. JPL Horizons entrega las horas en UT, que difiere de UTC en menos de un segundo; la página las muestra como UTC.</p>
+            <p>El índice de conveniencia S = 0.40·iluminación + 0.35·Tierra directa + 0.25·respaldo es una propuesta del equipo, no un estándar de NASA. El respaldo solo cuenta las horas en que el tramo local funciona y el punto de apoyo ve la Tierra; con el enlace desactivado se usan solo los dos primeros factores. No evalúa pendiente, rocas ni riesgos de descenso.</p>
           </article>
           <article class="tarjeta">
             <h3>Fuentes</h3>

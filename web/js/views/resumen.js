@@ -19,7 +19,7 @@ export function renderFranja(cont, d) {
   if (m.enlace) {
     const disponibles = m.enlace.rapido + m.enlace.robusto;
     enlace = indicador(ICONO.enlace, 'var(--ok)', `Enlace local, ${TIPO_ENLACE[estado.tipoEnlace].toLowerCase()}`,
-      `${num((100 * disponibles) / m.horas, 0)} %`, `${horasTexto(m.enlace.sin_enlace)} sin enlace`);
+      `${num((100 * disponibles) / m.horas, 0)} %`, `${horasTexto(m.horasRespaldo)} llega a la Tierra`);
   } else {
     enlace = indicador(ICONO.enlace, 'var(--texto-3)', 'Enlace local', 'Desactivado', '');
   }
@@ -35,9 +35,9 @@ export function renderDisponibilidad(cont, d) {
   const via = estado.enlaceActivo ? 'directa o respaldo' : 'solo directa';
   cont.innerHTML = `
     <div class="meta">
-      <div class="meta__valor">${num(m.pctAmbas, 0)} %</div>
-      <div class="barra" aria-hidden="true"><span style="width:${m.pctAmbas}%"></span></div>
-      <div class="meta__etq">Luz y comunicación<br>${m.horasAmbas} h a la vez</div>
+      <div class="meta__valor">${num(m.pctSolTierra, 0)} %</div>
+      <div class="barra" aria-hidden="true"><span style="width:${m.pctSolTierra}%"></span></div>
+      <div class="meta__etq">Sol y Tierra visibles<br>${m.horasSolTierra} h a la vez</div>
     </div>
     <div class="meta">
       <div class="meta__valor">${num(m.pctComunicacion, 0)} %</div>
@@ -49,8 +49,8 @@ export function renderDisponibilidad(cont, d) {
 /** Resumen comparativo de los tres sitios en el mismo periodo. */
 export function renderMiniComparativo(cont, d) {
   const { filas, sitio } = d;
-  const mejor = filas.reduce((a, b) => (b.metricas.pctAmbas > a.metricas.pctAmbas ? b : a));
-  const empate = filas.filter((f) => Math.abs(f.metricas.pctAmbas - mejor.metricas.pctAmbas) < 1e-9).length > 1;
+  const mejor = filas.reduce((a, b) => (b.metricas.pctSolTierra > a.metricas.pctSolTierra ? b : a));
+  const empate = filas.filter((f) => Math.abs(f.metricas.pctSolTierra - mejor.metricas.pctSolTierra) < 1e-9).length > 1;
   cont.innerHTML = filas.map(({ sitio: s, metricas: m }) => `
     <div class="mini-fila">
       <span class="mini-fila__nombre ${s.id === sitio.id ? 'activo' : ''}">${esc(s.etiqueta)}</span>
@@ -61,7 +61,7 @@ export function renderMiniComparativo(cont, d) {
       <span class="mini-fila__valor">${num(m.pctSol, 0)} % luz<br>${num(m.pctTierra, 0)} % Tierra</span>
     </div>`).join('') + `
     <div class="mini-pie">
-      <span>${empate ? 'Empate en luz con comunicación.' : `Más luz con comunicación: ${esc(mejor.sitio.etiqueta)}`}</span>
+      <span>${empate ? 'Empate en horas con Sol y Tierra.' : `Más horas con Sol y Tierra: ${esc(mejor.sitio.etiqueta)}`}</span>
       <a href="#comparador">Ver comparador</a>
     </div>`;
 }

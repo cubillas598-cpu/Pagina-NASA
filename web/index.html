@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lunar Landing Site Navigator · Demo</title>
+  <meta name="description" content="Compara tres sitios del polo sur lunar por iluminación solar, vista directa a la Tierra y un enlace local de respaldo.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='%23A8B4C8'/%3E%3Ccircle cx='20' cy='13' r='11' fill='%23070B14'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <svg class="fondo-topo" aria-hidden="true" focusable="false" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice"><g id="fondo-topo-lineas"></g></svg>
+
+  <header class="cabecera">
+    <div class="cabecera__marca">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="13" fill="url(#g-luna-logo)"/>
+        <ellipse cx="20" cy="20" rx="19" ry="6" fill="none" stroke="var(--cian)" stroke-opacity=".55" stroke-width="1" transform="rotate(-18 20 20)"/>
+        <defs><radialGradient id="g-luna-logo" cx="38%" cy="34%" r="70%"><stop offset="0" stop-color="#D9E1EC"/><stop offset=".7" stop-color="#7C889B"/><stop offset="1" stop-color="#3A4457"/></radialGradient></defs>
+      </svg>
+      <div>
+        <p class="cabecera__titulo">Lunar Landing Site Navigator</p>
+        <p class="cabecera__sub">con enlace local adaptativo</p>
+      </div>
+    </div>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#explorador" class="nav__item" data-vista="explorador">Explorador</a>
+      <a href="#comparador" class="nav__item" data-vista="comparador">Comparador</a>
+      <a href="#metodologia" class="nav__item" data-vista="metodologia">Metodología</a>
+    </nav>
+    <p class="insignia" title="Efemérides de JPL Horizons; horizonte, punto de apoyo y evento de polvo simulados.">Demo · Datos simulados</p>
+  </header>
+
+  <main id="contenido">
+    <section class="intro">
+      <div class="intro__texto">
+        <h1>Explora dónde la luz y la comunicación coinciden</h1>
+        <p>Tres candidatos del polo sur lunar, hora por hora en UTC. Mira cuándo hay Sol, cuándo se ve la Tierra y qué ocurre con el enlace de respaldo cuando la vista directa se pierde.</p>
+      </div>
+      <div class="intro__luna" aria-hidden="true">
+        <div class="esfera"></div>
+        <div class="aro"></div>
+      </div>
+    </section>
+
+    <!-- Controles: compartidos por Explorador y Comparador -->
+    <form class="controles vidrio" id="controles" aria-label="Controles de la demo" onsubmit="return false">
+      <div class="campo">
+        <label for="c-sitio">Sitio</label>
+        <select id="c-sitio"></select>
+      </div>
+      <fieldset class="campo campo--fechas">
+        <legend>Periodo (UTC)</legend>
+        <div class="fechas">
+          <label class="sr" for="c-desde">Desde</label>
+          <input type="date" id="c-desde" required>
+          <span aria-hidden="true">a</span>
+          <label class="sr" for="c-hasta">Hasta</label>
+          <input type="date" id="c-hasta" required>
+        </div>
+        <p class="campo__nota" id="c-fechas-nota" aria-live="polite"></p>
+      </fieldset>
+      <fieldset class="campo">
+        <legend>Tipo de enlace</legend>
+        <div class="segmentado" role="radiogroup" aria-label="Tipo de enlace">
+          <input type="radio" name="tipo" id="c-rf" value="rf"><label for="c-rf">Radiofrecuencia</label>
+          <input type="radio" name="tipo" id="c-optico" value="optico"><label for="c-optico">Óptico</label>
+        </div>
+      </fieldset>
+      <div class="campo campo--interruptores">
+        <label class="interruptor"><input type="checkbox" id="c-enlace" role="switch"><span class="interruptor__pista" aria-hidden="true"></span>Activar enlace local</label>
+        <label class="interruptor" id="c-polvo-envoltura"><input type="checkbox" id="c-polvo" role="switch"><span class="interruptor__pista" aria-hidden="true"></span>Evento de polvo</label>
+      </div>
+      <div class="campo">
+        <label for="c-horizonte">Horizonte</label>
+        <select id="c-horizonte">
+          <option value="sintetico">Perfil sintético</option>
+          <option value="plano">Plano (0°)</option>
+        </select>
+      </div>
+      <div class="controles__acciones">
+        <button type="button" class="boton boton--fantasma" id="c-ayuda" aria-haspopup="dialog">Ayuda sobre estados</button>
+        <button type="button" class="boton" id="c-reset">Restablecer demo</button>
+      </div>
+    </form>
+
+    <!-- EXPLORADOR -->
+    <section class="vista" id="vista-explorador" data-vista="explorador" aria-labelledby="t-explorador">
+      <h2 id="t-explorador" class="sr">Explorador</h2>
+
+      <div class="kpis" id="kpis" aria-live="polite"></div>
+
+      <div class="rejilla">
+        <article class="vidrio panel panel--mapa" aria-labelledby="t-mapa">
+          <header class="panel__cab">
+            <h3 id="t-mapa">Terreno del polo sur</h3>
+            <span class="etiqueta-concepto">Vista conceptual</span>
+          </header>
+          <div class="mapa" id="mapa"></div>
+          <ul class="leyenda" id="leyenda-mapa"></ul>
+        </article>
+
+        <aside class="vidrio panel panel--estado" id="estado" aria-labelledby="t-estado" aria-live="polite"></aside>
+
+        <article class="vidrio panel panel--horizonte" aria-labelledby="t-horizonte">
+          <header class="panel__cab">
+            <h3 id="t-horizonte">Horizonte del sitio</h3>
+            <span class="panel__meta" id="horizonte-meta"></span>
+          </header>
+          <div class="grafica" id="grafica-horizonte"></div>
+          <ul class="leyenda" id="leyenda-horizonte"></ul>
+        </article>
+      </div>
+
+      <article class="vidrio panel panel--tiempo" aria-labelledby="t-tiempo">
+        <header class="panel__cab">
+          <h3 id="t-tiempo">Línea de tiempo</h3>
+          <div class="reproductor" role="group" aria-label="Reproducción">
+            <button type="button" class="boton-icono" id="t-inicio" aria-label="Ir al inicio del periodo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 4 7 10l8 6z"/></svg></button>
+            <button type="button" class="boton-icono" id="t-atras" aria-label="Retroceder una hora"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13 4 6 10l7 6"/></svg></button>
+            <button type="button" class="boton-icono boton-icono--principal" id="t-play" aria-label="Reproducir"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="icono-play" d="M7 4v12l9-6z"/><path class="icono-pausa" d="M6 4h3v12H6zM11 4h3v12h-3z"/></svg></button>
+            <button type="button" class="boton-icono" id="t-adelante" aria-label="Avanzar una hora"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l7 6-7 6"/></svg></button>
+            <label class="sr" for="t-paso">Paso de avance</label>
+            <select id="t-paso" class="paso">
+              <option value="1">1 h</option>
+              <option value="6">6 h</option>
+              <option value="24">24 h</option>
+            </select>
+          </div>
+        </header>
+        <p class="tiempo__ayuda" id="tiempo-ayuda">Arrastra el cursor o usa ← → (1 h), Re Pág/Av Pág (24 h), Inicio/Fin.</p>
+        <div class="tiempo__scroll" id="tiempo-scroll">
+          <div class="tiempo" id="tiempo"></div>
+        </div>
+        <ul class="leyenda" id="leyenda-tiempo"></ul>
+      </article>
+    </section>
+
+    <!-- COMPARADOR -->
+    <section class="vista" id="vista-comparador" data-vista="comparador" aria-labelledby="t-comparador" hidden>
+      <div class="vidrio panel">
+        <header class="panel__cab">
+          <h2 id="t-comparador">Comparador de sitios</h2>
+          <button type="button" class="boton" id="exportar-csv">Exportar CSV</button>
+        </header>
+        <p class="panel__meta" id="comparador-meta"></p>
+        <div class="tabla-scroll">
+          <table class="tabla" id="tabla-comparador"></table>
+        </div>
+      </div>
+      <div class="vidrio panel">
+        <h3>Lo que muestran los datos</h3>
+        <ul class="conclusiones" id="conclusiones"></ul>
+        <p class="aviso">Estas conclusiones describen solo el periodo y los supuestos elegidos. No declaran un sitio seguro ni ideal para aterrizar.</p>
+      </div>
+    </section>
+
+    <!-- METODOLOGIA -->
+    <section class="vista metodologia" id="vista-metodologia" data-vista="metodologia" aria-labelledby="t-metodologia" hidden>
+      <h2 id="t-metodologia">Metodología</h2>
+      <div class="metodologia__rejilla">
+        <article class="vidrio panel">
+          <h3>Qué se calcula</h3>
+          <p>Para cada sitio y cada hora (UTC) se compara la elevación del Sol y de la Tierra con la elevación del horizonte en ese mismo azimut. Si el astro queda por encima, cuenta como visible.</p>
+          <p>Los porcentajes del periodo se obtienen de las mismas muestras horarias que dibujan la línea de tiempo y la gráfica: cada muestra vale una hora.</p>
+        </article>
+        <article class="vidrio panel">
+          <h3>Fuentes</h3>
+          <dl class="fuentes" id="fuentes"></dl>
+        </article>
+        <article class="vidrio panel">
+          <h3>Enlace local de respaldo</h3>
+          <p>Un clasificador de tres estados (Rápido, Robusto, Sin enlace) evalúa el tramo entre el lander y un punto de apoyo elevado. Cada tipo aporta sus propias señales y gana la más limitante.</p>
+          <ul id="reglas-enlace"></ul>
+          <p>El respaldo hacia la Tierra cuenta solo cuando funcionan el tramo local y la vista del punto de apoyo hacia la Tierra.</p>
+        </article>
+        <article class="vidrio panel">
+          <h3>Límites de esta demo</h3>
+          <ul>
+            <li>La iluminación indica disponibilidad solar, no energía eléctrica calculada.</li>
+            <li>La visibilidad es geométrica y el clasificador no es un presupuesto de enlace.</li>
+            <li>No es una evaluación completa de seguridad de aterrizaje.</li>
+            <li>El punto de apoyo usa las efemérides del lander: a pocos kilómetros el error angular es de décimas de grado.</li>
+            <li>El patrón de tres estados se inspira en el proyecto EVA del equipo; no reutiliza su código ni su modelo entrenado.</li>
+          </ul>
+        </article>
+        <article class="vidrio panel metodologia__ancho">
+          <h3>Cómo sustituir los datos</h3>
+          <p>Las efemérides viven en <code>data/&lt;sitio&gt;.json</code> y se regeneran con <code>scripts/efemerides.py</code>. Los horizontes, el punto de apoyo, los umbrales y el evento de polvo viven en <code>data/escenario_demo.json</code>. Para usar LOLA skyline, reemplaza <code>elevacion_deg</code> de cada perfil (360 valores, 1° de resolución) y cambia <code>fuente</code> a <code>lola_skyline</code>.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>NASA Space Apps Challenge 2026 · Hermosillo. Efemérides: JPL Horizons. Tipografía IBM Plex Sans (OFL). Licencia Apache 2.0.</p>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+  <dialog class="dialogo vidrio" id="dialogo-ayuda" aria-labelledby="ayuda-titulo">
+    <h2 id="ayuda-titulo">Qué significa cada estado</h2>
+    <dl class="ayuda-estados" id="ayuda-estados"></dl>
+    <p class="aviso">Umbrales, punto de apoyo y evento de polvo son supuestos de demostración.</p>
+    <form method="dialog"><button class="boton" autofocus>Entendido</button></form>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

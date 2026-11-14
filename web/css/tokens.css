@@ -8,32 +8,38 @@
 :root {
   color-scheme: dark;
 
-  --fondo: #15110e;
-  --texto: #F7F3EE;
-  --texto-2: rgba(247, 243, 238, 0.72);
-  --texto-3: rgba(247, 243, 238, 0.52);
+  /* Identidad lunar sobria: neutros carbón y marfil con acento dorado.
+     Única fuente de color: los gráficos SVG leen estas variables
+     (web/js/views/estilos.js). Contraste sobre --panel-solido:
+     texto 15.05:1, texto-2 8.03:1, acento 7.40:1. */
+  --fondo: #111214;
+  --panel-solido: #1B1D21;
+  --texto: #F2F2EF;
+  --texto-2: #B1B3B6;
+  --texto-3: #8E9196;
 
-  --naranja: #F5822A;
-  --naranja-claro: #FFA552;
-  --amarillo: #FFD15C;
-  --tierra: #EDEFF2;
+  --acento: #C6A86A;
+  --acento-claro: #E2C990;
+  --sobre-acento: #17140E;
+  --sol: #E2C990;
+  --tierra: #A9C3DD;
 
-  /* Estados semánticos (siempre con texto) */
-  --ok: #7BDBA2;
-  --aviso: #FFC857;
-  --error: #FF8A80;
+  /* Estados semánticos (siempre acompañados de texto o patrón) */
+  --ok: #82CFA2;
+  --aviso: #E3B65A;
+  --error: #EC8C84;
 
   /* Cristal ahumado */
-  --vidrio-app: rgba(48, 42, 37, 0.42);
-  --vidrio-tarjeta: rgba(255, 255, 255, 0.075);
-  --vidrio-tarjeta-alto: rgba(255, 255, 255, 0.12);
-  --vidrio-control: rgba(20, 16, 13, 0.42);
-  --borde: rgba(255, 255, 255, 0.14);
-  --borde-suave: rgba(255, 255, 255, 0.08);
-  --blur: blur(24px) saturate(120%);
-  --sombra-app: 0 40px 80px -30px rgba(0, 0, 0, 0.75), 0 12px 30px -12px rgba(0, 0, 0, 0.45);
-  --sombra-tarjeta: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
-  --reflejo: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --vidrio-app: rgba(27, 29, 33, 0.74);
+  --vidrio-tarjeta: rgba(255, 255, 255, 0.045);
+  --vidrio-tarjeta-alto: rgba(255, 255, 255, 0.08);
+  --vidrio-control: rgba(10, 11, 13, 0.45);
+  --borde: rgba(255, 255, 255, 0.12);
+  --borde-suave: rgba(255, 255, 255, 0.07);
+  --blur: blur(24px) saturate(115%);
+  --sombra-app: 0 40px 80px -30px rgba(0, 0, 0, 0.8), 0 12px 30px -12px rgba(0, 0, 0, 0.5);
+  --sombra-tarjeta: 0 14px 30px -18px rgba(0, 0, 0, 0.65);
+  --reflejo: inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 0 0 1px rgba(255, 255, 255, 0.015);
 
   --r-app: 28px;
   --r-tarjeta: 22px;

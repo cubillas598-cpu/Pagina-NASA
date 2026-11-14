@@ -85,6 +85,17 @@ export function problemasEscenario(escenario) {
   return problemas;
 }
 
+/** Coordenadas por sitio: latitud y longitud este numéricas y en rango. */
+export function problemasCoordenadas(escenario, coordenadas) {
+  const problemas = [];
+  for (const s of escenario.sitios) {
+    const c = coordenadas && coordenadas[s.id];
+    const ok = c && Number.isFinite(c.lat) && Number.isFinite(c.lon) && Math.abs(c.lat) <= 90 && c.lon >= 0 && c.lon < 360;
+    if (!ok) problemas.push(`${s.id}: faltan latitud o longitud válidas.`);
+  }
+  return problemas;
+}
+
 export function normalizarAz(az) {
   return ((az % 360) + 360) % 360;
 }

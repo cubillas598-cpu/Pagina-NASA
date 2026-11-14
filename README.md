@@ -70,15 +70,22 @@ Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
 
 En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio redirige a la demo; el esqueleto inicial quedo en `esqueleto.html`.
 
-Pagina estatica sin dependencias ni build (HTML, CSS y modulos JS). Lee los JSON
-de `data/` y calcula todo en el navegador.
+Pagina estatica (HTML, CSS y JS). Lee los JSON de `data/` y calcula todo en el
+navegador. La Luna 3D usa Three.js; esbuild compila `web/js/` en `web/build/app.js`,
+que se versiona para que GitHub Pages no necesite compilar.
 
 ```bash
+npm install                      # solo la primera vez (three, esbuild)
+npm run build                    # tras cambiar algo en web/js/
 python3 -m http.server 8000      # desde la raiz del repo
 # abrir http://localhost:8000/web/
 ```
 
-Version de respaldo para el jurado, un solo HTML que abre con doble clic y sin
+Sin WebGL, la pagina muestra un mapa polar 2D en lugar del globo. La textura del
+globo es provisional y decorativa; las posiciones de los sitios salen de las
+coordenadas de `data/<sitio>.json` (iguales a `sitios.json`).
+
+Version de respaldo para el jurado (`npm run empaquetar`), un solo HTML que abre con doble clic y sin
 internet (fuentes y datos incrustados):
 
 ```bash
@@ -183,6 +190,7 @@ Gerlache-Shackleton, y Malapert massif.
 ## Creditos de terceros
 
 - Poppins (SIL Open Font License 1.1), incluida en `web/fonts/`.
+- Three.js (licencia MIT), empaquetado en `web/build/app.js`. esbuild (MIT) solo como herramienta de desarrollo.
 - Diseño visual adaptado de "Glassmorphism Dashboard | UI DESIGN" de Oluwakemi Jegede (Behance, galeria 190227507), como referencia de composicion; no se reutilizan sus imagenes.
 
 ## Licencia

@@ -40,6 +40,14 @@ La resolución es horaria: el inicio y el fin de cada ventana tienen un margen d
 | Pesos del índice S | 0.40 / 0.35 / 0.25 | `web/js/model.js` | Propuesta del equipo, no un estándar de NASA. |
 | Mapa | Posiciones ilustrativas | `data/escenario_demo.json` (`mapa`) | Rotulado en la página como "Vista conceptual". |
 
+## Recursos visuales (no son datos)
+
+| Recurso | Origen | Uso |
+|---|---|---|
+| Textura del globo lunar | Provisional, generada en el navegador | Solo visual. Sustituirla por el NASA CGI Moon Kit (https://svs.gsfc.nasa.gov/4720/, LRO) en `web/assets/luna/` cuando se descargue; NASA advierte que esos mapas son para visualización, no para análisis. |
+| Posición de los marcadores en el globo | Latitud y longitud de `data/<sitio>.json`, convertidas a la esfera en `web/js/luna-geometria.js` | Ubicación geográfica real de los sitios; la prueba `tests/luna-geometria.test.mjs` cubre la conversión. |
+| Three.js 0.187.0 (MIT) | npm | Render del globo. |
+
 ## Precedentes citados (contexto, no datos)
 
 - Relevo RF: concepto LunaNet / Lunar Communications Relay de NASA.

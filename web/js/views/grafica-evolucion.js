@@ -70,12 +70,12 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
     const partes = [];
     const paso = max - min > 12 ? 4 : 2;
     for (let v = Math.ceil(min / paso) * paso; v <= max; v += paso) {
-      partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,245,235,${v === 0 ? 0 : 0.06})"/>`);
+      partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,${v === 0 ? 0 : 0.06})"/>`);
       partes.push(`<text x="${ME.izq - 8}" y="${y(v) + 4}" text-anchor="end" class="ev-eje">${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}°</text>`);
     }
     // Zona visible (sobre el horizonte) apenas sombreada.
-    partes.push(`<rect x="${ME.izq}" y="${ME.sup}" width="${ancho}" height="${y(0) - ME.sup}" fill="rgba(255,245,235,.03)"/>`);
-    partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,245,235,.4)" stroke-dasharray="4 5"/>`);
+    partes.push(`<rect x="${ME.izq}" y="${ME.sup}" width="${ancho}" height="${y(0) - ME.sup}" fill="rgba(255,255,255,.03)"/>`);
+    partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,255,255,.4)" stroke-dasharray="4 5"/>`);
     partes.push(`<text x="${W - ME.der}" y="${y(0) + 14}" text-anchor="end" class="ev-eje">0° = horizonte local</text>`);
 
     // Días en el eje x.
@@ -92,7 +92,7 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
       return dd;
     };
     partes.push(`<path d="${linea((s) => s.tierra.el - s.tierra.horizonte)}" fill="none" stroke="${COLOR.tierra}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`);
-    partes.push(`<path d="${linea((s) => s.sol.el - s.sol.horizonte)}" fill="none" stroke="${COLOR.naranja}" stroke-width="2.6" stroke-linejoin="round"/>`);
+    partes.push(`<path d="${linea((s) => s.sol.el - s.sol.horizonte)}" fill="none" stroke="${COLOR.sol}" stroke-width="2.6" stroke-linejoin="round"/>`);
 
     cont.innerHTML = `
       <svg viewBox="0 0 ${W} ${H}" aria-hidden="true">
@@ -116,11 +116,11 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
     const anchoB = texto.length * 6.4 + 18;
     const bx = Math.min(Math.max(cx - anchoB / 2, 2), geo.W - anchoB - 2);
     cont.querySelector('#ev-cursor').innerHTML = `
-      <line x1="${cx}" x2="${cx}" y1="${ME.sup - 6}" y2="${geo.H - ME.inf}" stroke="rgba(255,245,235,.35)"/>
-      <rect x="${bx}" y="6" width="${anchoB}" height="22" rx="11" fill="rgba(30,25,21,.85)" stroke="rgba(255,255,255,.18)"/>
+      <line x1="${cx}" x2="${cx}" y1="${ME.sup - 6}" y2="${geo.H - ME.inf}" stroke="rgba(255,255,255,.35)"/>
+      <rect x="${bx}" y="6" width="${anchoB}" height="22" rx="11" fill="rgba(17,18,20,.85)" stroke="rgba(255,255,255,.18)"/>
       <text x="${bx + anchoB / 2}" y="21" text-anchor="middle" class="ev-burbuja">${texto}</text>
       <circle cx="${cx}" cy="${yt}" r="5" fill="${m.tierra.visible ? COLOR.tierra : COLOR.fondo}" stroke="${COLOR.tierra}" stroke-width="2"/>
-      <circle cx="${cx}" cy="${ys}" r="6" fill="${m.sol.visible ? COLOR.naranja : COLOR.fondo}" stroke="#fff" stroke-width="2"/>`;
+      <circle cx="${cx}" cy="${ys}" r="6" fill="${m.sol.visible ? COLOR.sol : COLOR.fondo}" stroke="#fff" stroke-width="2"/>`;
     cont.setAttribute('aria-valuemin', String(geo.i0));
     cont.setAttribute('aria-valuemax', String(geo.i1));
     cont.setAttribute('aria-valuenow', String(indice));

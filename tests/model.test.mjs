@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
-  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria,
+  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria, problemasCoordenadas,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -255,6 +255,7 @@ test('el respaldo sin conexión contiene exactamente los mismos datos que la web
   assert.deepEqual(incrustado.escenario, escenario, 'escenario distinto: ejecuta npm run empaquetar');
   for (const s of escenario.sitios) {
     assert.deepEqual(incrustado.efemerides[s.id], leer(s.efemerides).horas, `efemérides de ${s.id} distintas`);
+    assert.deepEqual(incrustado.coordenadas[s.id], leer(s.efemerides).sitio, `coordenadas de ${s.id} distintas`);
   }
 });
 
@@ -262,4 +263,13 @@ test('esMarcaHoraria exige AAAA-MM-DDTHH:MM real', () => {
   assert.ok(esMarcaHoraria('2026-12-06T08:20'));
   for (const malo of ['no-es-fecha', '2026-12-06', '2026-13-01T00:00', '2026-12-06T8:20', null]) assert.ok(!esMarcaHoraria(malo), String(malo));
   assert.match(problemasEfemerides([{ t: 'x', sol_el: 1, sol_az: 1, tierra_el: 1, tierra_az: 1 }])[0], /fecha válida/);
+});
+
+test('problemasCoordenadas: usa las coordenadas de las efemérides y rechaza faltantes', () => {
+  const coords = Object.fromEntries(escenario.sitios.map((s) => [s.id, leer(s.efemerides).sitio]));
+  assert.deepEqual(problemasCoordenadas(escenario, coords), []);
+  const sitiosJson = leer('sitios.json').sitios;
+  for (const s of sitiosJson) assert.deepEqual([coords[s.id].lat, coords[s.id].lon], [s.lat, s.lon], `${s.id} coincide con sitios.json`);
+  assert.match(problemasCoordenadas(escenario, { ...coords, malapert: { lat: -86 } }).join(' '), /malapert/);
+  assert.match(problemasCoordenadas(escenario, { ...coords, shackleton: { lat: -89, lon: -10 } }).join(' '), /shackleton/);
 });

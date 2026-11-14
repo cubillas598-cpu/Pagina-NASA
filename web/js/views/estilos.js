@@ -1,22 +1,28 @@
 // Colores, textos e iconos compartidos por las vistas.
 // Cada estado combina color + texto + patrón o icono: nunca solo color.
 
+/** Lee un token de color de web/css/tokens.css (única fuente de la paleta). */
+function token(nombre, respaldo) {
+  if (typeof document === 'undefined') return respaldo;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+  return v || respaldo;
+}
+
 export const COLOR = {
-  fondo: '#1a1512',
-  superficie: '#2a231e',
-  texto: '#F7F3EE',
-  texto2: 'rgba(247,243,238,.72)',
-  texto3: 'rgba(247,243,238,.52)',
-  naranja: '#F5822A',
-  naranjaClaro: '#FFA552',
-  ambar: '#FFA552',
-  tierra: '#EDEFF2',
-  ok: '#7BDBA2',
-  aviso: '#FFC857',
-  error: '#FF8A80',
-  neutro: 'rgba(255,255,255,.10)',
-  sombra: 'rgba(20,16,13,.55)',
-  cian: '#FFA552',
+  fondo: token('--fondo', '#111214'),
+  superficie: token('--panel-solido', '#1B1D21'),
+  texto: token('--texto', '#F2F2EF'),
+  texto2: token('--texto-2', '#B1B3B6'),
+  texto3: token('--texto-3', '#8E9196'),
+  acento: token('--acento', '#C6A86A'),
+  acentoClaro: token('--acento-claro', '#E2C990'),
+  sol: token('--sol', '#E2C990'),
+  tierra: token('--tierra', '#A9C3DD'),
+  ok: token('--ok', '#82CFA2'),
+  aviso: token('--aviso', '#E3B65A'),
+  error: token('--error', '#EC8C84'),
+  neutro: 'rgba(255,255,255,.08)',
+  sombra: 'rgba(10,11,13,.6)',
 };
 
 export const ENLACE = {
@@ -54,10 +60,10 @@ export const ICONO = {
 export function defsPatrones() {
   return `
     <pattern id="p-rayas" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <rect width="6" height="6" fill="${COLOR.aviso}"/><rect width="2.2" height="6" fill="rgba(40,24,8,.38)"/>
+      <rect width="6" height="6" fill="${COLOR.aviso}"/><rect width="2.2" height="6" fill="rgba(0,0,0,.35)"/>
     </pattern>
     <pattern id="p-cruces" width="7" height="7" patternUnits="userSpaceOnUse">
-      <rect width="7" height="7" fill="${COLOR.error}"/><path d="M0 0l7 7M7 0 0 7" stroke="rgba(40,16,10,.45)" stroke-width="1.4"/>
+      <rect width="7" height="7" fill="${COLOR.error}"/><path d="M0 0l7 7M7 0 0 7" stroke="rgba(0,0,0,.4)" stroke-width="1.4"/>
     </pattern>
     <pattern id="p-polvo" width="5" height="5" patternUnits="userSpaceOnUse">
       <circle cx="1.5" cy="1.5" r=".9" fill="rgba(241,245,249,.55)"/><circle cx="4" cy="3.8" r=".6" fill="rgba(241,245,249,.4)"/>

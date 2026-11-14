@@ -6,7 +6,9 @@ import { renderFranja, renderDisponibilidad, renderMiniComparativo } from './vie
 import { crearGraficaEvolucion } from './views/grafica-evolucion.js';
 import { renderHora, renderDestacada, renderEventos, renderPorque } from './views/panel-derecho.js';
 import { renderPanelEstado } from './views/panel-estado.js';
-import { renderMapa, leyendaMapa } from './views/mapa.js';
+import { crearMapaPolar, leyendaMapa } from './views/mapa.js';
+import { crearLuna } from './views/luna.js';
+import { renderSitiosLuna, renderFichaLuna } from './views/ficha-luna.js';
 import { renderGraficaHorizonte, leyendaHorizonte } from './views/grafica-horizonte.js';
 import { crearLineaTiempo, leyendaTiempo } from './views/linea-tiempo.js';
 import { renderComparador } from './views/comparador.js';
@@ -181,11 +183,11 @@ async function iniciar() {
   $('#c-ayuda').addEventListener('click', () => dialogo.showModal());
 
   // ---- Metodología: fuentes y reglas desde el propio escenario.
-  const etiquetaEstado = { en_uso: ['En uso', 'var(--ok)'], prevista: ['Integración prevista', 'var(--amarillo)'] };
+  const etiquetaEstado = { en_uso: ['En uso', 'var(--ok)'], prevista: ['Integración prevista', 'var(--acento-claro)'] };
   $('#fuentes').innerHTML = Object.values(escenario.fuentes).map((f) => {
     const [txt, col] = etiquetaEstado[f.estado] || [f.estado, 'var(--texto-2)'];
     return `<div><dt>${esc(f.nombre)} <span class="estado-fuente" style="color:${col}">${txt}</span></dt><dd>${esc(f.detalle)}</dd></div>`;
-  }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--amarillo)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
+  }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--acento-claro)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
   const r = escenario.enlace_local;
   $('#reglas-enlace').innerHTML = `
     <li><strong>Radiofrecuencia:</strong> requiere línea de vista al punto de apoyo. Si el punto de apoyo queda en sombra opera con batería (robusto); tras ${r.rf.bateria_relevo_h} h en sombra se considera sin enlace.</li>
@@ -198,6 +200,7 @@ async function iniciar() {
       if (a.dataset.vista === estado.vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     $('#cab-sub').textContent = SUBTITULOS[estado.vista];
+    $('#luna-tarjeta').hidden = estado.vista !== 'resumen';
   }
   window.addEventListener('hashchange', () => {
     const v = location.hash.slice(1);
@@ -261,8 +264,28 @@ async function iniciar() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
+  // ---- Luna 3D (o mapa polar 2D si no hay WebGL) y mapa polar de Sitios
+  const reducirMovimiento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const elegirSitio = (id) => {
+    if (id === estado.sitioId && luna) luna.enfocarSitio(sitios.find((s) => s.id === id));
+    else actualizar({ sitioId: id });
+  };
+  const luna = crearLuna($('#luna'), {
+    alElegir: elegirSitio,
+    urlTextura: document.getElementById('textura-luna')?.getAttribute('href') || null,
+    reducirMovimiento,
+  });
+  const mapaRespaldo = luna ? null : crearMapaPolar($('#luna'), elegirSitio);
+  if (!luna) $('#luna').classList.add('luna--sin-webgl');
+  const mapaSitios = crearMapaPolar($('#mapa'), elegirSitio);
+  $('#luna-sitios').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    if (b.dataset.sitio) elegirSitio(b.dataset.sitio);
+    else if (b.dataset.accion === 'tres' && luna) luna.verTres();
+  });
+
   // ---- Render
-  const elegirSitio = (id) => actualizar({ sitioId: id });
   let eventos = [];
 
   function render(completo) {
@@ -278,6 +301,9 @@ async function iniciar() {
     renderEventos($('#eventos'), $('#eventos-total'), d, eventos, (i) => actualizar({ indice: i }, { completo: false }));
 
     if (estado.vista === 'resumen') {
+      renderSitiosLuna($('#luna-sitios'), d, !!luna);
+      renderFichaLuna($('#luna-ficha'), d, !!luna);
+      if (luna) luna.render(d); else mapaRespaldo.render(d);
       if (completo) {
         renderFranja($('#franja'), d);
         renderDisponibilidad($('#disponibilidad'), d);
@@ -289,7 +315,7 @@ async function iniciar() {
     } else if (estado.vista === 'sitios') {
       if (completo) leyendaHorizonte($('#leyenda-horizonte'), estado);
       renderPanelEstado($('#estado'), d);
-      renderMapa($('#mapa'), d, elegirSitio);
+      mapaSitios.render(d);
       renderGraficaHorizonte($('#grafica-horizonte'), d);
     } else if (estado.vista === 'comparador') {
       if (completo) renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);

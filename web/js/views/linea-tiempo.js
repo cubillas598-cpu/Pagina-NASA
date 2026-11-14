@@ -91,7 +91,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
 
     const carriles = [
       { nombre: 'Iluminación', clave: (m) => (m.sol.visible ? 'si' : 'no'),
-        relleno: (v) => (v === 'si' ? COLOR.ambar : COLOR.sombra), texto: (v) => (v === 'si' ? 'Sol visible' : 'Sombra') },
+        relleno: (v) => (v === 'si' ? COLOR.sol : COLOR.sombra), texto: (v) => (v === 'si' ? 'Sol visible' : 'Sombra') },
       { nombre: 'Comunicación directa', clave: (m) => (m.tierra.visible ? 'si' : 'no'),
         relleno: (v) => (v === 'si' ? COLOR.tierra : COLOR.sombra), texto: (v) => (v === 'si' ? 'Tierra visible' : 'Tierra oculta') },
     ];
@@ -107,7 +107,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     for (let i = i0; i <= i1; i++) {
       if (!serie[i].t.endsWith('T00:00')) continue;
       const xx = xi(i);
-      partes.push(`<line x1="${xx}" x2="${xx}" y1="${EJE - 8}" y2="${EJE + carriles.length * (ALTO_CARRIL + SEP)}" stroke="rgba(255,245,235,.1)"/>`);
+      partes.push(`<line x1="${xx}" x2="${xx}" y1="${EJE - 8}" y2="${EJE + carriles.length * (ALTO_CARRIL + SEP)}" stroke="rgba(255,255,255,.1)"/>`);
       if (dia % diasPorEtiqueta === 0) partes.push(`<text x="${xx + 3}" y="${EJE - 12}">${diaMesUtc(serie[i].ms)}</text>`);
       dia++;
     }
@@ -143,10 +143,10 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     if (br.horas > 0) {
       const a = xi(br.desde), b = xi(br.hasta + 1);
       const yB = yFin + 34;
-      partes.push(`<path d="M${a},${yB - 6}V${yB}H${b}V${yB - 6}" fill="none" stroke="${COLOR.cian}" stroke-width="1.5"/>`);
+      partes.push(`<path d="M${a},${yB - 6}V${yB}H${b}V${yB - 6}" fill="none" stroke="${COLOR.acento}" stroke-width="1.5"/>`);
       const etiqueta = `${estado.enlaceActivo ? 'Mayor intervalo sin comunicación' : 'Mayor intervalo sin vista a la Tierra'}: ${horasTexto(br.horas)}`;
       const cx = Math.min(Math.max((a + b) / 2, M_IZQ + 150), W - M_DER - 150);
-      partes.push(`<text x="${cx}" y="${yB + 16}" text-anchor="middle" fill="${COLOR.cian}">${etiqueta}</text>`);
+      partes.push(`<text x="${cx}" y="${yB + 16}" text-anchor="middle" fill="${COLOR.acento}">${etiqueta}</text>`);
     }
     const H = yFin + 60;
 
@@ -155,7 +155,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
         <defs>${defsPatrones()}</defs>
         ${partes.join('')}
         <g id="cursor">
-          <rect class="cursor__marco" x="-7" y="${EJE - 4}" width="14" height="${yFin - EJE + 2}" rx="7" fill="rgba(245,130,42,.14)" stroke="rgba(255,165,82,.5)"/>
+          <rect class="cursor__marco" x="-7" y="${EJE - 4}" width="14" height="${yFin - EJE + 2}" rx="7" fill="rgba(198,168,106,.14)" stroke="rgba(226,201,144,.5)"/>
           <line class="cursor__linea" x1="0" x2="0" y1="${EJE - 4}" y2="${yFin - 2}" stroke="${COLOR.texto}" stroke-width="2"/>
         </g>
       </svg>`;
@@ -189,15 +189,15 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
 
 export function leyendaTiempo(cont, estado) {
   const items = [
-    `<li><span class="muestra" style="background:${COLOR.ambar}"></span>Sol visible</li>`,
+    `<li><span class="muestra" style="background:${COLOR.sol}"></span>Sol visible</li>`,
     `<li><span class="muestra" style="background:${COLOR.tierra}"></span>Tierra visible</li>`,
-    `<li><span class="muestra" style="background:${COLOR.sombra};border:1px solid rgba(255,245,235,.3)"></span>Sombra / Tierra oculta</li>`,
+    `<li><span class="muestra" style="background:${COLOR.sombra};border:1px solid rgba(255,255,255,.3)"></span>Sombra / Tierra oculta</li>`,
   ];
   if (estado.enlaceActivo) {
     items.push(
       `<li><span class="muestra" style="background:${COLOR.ok}"></span>Rápido</li>`,
-      `<li><span class="muestra" style="background:repeating-linear-gradient(45deg,${COLOR.aviso} 0 3px,#8a6a3a 3px 5px)"></span>Robusto</li>`,
-      `<li><span class="muestra" style="background:repeating-linear-gradient(45deg,${COLOR.error} 0 2px,#7a3c3c 2px 4px)"></span>Sin enlace</li>`,
+      `<li><span class="muestra" style="background:repeating-linear-gradient(45deg,${COLOR.aviso} 0 3px,rgba(0,0,0,.35) 3px 5px)"></span>Robusto</li>`,
+      `<li><span class="muestra" style="background:repeating-linear-gradient(45deg,${COLOR.error} 0 2px,rgba(0,0,0,.4) 2px 4px)"></span>Sin enlace</li>`,
     );
   }
   items.push('<li>Cada columna es una hora UTC</li>');

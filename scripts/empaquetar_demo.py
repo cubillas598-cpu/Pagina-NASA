@@ -38,8 +38,29 @@ IMPORT = re.compile(r"^import\s+.*?from\s+'[^']+';\s*$", re.M)
 EXPORT = re.compile(r"^export\s+(?=(async\s+)?function|const|let|class)", re.M)
 
 
+def leer_texto(ruta):
+    try:
+        return ruta.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as err:
+        raise SystemExit(f"No se pudo leer {ruta}: {err}")
+
+
+def leer_bytes(ruta):
+    try:
+        return ruta.read_bytes()
+    except OSError as err:
+        raise SystemExit(f"No se pudo leer {ruta}: {err}")
+
+
+def leer_json(ruta):
+    try:
+        return json.loads(leer_texto(ruta))
+    except json.JSONDecodeError as err:
+        raise SystemExit(f"{ruta} no es JSON valido: {err}")
+
+
 def css_con_fuentes(ruta):
-    css = ruta.read_text(encoding="utf-8")
+    css = leer_texto(ruta)
 
     tipos = {".woff2": "font/woff2", ".svg": "image/svg+xml"}
 
@@ -47,14 +68,14 @@ def css_con_fuentes(ruta):
         fuente = (ruta.parent / m.group(1)).resolve()
         if fuente.suffix not in tipos:
             raise SystemExit(f"{ruta.name}: no se sabe incrustar {fuente.name} (extension {fuente.suffix}).")
-        datos = base64.b64encode(fuente.read_bytes()).decode("ascii")
+        datos = base64.b64encode(leer_bytes(fuente)).decode("ascii")
         return f'url("data:{tipos[fuente.suffix]};base64,{datos}")'
 
     return re.sub(r'url\("(\.\./(?:fonts|assets)/[^"]+)"\)', incrustar, css)
 
 
 def main():
-    html = (WEB / "index.html").read_text(encoding="utf-8")
+    html = leer_texto(WEB / "index.html")
 
     estilos = "\n".join(css_con_fuentes(WEB / p) for p in ("css/tokens.css", "css/app.css"))
     html = re.sub(r'\s*<link rel="stylesheet" href="css/tokens.css">\s*<link rel="stylesheet" href="css/app.css">',
@@ -62,7 +83,7 @@ def main():
 
     partes = []
     for rel in MODULOS:
-        codigo = (WEB / rel).read_text(encoding="utf-8")
+        codigo = leer_texto(WEB / rel)
         if re.search(r"^import\s*\{[^}]*$", codigo, re.M):
             raise SystemExit(f"{rel}: import en varias lineas; el empaquetador espera imports de una linea.")
         codigo = IMPORT.sub("", codigo)
@@ -75,9 +96,9 @@ def main():
     if repetidos:
         raise SystemExit(f"Nombres de nivel superior repetidos entre modulos: {repetidos}")
 
-    escenario = json.loads((RAIZ / "data" / "escenario_demo.json").read_text(encoding="utf-8"))
+    escenario = leer_json(RAIZ / "data" / "escenario_demo.json")
     efemerides = {
-        s["id"]: json.loads((RAIZ / s["efemerides"]).read_text(encoding="utf-8"))["horas"]
+        s["id"]: leer_json(RAIZ / s["efemerides"])["horas"]
         for s in escenario["sitios"]
     }
     datos = json.dumps({"escenario": escenario, "efemerides": efemerides}, ensure_ascii=False, separators=(",", ":"))
@@ -90,15 +111,16 @@ def main():
     if 'src="js/' in html or 'href="css/' in html or 'url("../' in html:
         raise SystemExit("Quedaron referencias externas sin incrustar.")
 
-    SALIDA.parent.mkdir(exist_ok=True)
-    SALIDA.write_text(html, encoding="utf-8")
+    try:
+        SALIDA.parent.mkdir(exist_ok=True)
+        SALIDA.write_text(html, encoding="utf-8")
+    except OSError as err:
+        raise SystemExit(f"No se pudo escribir {SALIDA}: {err}")
     print(f"Escrito {SALIDA} ({SALIDA.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, ValueError, KeyError) as err:
-        # ValueError cubre JSON invalido y texto con codificacion no UTF-8;
-        # KeyError, un sitio del escenario sin campo "efemerides".
-        raise SystemExit(f"No se pudo empaquetar la demo ({type(err).__name__}): {err}")
+    except KeyError as err:
+        raise SystemExit(f"Falta el campo {err} en los datos del escenario o de las efemerides.")

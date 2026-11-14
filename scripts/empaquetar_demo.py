@@ -101,4 +101,4 @@ if __name__ == "__main__":
     except (OSError, ValueError, KeyError) as err:
         # ValueError cubre JSON invalido y texto con codificacion no UTF-8;
         # KeyError, un sitio del escenario sin campo "efemerides".
-        raise SystemExit(f"No se pudo empaquetar la demo: {err!r}")
+        raise SystemExit(f"No se pudo empaquetar la demo ({type(err).__name__}): {err}")

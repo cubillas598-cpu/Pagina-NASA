@@ -1,7 +1,7 @@
 import { cargarDatos } from './datos.js';
 import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
 import { isoDia, esc } from './format.js';
-import { ENLACE } from './views/estilos.js';
+import { ENLACE, etiquetaHorizonte, codigoHorizonte } from './views/estilos.js';
 import { renderFranja, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
 import { crearGraficaEvolucion } from './views/grafica-evolucion.js';
 import { renderHora, renderDestacada, renderEventos, renderPorque } from './views/panel-derecho.js';
@@ -30,7 +30,7 @@ function estadoInicial(msRef) {
     tipoEnlace: 'rf',
     enlaceActivo: true,
     polvo: false,
-    modoHorizonte: 'sintetico',
+    modoHorizonte: 'perfil',
     indice: 0,
     paso: 1,
   };
@@ -137,6 +137,7 @@ async function iniciar() {
     c.enlace.checked = estado.enlaceActivo;
     c.polvo.checked = estado.polvo;
     c.polvoEnv.hidden = !(estado.enlaceActivo && estado.tipoEnlace === 'optico');
+    c.horizonte.options[0].textContent = etiquetaHorizonte('perfil', sitios.find((s) => s.id === estado.sitioId));
     c.horizonte.value = estado.modoHorizonte;
     $('#t-paso').value = String(estado.paso);
   }
@@ -244,7 +245,7 @@ async function iniciar() {
     const d = derivar();
     const csv = '﻿' + comparativoCsv(d.filas, {
       inicio: `${d.serie[d.i0].t}Z`, fin: `${d.serie[d.i1].t}Z`, enlaceActivo: estado.enlaceActivo,
-      tipoEnlace: estado.tipoEnlace, polvo: estado.polvo, modoHorizonte: estado.modoHorizonte,
+      tipoEnlace: estado.tipoEnlace, polvo: estado.polvo, modoHorizonte: codigoHorizonte(estado.modoHorizonte, d.sitio),
     });
     const nombre = `comparativo-sitios_${estado.desde}_${estado.hasta}.csv`;
     const host = await descargasHost;

@@ -1,6 +1,6 @@
 import { METRICAS_COMPARADOR, valorMetrica } from '../model.js';
 import { num, esc, fechaUtc } from '../format.js';
-import { TIPO_ENLACE, MODO_HORIZONTE } from './estilos.js';
+import { TIPO_ENLACE, etiquetaHorizonte } from './estilos.js';
 
 /** Tabla de tres sitios sobre el mismo periodo, con el mejor valor marcado. */
 export function renderComparador(tabla, meta, lista, d) {
@@ -9,7 +9,7 @@ export function renderComparador(tabla, meta, lista, d) {
   meta.textContent = `Periodo: ${fechaUtc(serie[i0].ms)} a ${fechaUtc(serie[i1].ms)} (${i1 - i0 + 1} h, UTC). `
     + `Enlace local: ${estado.enlaceActivo ? TIPO_ENLACE[estado.tipoEnlace].toLowerCase() : 'desactivado'}`
     + `${estado.enlaceActivo && estado.tipoEnlace === 'optico' && estado.polvo ? ', con evento de polvo' : ''}. `
-    + `Horizonte: ${MODO_HORIZONTE[estado.modoHorizonte]}.`;
+    + `Horizonte: ${etiquetaHorizonte(estado.modoHorizonte, d.sitio)}.`;
 
   const cab = `<thead><tr><th scope="col">Métrica</th>${filas.map((f) => `<th scope="col"><b>${esc(f.sitio.etiqueta)}</b>${esc(f.sitio.nombre_corto)}</th>`).join('')}</tr></thead>`;
 

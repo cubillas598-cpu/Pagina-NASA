@@ -124,7 +124,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     });
     const yFin = EJE + carriles.length * (ALTO_CARRIL + SEP) + 4;
 
-    // Evento de polvo sintético.
+    // Evento de polvo (duración de Apollo, momento supuesto).
     const ev = d.escenario.evento_polvo;
     if (estado.enlaceActivo && estado.tipoEnlace === 'optico' && estado.polvo) {
       const rango = horasEventoPolvo(serie, ev);

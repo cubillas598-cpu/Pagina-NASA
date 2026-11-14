@@ -93,7 +93,7 @@
             </div>
             <label class="campo-linea"><span>Horizonte</span>
               <select id="c-horizonte">
-                <option value="sintetico">Perfil sintético</option>
+                <option value="perfil">Perfil del sitio</option>
                 <option value="plano">Plano (0°)</option>
               </select>
             </label>
@@ -174,7 +174,7 @@
           </article>
           <article class="tarjeta metodologia__ancho">
             <h3>Cómo sustituir los datos</h3>
-            <p>Las efemérides viven en <code>data/&lt;sitio&gt;.json</code> y se regeneran con <code>scripts/efemerides.py</code>. Los horizontes, el punto de apoyo, los umbrales y el evento de polvo viven en <code>data/escenario_demo.json</code>. Para usar LOLA skyline, reemplaza <code>elevacion_deg</code> de cada perfil (360 valores, 1° de resolución) y cambia <code>fuente</code> a <code>lola_skyline</code>.</p>
+            <p>Las efemérides viven en <code>data/&lt;sitio&gt;.json</code> y se regeneran con <code>scripts/efemerides.py</code>. Los horizontes de cada sitio y de su punto de apoyo vienen del DEM de LOLA y se regeneran con <code>scripts/horizonte.py</code>; se guardan en <code>data/escenario_demo.json</code> (360 valores, 1° de resolución) junto con el punto de apoyo, los umbrales y el evento de polvo, que siguen siendo supuestos de demostración.</p>
           </article>
         </div>
       </section>
@@ -184,7 +184,7 @@
       <div class="tarjeta panel-sitio">
         <div class="perfil">
           <div class="perfil__barra">
-            <span class="chip chip--simulado" title="Efemérides de JPL Horizons; horizonte, punto de apoyo y momento del evento de polvo simulados.">Demo · Datos simulados</span>
+            <span class="chip chip--simulado" title="Reales: efemérides de JPL Horizons y horizontes de LOLA. Simulados: ubicación del punto de apoyo, umbrales y momento del evento de polvo.">Demo · Datos simulados</span>
             <button type="button" class="boton-texto" id="c-ayuda" aria-haspopup="dialog">Ayuda</button>
           </div>
           <div class="perfil__emblema" aria-hidden="true">
@@ -237,7 +237,7 @@
   <dialog class="dialogo" id="dialogo-ayuda" aria-labelledby="ayuda-titulo">
     <h2 id="ayuda-titulo">Qué significa cada estado</h2>
     <dl class="ayuda-estados" id="ayuda-estados"></dl>
-    <p class="aviso">Umbrales, punto de apoyo y momento del evento de polvo son supuestos de demostración.</p>
+    <p class="aviso">La ubicación del punto de apoyo, los umbrales y el momento del evento de polvo son supuestos de demostración.</p>
     <form method="dialog"><button class="boton boton--naranja" autofocus>Entendido</button></form>
   </dialog>
 

@@ -17,7 +17,7 @@ function serieDe(id, extra = {}) {
   const sitio = escenario.sitios.find((s) => s.id === id);
   const horas = leer(sitio.efemerides).horas;
   return calcularSerie(sitio, horas, {
-    modoHorizonte: 'sintetico', tipoEnlace: 'rf', polvo: false,
+    modoHorizonte: 'perfil', tipoEnlace: 'rf', polvo: false,
     reglas: escenario.enlace_local, eventoPolvo: escenario.evento_polvo, ...extra,
   });
 }
@@ -127,11 +127,11 @@ test('comparador marca empates y genera conclusiones prudentes', () => {
 test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
   const m = { horas: 2, pctSol: 50, pctTierra: 0, enlace: { rapido: 1, robusto: 1, sin_enlace: 0 }, brecha: { horas: 2 } };
   const csv = comparativoCsv([{ sitio: { etiqueta: 'Sitio A', nombre_corto: 'Borde, Shackleton' }, metricas: m }],
-    { inicio: 'x', fin: 'y', enlaceActivo: true, tipoEnlace: 'optico', polvo: true, modoHorizonte: 'sintetico' });
+    { inicio: 'x', fin: 'y', enlaceActivo: true, tipoEnlace: 'optico', polvo: true, modoHorizonte: 'lola_skyline' });
   const lineas = csv.trim().split('\n');
   assert.equal(lineas.length, 2);
   assert.ok(lineas[1].includes('"Borde, Shackleton"'));
-  assert.ok(lineas[1].includes(',si,1,1,0,2,sintetico'));
+  assert.ok(lineas[1].includes(',si,1,1,0,2,lola_skyline'));
 });
 
 test('disponibilidad combinada: comunicación y luz con comunicación', () => {

@@ -58,7 +58,7 @@ export function clasificar(factores) {
  * Serie horaria completa de un sitio.
  * @param sitio      entrada de escenario_demo.json
  * @param horas      lista de efemerides {t, sol_el, sol_az, tierra_el, tierra_az}
- * @param opciones   {modoHorizonte:'sintetico'|'plano', tipoEnlace:'rf'|'optico',
+ * @param opciones   {modoHorizonte:'perfil'|'plano', tipoEnlace:'rf'|'optico',
  *                    polvo:boolean, reglas, eventoPolvo}
  */
 export function calcularSerie(sitio, horas, opciones) {

@@ -76,7 +76,7 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
     // Zona visible (sobre el horizonte) apenas sombreada.
     partes.push(`<rect x="${ME.izq}" y="${ME.sup}" width="${ancho}" height="${y(0) - ME.sup}" fill="rgba(255,245,235,.03)"/>`);
     partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,245,235,.4)" stroke-dasharray="4 5"/>`);
-    partes.push(`<text x="${W - ME.der}" y="${y(0) - 6}" text-anchor="end" class="ev-eje">Horizonte local</text>`);
+    partes.push(`<text x="${W - ME.der}" y="${y(0) + 14}" text-anchor="end" class="ev-eje">0° = horizonte local</text>`);
 
     // Días en el eje x.
     const dias = [];

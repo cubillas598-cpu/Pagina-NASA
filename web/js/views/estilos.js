@@ -29,7 +29,18 @@ export const ENLACE = {
 };
 
 export const TIPO_ENLACE = { rf: 'Radiofrecuencia', optico: 'Óptico' };
-export const MODO_HORIZONTE = { sintetico: 'perfil sintético', plano: 'plano (0°)' };
+const NOMBRE_FUENTE_HORIZONTE = { lola_skyline: 'LOLA (DEM real)', sintetico: 'perfil sintético' };
+
+/** Nombre del horizonte en uso: la fuente del perfil del sitio o el plano de 0°. */
+export function etiquetaHorizonte(modo, sitio) {
+  if (modo === 'plano') return 'plano (0°)';
+  return NOMBRE_FUENTE_HORIZONTE[sitio.horizonte.fuente] || sitio.horizonte.fuente;
+}
+
+/** Valor para el CSV: la fuente real del perfil o "plano". */
+export function codigoHorizonte(modo, sitio) {
+  return modo === 'plano' ? 'plano' : sitio.horizonte.fuente;
+}
 
 export const ICONO = {
   sol: '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 1.5v2.2M10 16.3v2.2M1.5 10h2.2M16.3 10h2.2M4 4l1.6 1.6M14.4 14.4 16 16M4 16l1.6-1.6M14.4 5.6 16 4"/></g></svg>',

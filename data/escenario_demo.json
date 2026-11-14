@@ -1,5 +1,5 @@
 {
-  "_nota": "Supuestos de demostracion. Horizontes sinteticos deterministas (generados por scripts/generar_escenario_demo.py) hasta integrar LOLA skyline. Efemerides reales en data/<id>.json (JPL Horizons).",
+  "_nota": "Generado por scripts/generar_escenario_demo.py. Horizontes: los escribe scripts/horizonte.py (LOLA) y este script los conserva. Punto de apoyo, umbrales y momento del evento de polvo: supuestos de demostracion. Efemerides reales en data/<id>.json (JPL Horizons).",
   "version": 1,
   "fuentes": {
     "efemerides": {
@@ -8,16 +8,16 @@
       "detalle": "Generadas por scripts/efemerides.py; la verificación manual contra la app de JPL sigue pendiente (docs/plan.md)."
     },
     "horizonte": {
-      "nombre": "LOLA skyline",
-      "estado": "prevista",
-      "detalle": "Mientras tanto se usa un perfil sintético de demostración; también puede activarse el horizonte plano (0°)."
+      "nombre": "LOLA (DEM de 80 m/px, NASA PGDA)",
+      "estado": "en_uso",
+      "detalle": "Horizonte de cada sitio y de su punto de apoyo calculado con scripts/horizonte.py: rayos geodesicos de hasta 30 km sobre el DEM con correccion por curvatura. Tambien puede activarse el horizonte plano (0°)."
     }
   },
   "sitios": [
     {
       "id": "shackleton",
       "etiqueta": "Sitio A",
-      "nombre_corto": "Borde de Shackleton",
+      "nombre_corto": "Peak Near Shackleton",
       "efemerides": "data/shackleton.json",
       "mapa": {
         "x": 0.4,
@@ -767,7 +767,7 @@
     {
       "id": "de_gerlache",
       "etiqueta": "Sitio B",
-      "nombre_corto": "Cresta Shackleton–de Gerlache",
+      "nombre_corto": "Cresta de Gerlache–Shackleton",
       "efemerides": "data/de_gerlache.json",
       "mapa": {
         "x": 0.72,

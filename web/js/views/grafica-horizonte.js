@@ -41,14 +41,16 @@ export function renderGraficaHorizonte(cont, d) {
   W = Math.max(560, Math.round(cont.clientWidth || 1000));
   H = W < 760 ? 260 : 300;
   // Escala vertical fija por sitio (no cambia al mover el cursor).
-  const maxSerie = d.serie.reduce((mx, s) => Math.max(mx, s.sol.el, s.tierra.el), 0);
-  const minSerie = d.serie.reduce((mn, s) => Math.min(mn, s.sol.el, s.tierra.el), 0);
+  const perfilVals = perfil ? perfil.elevacion_deg : [0];
+  const maxSerie = d.serie.reduce((mx, s) => Math.max(mx, s.sol.el, s.tierra.el), Math.max(...perfilVals));
+  const minSerie = d.serie.reduce((mn, s) => Math.min(mn, s.sol.el, s.tierra.el), Math.min(...perfilVals));
   EL_MAX = Math.max(6, Math.ceil(maxSerie / 2) * 2 + 2);
   EL_MIN = Math.min(-4, Math.floor(minSerie / 2) * 2);
 
   const partes = [];
   // Rejilla y ejes.
-  for (let el = EL_MIN; el <= EL_MAX; el += 2) {
+  const pasoEl = EL_MAX - EL_MIN > 18 ? 4 : 2;
+  for (let el = EL_MIN; el <= EL_MAX; el += pasoEl) {
     const yy = y(el);
     partes.push(`<line x1="${M.izq}" x2="${W - M.der}" y1="${yy}" y2="${yy}" stroke="rgba(255,245,235,${el === 0 ? 0.35 : 0.08})"/>`);
     partes.push(`<text x="${M.izq - 8}" y="${yy + 4}" text-anchor="end" class="g-eje">${el}°</text>`);

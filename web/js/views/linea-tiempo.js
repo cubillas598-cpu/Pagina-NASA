@@ -1,4 +1,4 @@
-import { segmentar } from '../model.js';
+import { segmentar, horasEventoPolvo } from '../model.js';
 import { diaMesUtc, fechaHoraUtc, horasTexto, esc } from '../format.js';
 import { COLOR, ENLACE, defsPatrones, rellenoEnlace } from './estilos.js';
 
@@ -127,13 +127,14 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     // Evento de polvo sintético.
     const ev = d.escenario.evento_polvo;
     if (estado.enlaceActivo && estado.tipoEnlace === 'optico' && estado.polvo) {
-      const iEv = serie.findIndex((m) => m.t === ev.inicio);
-      if (iEv >= 0) {
-        const a = Math.max(i0, iEv), b = Math.min(i1 + 1, iEv + ev.horas_severo + ev.horas_degradado);
-        if (b > a) {
-          partes.push(`<rect x="${xi(a)}" y="${EJE + 2}" width="${xi(b) - xi(a)}" height="${yFin - EJE - 2}" fill="url(#p-polvo)" opacity=".5"/>`);
-          partes.push(`<text x="${xi(a) + 4}" y="${yFin + 14}" fill="${COLOR.texto}">Evento de polvo (sintético)</text>`);
-        }
+      const rango = horasEventoPolvo(serie, ev);
+      if (rango && rango[1] >= i0 && rango[0] <= i1) {
+        const a = Math.max(i0, rango[0]), b = Math.min(i1, rango[1]) + 1;
+        // Una hora puede medir menos de 1 px: el marcador tiene un ancho mínimo visible.
+        const x0 = xi(a), ancho = Math.max(6, xi(b) - x0);
+        partes.push(`<rect x="${x0 - (ancho - (xi(b) - x0)) / 2}" y="${EJE + 2}" width="${ancho}" height="${yFin - EJE - 2}" fill="url(#p-polvo)" opacity=".7" stroke="${COLOR.texto}" stroke-opacity=".5"/>`);
+        const izq = x0 > W - 260;
+        partes.push(`<text x="${izq ? x0 - 6 : x0 + ancho + 4}" y="${yFin + 14}" text-anchor="${izq ? 'end' : 'start'}" fill="${COLOR.texto}">Evento de polvo: ${ev.duracion_s} s (referencia Apollo)</text>`);
       }
     }
 

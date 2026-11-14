@@ -118,12 +118,12 @@ export function calcularSerie(sitio, horas, opciones) {
         }
       }
       if (opciones.polvo && opciones.eventoPolvo) {
-        const ev = opciones.eventoPolvo;
-        const dh = (ms - polvoIni) / hora;
-        if (dh >= 0 && dh < ev.horas_severo) {
-          factores.push(factor('polvo', 0, 'Evento de polvo: dispersión severa sobre la línea de vista.'));
-        } else if (dh >= ev.horas_severo && dh < ev.horas_severo + ev.horas_degradado) {
-          factores.push(factor('polvo', 1, 'Polvo en suspensión: la señal se atenúa.'));
+        // Segundos del evento que caen dentro de esta muestra horaria.
+        const s = segundosPolvoEnHora(opciones.eventoPolvo, polvoIni, ms);
+        if (s >= 1800) {
+          factores.push(factor('polvo', 0, `Polvo del penacho sobre la línea de vista durante ${Math.round(s)} s de esta hora.`));
+        } else if (s > 0) {
+          factores.push(factor('polvo', 1, `Polvo del penacho bloquea la línea de vista unos ${Math.round(s)} s en esta hora: el enlace reintenta en baja tasa.`));
         }
       }
     }
@@ -141,6 +141,28 @@ export function calcularSerie(sitio, horas, opciones) {
       respaldoTierra,
     };
   });
+}
+
+/**
+ * Segundos de un evento de polvo {inicio, duracion_s} dentro de la hora que
+ * empieza en `ms`. Con muestras horarias, un evento de segundos degrada esa
+ * hora a "robusto"; solo si cubre la mitad de la hora o más queda "sin enlace".
+ */
+export function segundosPolvoEnHora(evento, inicioMs, ms) {
+  const fin = inicioMs + evento.duracion_s * 1000;
+  const solape = Math.min(fin, ms + 3600e3) - Math.max(inicioMs, ms);
+  return Math.max(0, solape) / 1000;
+}
+
+/** Primera y última muestra horaria que toca el evento de polvo, o null. */
+export function horasEventoPolvo(serie, evento) {
+  const ini = parseUtc(evento.inicio);
+  const fin = ini + evento.duracion_s * 1000;
+  const a = serie.findIndex((m) => m.ms + 3600e3 > ini);
+  if (a < 0 || serie[a].ms >= fin) return null;
+  let b = a;
+  while (b + 1 < serie.length && serie[b + 1].ms < fin) b++;
+  return [a, b];
 }
 
 export function hayComunicacion(m, enlaceActivo) {

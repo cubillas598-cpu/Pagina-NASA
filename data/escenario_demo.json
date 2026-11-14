@@ -2276,9 +2276,9 @@
   }
  },
  "evento_polvo": {
-  "_nota": "Evento sintetico inspirado en el polvo levantado por un penacho de aterrizaje; no mide ningun aterrizaje real.",
-  "inicio": "2026-12-06T08:00",
-  "horas_severo": 6,
-  "horas_degradado": 14
+  "_nota": "Duracion calibrada con Apollo (ver README y docs/propuesta.md): 10-12 s de polvo visible en el descenso final. El momento del aterrizaje cercano es un supuesto de demo.",
+  "inicio": "2026-12-06T08:20",
+  "duracion_s": 12,
+  "referencia": "Apollo: 10-12 s de polvo visible en descenso final; hueco de telemetria en el ascenso del Apolo 11 por su penacho."
  }
 }

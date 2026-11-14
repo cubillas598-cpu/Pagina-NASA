@@ -33,6 +33,8 @@ enlace local (radiofrecuencia u optico) en rapido, robusto o sin enlace.
 
 ## Demo web
 
+En linea: https://cubillas598-cpu.github.io/Pagina-NASA/ (GitHub Pages, rama `main`).
+
 Pagina estatica sin dependencias ni build (HTML, CSS y modulos JS). Lee los JSON
 de `data/` y calcula todo en el navegador.
 
@@ -56,7 +58,8 @@ Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
 | --- | --- | --- |
 | Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; falta la verificacion manual del plan |
 | Horizonte por azimut del sitio y del punto de apoyo | `data/escenario_demo.json` | Sintetico determinista (`scripts/generar_escenario_demo.py`). Tambien hay modo horizonte plano |
-| Punto de apoyo, umbrales RF/optico, evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
+| Duracion del evento de polvo (12 s) | `data/escenario_demo.json` | Calibrada con Apollo (10-12 s); con muestras horarias degrada esa hora a robusto |
+| Punto de apoyo, umbrales RF/optico, momento del evento de polvo | `data/escenario_demo.json` | Supuestos de demostracion |
 | Posiciones del mapa | `data/escenario_demo.json` (`mapa`) | Ilustrativas ("Vista conceptual") |
 
 Para pasar a LOLA skyline: reemplazar `elevacion_deg` de cada `horizonte`

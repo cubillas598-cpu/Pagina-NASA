@@ -1,5 +1,5 @@
 import { cargarDatos } from './datos.js';
-import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc } from './model.js';
+import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo } from './model.js';
 import { isoDia, aleatorio, contorno, esc } from './format.js';
 import { ENLACE } from './views/estilos.js';
 import { renderKpis } from './views/kpis.js';
@@ -134,9 +134,9 @@ async function iniciar() {
     const cambios = { polvo: c.polvo.checked };
     // Al activar el polvo, llevar el cursor al inicio del evento si cae en el periodo.
     if (c.polvo.checked) {
-      const iEv = horasRef.findIndex((h) => h.t === escenario.evento_polvo.inicio);
+      const ev = horasEventoPolvo(msRef.map((ms) => ({ ms })), escenario.evento_polvo);
       const [i0, i1] = rangoIndices();
-      if (iEv >= i0 && iEv <= i1) cambios.indice = iEv;
+      if (ev && ev[0] >= i0 && ev[0] <= i1) cambios.indice = ev[0];
     }
     actualizar(cambios);
   });
@@ -164,11 +164,11 @@ async function iniciar() {
   $('#fuentes').innerHTML = Object.values(escenario.fuentes).map((f) => {
     const [txt, col] = etiquetaEstado[f.estado] || [f.estado, 'var(--texto-2)'];
     return `<div><dt>${esc(f.nombre)} <span class="estado-fuente" style="color:${col}">${txt}</span></dt><dd>${esc(f.detalle)}</dd></div>`;
-  }).join('') + `<div><dt>Punto de apoyo, umbrales y evento de polvo <span class="estado-fuente" style="color:var(--ambar)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
+  }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--ambar)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
   const r = escenario.enlace_local;
   $('#reglas-enlace').innerHTML = `
     <li><strong>Radiofrecuencia:</strong> requiere línea de vista al punto de apoyo. Si el punto de apoyo queda en sombra opera con batería (robusto); tras ${r.rf.bateria_relevo_h} h en sombra se considera sin enlace.</li>
-    <li><strong>Óptico:</strong> si el Sol queda a menos de ${r.optico.sep_robusto_deg}° de la línea de vista el enlace pasa a robusto; a menos de ${r.optico.sep_sin_enlace_deg}° queda sin enlace. El evento de polvo sintético deja el enlace sin servicio ${escenario.evento_polvo.horas_severo} h y degradado ${escenario.evento_polvo.horas_degradado} h más.</li>`;
+    <li><strong>Óptico:</strong> si el Sol queda a menos de ${r.optico.sep_robusto_deg}° de la línea de vista el enlace pasa a robusto; a menos de ${r.optico.sep_sin_enlace_deg}° queda sin enlace. El evento de polvo dura ${escenario.evento_polvo.duracion_s} s, calibrado con Apollo (10–12 s de polvo visible en el descenso final). Como cada muestra vale una hora, esa hora pasa a robusto; solo un evento de media hora o más la dejaría sin enlace. El momento del aterrizaje cercano es un supuesto.</li>`;
 
   // ---- Navegación
   function mostrarVista() {

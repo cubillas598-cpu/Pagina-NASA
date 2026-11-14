@@ -13,7 +13,9 @@ export function renderComparador(tabla, meta, lista, d) {
     + `Índice de conveniencia: S = ${num(PESOS_SUITABILITY.energia, 2)}·iluminación + `
     + `${num(PESOS_SUITABILITY.comunicacion, 2)}·comunicación directa`
     + `${estado.enlaceActivo ? ` + ${num(PESOS_SUITABILITY.respaldo, 2)}·enlace local` : ''} `
-    + `(propuesto por el equipo, no es un estándar de NASA).`;
+    + `(propuesto por el equipo, no es un estándar de NASA)`
+    + `${estado.enlaceActivo ? '; R solo cuenta horas en que el respaldo llega a la Tierra' : ''}. `
+    + 'Resolución horaria: cada cambio se ubica con un margen de ±1 h.';
 
   const cab = `<thead><tr><th scope="col">Métrica</th>${filas.map((f) => `<th scope="col"><b>${esc(f.sitio.etiqueta)}</b>${esc(f.sitio.nombre_corto)}</th>`).join('')}</tr></thead>`;
 
@@ -37,7 +39,8 @@ export function renderComparador(tabla, meta, lista, d) {
       const v = valorMetrica(f.metricas, def.clave);
       const esMejor = mejores.includes(f.sitio.id);
       const texto = def.unidad === '%' ? `${num(v, 1)} %` : `${v} h`;
-      const extra = def.unidad === '%' ? `<small> ${def.clave === 'pctSol' ? f.metricas.horasSol : f.metricas.horasTierra} h</small>` : '';
+      const HORAS = { pctSol: 'horasSol', pctTierra: 'horasTierra', pctSolTierra: 'horasSolTierra', pctRespaldo: 'horasRespaldo' };
+      const extra = def.unidad === '%' ? `<small> ${f.metricas[HORAS[def.clave]]} h</small>` : '';
       return `<td class="${esMejor ? 'mejor' : ''}">${texto}${extra}${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
     }).join('');
     return `<tr><th scope="row">${etiqueta}<br><small class="c-neutro">${criterio}</small></th>${celdas}</tr>`;

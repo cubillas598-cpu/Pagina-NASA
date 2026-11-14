@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
-  suitabilityScore, PESOS_SUITABILITY,
+  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -112,7 +112,8 @@ test('tramoMasLargo y segmentar', () => {
 });
 
 test('comparador marca empates y genera conclusiones prudentes', () => {
-  const met = (pctSol, brecha) => ({ pctSol, pctTierra: 10, enlace: null, brecha: { horas: brecha } });
+  const met = (pctSol, brecha) => ({ pctSol, pctTierra: 10, pctSolTierra: 5, enlace: null, brecha: { horas: brecha },
+    ventanaTierra: { horas: 3 }, sombraMax: { horas: 4 }, ventanaSol: { horas: 6 } });
   const filas = [
     { sitio: { id: 'a', etiqueta: 'Sitio A' }, metricas: met(80, 5) },
     { sitio: { id: 'b', etiqueta: 'Sitio B' }, metricas: met(90, 5) },
@@ -129,9 +130,9 @@ test('suitabilityScore: pesos suman 1 y la formula es exacta con enlace activo',
   const suma = PESOS_SUITABILITY.energia + PESOS_SUITABILITY.comunicacion + PESOS_SUITABILITY.respaldo;
   assert.ok(Math.abs(suma - 1) < 1e-9);
 
-  const m = { pctSol: 80, pctTierra: 40, horas: 10, enlace: { rapido: 6, robusto: 2, sin_enlace: 2 } };
+  const m = { pctSol: 80, pctTierra: 40, horas: 10, pctRespaldo: 30, enlace: { rapido: 6, robusto: 2, sin_enlace: 2 } };
   const esperado = PESOS_SUITABILITY.energia * 80 + PESOS_SUITABILITY.comunicacion * 40
-    + PESOS_SUITABILITY.respaldo * (100 * (6 + 2) / 10);
+    + PESOS_SUITABILITY.respaldo * 30;
   assert.ok(Math.abs(suitabilityScore(m, true) - esperado) < 1e-9);
 });
 
@@ -145,13 +146,16 @@ test('suitabilityScore: sin enlace activo se renormaliza a energia y comunicacio
 });
 
 test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
-  const m = { horas: 2, pctSol: 50, pctTierra: 0, enlace: { rapido: 1, robusto: 1, sin_enlace: 0 }, brecha: { horas: 2 } };
+  const m = { horas: 2, pctSol: 50, pctTierra: 0, pctSolTierra: 0, pctRespaldo: 50, enlace: { rapido: 1, robusto: 1, sin_enlace: 0 },
+    brecha: { horas: 2 }, ventanaTierra: { horas: 0 }, sombraMax: { horas: 1 } };
   const csv = comparativoCsv([{ sitio: { etiqueta: 'Sitio A', nombre_corto: 'Borde, Shackleton' }, metricas: m }],
     { inicio: 'x', fin: 'y', enlaceActivo: true, tipoEnlace: 'optico', polvo: true, modoHorizonte: 'lola_skyline' });
   const lineas = csv.trim().split('\n');
   assert.equal(lineas.length, 2);
   assert.ok(lineas[1].includes('"Borde, Shackleton"'));
   assert.ok(lineas[1].includes(',si,1,1,0,2,lola_skyline'));
+  assert.equal(lineas[0].split(',').length, lineas[1].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).length);
+  assert.ok(lineas[1].endsWith(',0.0,50.0,0,1'));
 });
 
 test('disponibilidad combinada: comunicación y luz con comunicación', () => {
@@ -174,4 +178,58 @@ test('eventosPeriodo detecta cambios y la duración del tramo que abren', () => 
   ]);
   const real = serieDe('shackleton');
   for (const e of eventosPeriodo(real, 0, real.length - 1, true)) assert.ok(e.indice > 0);
+});
+
+test('R del índice solo cuenta respaldo que llega a la Tierra', () => {
+  for (const s of escenario.sitios) {
+    const serie = serieDe(s.id, { tipoEnlace: 'optico' });
+    const m = metricasPeriodo(serie, 0, serie.length - 1, true);
+    assert.equal(m.horasRespaldo, serie.filter((x) => x.respaldoTierra).length);
+    assert.ok(m.horasRespaldo <= m.enlace.rapido + m.enlace.robusto);
+    const conTodo = { ...m, pctRespaldo: 100 };
+    assert.ok(suitabilityScore(m, true) <= suitabilityScore(conTodo, true));
+  }
+  // Tramo local perfecto sin vista del apoyo a la Tierra: R = 0, no 100.
+  const m = { pctSol: 50, pctTierra: 50, horas: 10, pctRespaldo: 0, enlace: { rapido: 10, robusto: 0, sin_enlace: 0 } };
+  assert.ok(Math.abs(suitabilityScore(m, true) - (PESOS_SUITABILITY.energia * 50 + PESOS_SUITABILITY.comunicacion * 50)) < 1e-9);
+});
+
+test('Sol y Tierra a la vez no incluye el respaldo', () => {
+  const serie = serieDe('malapert', { tipoEnlace: 'rf' });
+  const con = metricasPeriodo(serie, 0, serie.length - 1, true);
+  const sin = metricasPeriodo(serie, 0, serie.length - 1, false);
+  assert.equal(con.horasSolTierra, sin.horasSolTierra);
+  assert.equal(con.horasSolTierra, serie.filter((x) => x.sol.visible && x.tierra.visible).length);
+});
+
+test('ventanas continuas por condición', () => {
+  const serie = serieDe('shackleton');
+  const m = metricasPeriodo(serie, 0, serie.length - 1, false);
+  assert.equal(valorMetrica(m, 'ventanaTierra'), m.ventanaTierra.horas);
+  for (let i = m.ventanaTierra.desde; i <= m.ventanaTierra.hasta; i++) assert.ok(serie[i].tierra.visible);
+  for (let i = m.sombraMax.desde; i <= m.sombraMax.hasta; i++) assert.ok(!serie[i].sol.visible);
+  assert.ok(m.ventanaSol.horas <= m.horasSol);
+});
+
+test('compararSitios marca empates en métricas de ventanas', () => {
+  const met = (t) => ({ pctSol: 1, pctTierra: 1, pctSolTierra: 1, enlace: null, brecha: { horas: 1 },
+    ventanaTierra: { horas: t }, sombraMax: { horas: 2 }, ventanaSol: { horas: 1 } });
+  const filas = ['a', 'b', 'c'].map((id, k) => ({ sitio: { id, etiqueta: id.toUpperCase() }, metricas: met([5, 5, 3][k]) }));
+  const r = compararSitios(filas, false);
+  assert.deepEqual(r.mejores.ventanaTierra, ['a', 'b']);
+  assert.deepEqual(r.mejores.sombraMax, ['a', 'b', 'c']);
+  assert.ok(!('pctRespaldo' in r.mejores), 'sin enlace activo no se compara el respaldo');
+});
+
+test('problemasEfemerides detecta huecos y valores inválidos sin inventar datos', () => {
+  const base = [
+    { t: '2026-12-01T00:00', sol_el: 1, sol_az: 10, tierra_el: -1, tierra_az: 200 },
+    { t: '2026-12-01T01:00', sol_el: 1, sol_az: 11, tierra_el: -1, tierra_az: 200 },
+  ];
+  assert.deepEqual(problemasEfemerides(base), []);
+  assert.equal(problemasEfemerides([]).length, 1);
+  assert.match(problemasEfemerides([base[0], { ...base[1], t: '2026-12-01T03:00' }])[0], /salto/);
+  assert.match(problemasEfemerides([{ ...base[0], sol_el: 'x' }])[0], /sol_el/);
+  assert.match(problemasEfemerides([{ ...base[0], tierra_az: 400 }])[0], /tierra_az/);
+  for (const s of escenario.sitios) assert.deepEqual(problemasEfemerides(leer(s.efemerides).horas, s.id), []);
 });

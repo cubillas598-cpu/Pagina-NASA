@@ -27,6 +27,7 @@ de conveniencia (S) del comparador, ver seccion "Indice de conveniencia" abajo.
 ## Documentos
 
 - `docs/plan.md` — plan por bloques horarios, roles, riesgos y orden de recorte
+- `docs/fuentes.md` — trazabilidad: dato NASA, calculo derivado y supuesto del equipo
 - `docs/propuesta.md` / `docs/propuesta.pdf` — propuesta completa: principio de
   funcionamiento, arquitectura, riesgos con mitigacion, banco de preguntas
   anticipadas
@@ -37,6 +38,14 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 
 ## Estado
 
+Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
+
+- [ ] Validar las efemerides contra la herramienta de JPL (3 instantes por sitio)
+- [ ] Sensibilidad del horizonte al radio de 30 km de `scripts/horizonte.py`
+      (repetir con 100-150 km; puede cambiar los % de Malapert)
+- [ ] Activar GitHub Pages (Settings > Pages > rama `main`, carpeta raiz)
+
+
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos
 - [x] Horizonte local por sitio con DEM real de LOLA (NASA PGDA, 80 m/px)
 - [x] Clasificador de enlace local (reglas de demostracion, RF y optico)
@@ -45,7 +54,7 @@ Ver `docs/bitacora.md` — registro de avance en tiempo real, un bloque a la vez
 
 ## Demo web
 
-En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio muestra el esqueleto de `index.html`.
+En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio redirige a la demo; el esqueleto inicial quedo en `esqueleto.html`.
 
 Pagina estatica sin dependencias ni build (HTML, CSS y modulos JS). Lee los JSON
 de `data/` y calcula todo en el navegador.
@@ -63,6 +72,12 @@ python3 scripts/empaquetar_demo.py   # escribe dist/lunar-navigator-demo.html
 ```
 
 Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
+
+Scripts de datos en Python: `pip install -r requirements.txt` (solo
+`scripts/horizonte.py` necesita numpy, rasterio y pyproj; los demas usan la biblioteca
+estandar).
+
+La resolucion es horaria: el inicio y el fin de cada ventana tienen un margen de +-1 h.
 
 ### Que es real y que es supuesto
 
@@ -117,14 +132,20 @@ muestra un indice unico S (0-100, mas alto es mejor) por sitio:
 S = w1*E + w2*C + w3*R
 E = % horas con Sol visible (energia)
 C = % horas con vista directa a la Tierra (comunicacion)
-R = % horas con enlace local disponible, rapido o robusto (respaldo)
+R = % horas con respaldo que llega a la Tierra: tramo local con servicio
+    (rapido o robusto) Y punto de apoyo con la Tierra visible
 w1=0.40, w2=0.35, w3=0.25 (pesos editables, deben sumar 1)
 ```
 
 Si el enlace local esta desactivado, R no se mide y los dos pesos restantes se
 renormalizan (`S = (w1*E + w2*C) / (w1+w2)`) para que el indice siga en escala 0-100.
 
-**Es un indice propuesto por el equipo, NO un estandar oficial de NASA.** Implementado
+Decision del equipo (14-nov): un tramo local que funciona sin que el punto de apoyo
+vea la Tierra no cuenta como respaldo. Con los horizontes LOLA actuales, los puntos de
+apoyo de los sitios A y B nunca ven la Tierra en diciembre de 2026, asi que su R es 0.
+
+**Es un indice propuesto por el equipo, NO un estandar oficial de NASA.** No evalua
+pendiente, rocas ni riesgos de descenso: no certifica que un sitio sea seguro. Implementado
 en `web/js/model.js` (`suitabilityScore`), probado en `tests/model.test.mjs`, visible
 en la tabla del comparador y en la columna `indice_conveniencia` del CSV exportado.
 

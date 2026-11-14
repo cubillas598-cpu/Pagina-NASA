@@ -1,0 +1,5 @@
+# Dependencias de scripts/horizonte.py (los demas scripts usan solo la biblioteca estandar).
+# Versiones vigentes al 14-nov-2026 segun PyPI.
+numpy>=2.5
+rasterio>=1.5
+pyproj>=3.8

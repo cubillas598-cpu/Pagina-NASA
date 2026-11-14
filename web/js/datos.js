@@ -1,3 +1,5 @@
+import { problemasEfemerides } from './model.js';
+
 // Carga de datos locales. En la versión empaquetada (un solo HTML) los datos
 // vienen incrustados en <script type="application/json" id="datos-demo">.
 
@@ -25,7 +27,8 @@ function validar(escenario, efemerides) {
   const ref = efemerides[ids[0]];
   for (const id of ids) {
     const h = efemerides[id];
-    if (!Array.isArray(h) || h.length === 0) throw new Error(`Faltan efemérides para ${id}.`);
+    const problemas = problemasEfemerides(h, id);
+    if (problemas.length) throw new Error(`Datos de efemérides no válidos. ${problemas.join(' ')}`);
     if (h.length !== ref.length || h[0].t !== ref[0].t || h[h.length - 1].t !== ref[ref.length - 1].t) {
       throw new Error(`Las efemérides de ${id} no cubren las mismas horas que ${ids[0]}.`);
     }

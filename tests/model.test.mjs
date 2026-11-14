@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
-  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica,
+  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -232,4 +232,34 @@ test('problemasEfemerides detecta huecos y valores inválidos sin inventar datos
   assert.match(problemasEfemerides([{ ...base[0], sol_el: 'x' }])[0], /sol_el/);
   assert.match(problemasEfemerides([{ ...base[0], tierra_az: 400 }])[0], /tierra_az/);
   for (const s of escenario.sitios) assert.deepEqual(problemasEfemerides(leer(s.efemerides).horas, s.id), []);
+});
+
+test('problemasEscenario rechaza horizontes con null en vez de tratarlos como 0°', () => {
+  assert.deepEqual(problemasEscenario(escenario), []);
+  const copia = JSON.parse(JSON.stringify(escenario));
+  copia.sitios[1].horizonte.elevacion_deg[200] = null;
+  assert.match(problemasEscenario(copia).join(' '), /de_gerlache: valor de horizonte no válido en el azimut 200°/);
+  const corto = JSON.parse(JSON.stringify(escenario));
+  corto.sitios[0].relevo.horizonte.elevacion_deg.pop();
+  assert.match(problemasEscenario(corto).join(' '), /punto de apoyo: el horizonte debe tener 360 valores/);
+  const sinPolvo = JSON.parse(JSON.stringify(escenario));
+  sinPolvo.evento_polvo.inicio = 'no-es-fecha';
+  assert.match(problemasEscenario(sinPolvo).join(' '), /evento de polvo/);
+});
+
+test('el respaldo sin conexión contiene exactamente los mismos datos que la web', () => {
+  const html = fs.readFileSync(path.join(raiz, 'dist/lunar-navigator-demo.html'), 'utf8');
+  const m = html.match(/<script type="application\/json" id="datos-demo">([\s\S]*?)<\/script>/);
+  assert.ok(m, 'el respaldo debe incrustar los datos');
+  const incrustado = JSON.parse(m[1].replace(/<\\\//g, '</'));
+  assert.deepEqual(incrustado.escenario, escenario, 'escenario distinto: ejecuta npm run empaquetar');
+  for (const s of escenario.sitios) {
+    assert.deepEqual(incrustado.efemerides[s.id], leer(s.efemerides).horas, `efemérides de ${s.id} distintas`);
+  }
+});
+
+test('esMarcaHoraria exige AAAA-MM-DDTHH:MM real', () => {
+  assert.ok(esMarcaHoraria('2026-12-06T08:20'));
+  for (const malo of ['no-es-fecha', '2026-12-06', '2026-13-01T00:00', '2026-12-06T8:20', null]) assert.ok(!esMarcaHoraria(malo), String(malo));
+  assert.match(problemasEfemerides([{ t: 'x', sol_el: 1, sol_az: 1, tierra_el: 1, tierra_az: 1 }])[0], /fecha válida/);
 });

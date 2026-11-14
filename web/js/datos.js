@@ -1,4 +1,4 @@
-import { problemasEfemerides } from './model.js';
+import { problemasEfemerides, problemasEscenario } from './model.js';
 
 // Carga de datos locales. En la versión empaquetada (un solo HTML) los datos
 // vienen incrustados en <script type="application/json" id="datos-demo">.
@@ -23,6 +23,8 @@ export async function cargarDatos(base = '../') {
 }
 
 function validar(escenario, efemerides) {
+  const malEscenario = problemasEscenario(escenario);
+  if (malEscenario.length) throw new Error(`Escenario no válido. ${malEscenario.slice(0, 5).join(' ')}`);
   const ids = escenario.sitios.map((s) => s.id);
   const ref = efemerides[ids[0]];
   for (const id of ids) {

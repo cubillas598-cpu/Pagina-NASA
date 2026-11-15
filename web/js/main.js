@@ -355,7 +355,7 @@ async function iniciar() {
   // Sitios: el visor 3D de docs/ (relieve LOLA) va en el lugar del mapa; el mapa
   // polar 2D queda de respaldo. Sin conexión (archivo único) el visor no está
   // disponible y se usa el 2D. Visor y demo comparten el sitio elegido.
-  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1';
+  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1&v=20261115d';
   const sinConexion = location.protocol === 'file:' || !!document.getElementById('datos-demo');
   let modoMapa = sinConexion ? '2d' : '3d';
   let visor = null;

@@ -85,7 +85,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     datos = d;
     const { serie, i0, i1, estado, metricas } = d;
     const n = i1 - i0 + 1;
-    const W = Math.max(760, Math.round(cont.parentElement.clientWidth || 1000));
+    const W = Math.max(560, Math.round(cont.parentElement.clientWidth || 1000));
     const ancho = W - M_IZQ - M_DER;
     const xi = (i) => M_IZQ + ((i - i0) / n) * ancho;
 
@@ -115,7 +115,7 @@ export function crearLineaTiempo(cont, tooltip, { alCambiarIndice }) {
     carriles.forEach((c, k) => {
       const yTit = EJE + k * (ALTO_CARRIL + SEP) + 14;
       const yBar = yTit + 8;
-      partes.push(`<text class="carril__nombre" x="${M_IZQ}" y="${yTit}">${c.nombre}</text>`);
+      partes.push(`<text class="carril__nombre" x="${M_IZQ + 14}" y="${yTit}">${c.nombre}</text>`);
       partes.push(`<rect x="${M_IZQ}" y="${yBar}" width="${ancho}" height="${ALTO_CARRIL}" rx="6" fill="${COLOR.neutro}"/>`);
       for (const s of segmentar(serie, i0, i1, c.clave)) {
         const x0 = xi(s.desde), x1 = xi(s.hasta + 1);

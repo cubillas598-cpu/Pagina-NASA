@@ -28,7 +28,7 @@ function reticula() {
   for (let k = 1; k <= 4; k++) {
     const r = (k / EXTENSION_DEG) * RADIO_PX;
     p.push(`<circle cx="${CX}" cy="${CY}" r="${r}" class="ret"/>`);
-    p.push(`<text x="${CX + 6}" y="${CY - r - 6}" class="ret-etq">${90 - k}° S</text>`);
+    p.push(`<text x="${CX + 8}" y="${CY + r + 20}" class="ret-etq">${90 - k}° S</text>`);
   }
   for (let lon = 0; lon < 360; lon += 30) {
     const [x, y] = proyectarPolar(-90 + EXTENSION_DEG, lon);
@@ -37,7 +37,7 @@ function reticula() {
     const etq = lon === 0 ? '0°' : lon === 180 ? '180°' : `${lon}° E`;
     p.push(`<text x="${tx}" y="${ty + 4}" text-anchor="middle" class="ret-etq">${etq}</text>`);
   }
-  p.push(`<circle cx="${CX}" cy="${CY}" r="3" fill="${COLOR.texto3}"/><text x="${CX + 8}" y="${CY + 16}" class="ret-etq">Polo sur</text>`);
+  p.push(`<circle cx="${CX}" cy="${CY}" r="3" fill="${COLOR.texto3}"/><text x="${CX}" y="${CY - 10}" text-anchor="middle" class="ret-etq">Polo sur</text>`);
   // Barra de escala de 25 km.
   const px25 = (25 / KM_POR_GRADO / EXTENSION_DEG) * RADIO_PX;
   p.push(`<line x1="40" y1="${MAPA_H - 40}" x2="${40 + px25}" y2="${MAPA_H - 40}" stroke="${COLOR.texto2}" stroke-width="2"/><text x="40" y="${MAPA_H - 50}" class="ret-etq">25 km</text>`);
@@ -54,9 +54,9 @@ export function crearMapaPolar(cont, alElegir) {
       <defs>${defsPatrones()}</defs>
       <style>
         .ret { fill: none; stroke: rgba(255,255,255,.09); stroke-width: 1; }
-        .ret-etq { font: 400 13px var(--fuente); fill: ${COLOR.texto3}; }
-        .etq { font: 600 16px var(--fuente); fill: ${COLOR.texto}; }
-        .etq2 { font: 400 14px var(--fuente); fill: ${COLOR.texto2}; }
+        .ret-etq { font: 400 18px var(--fuente); fill: ${COLOR.texto3}; }
+        .etq { font: 600 20px var(--fuente); fill: ${COLOR.texto}; }
+        .etq2 { font: 500 22px var(--fuente); fill: ${COLOR.texto2}; }
       </style>
       <rect width="${MAPA_W}" height="${MAPA_H}" fill="rgba(10,11,13,.35)"/>
       <g>${reticula()}</g>
@@ -102,18 +102,30 @@ export function crearMapaPolar(cont, alElegir) {
       <circle cx="${tx}" cy="${ty}" r="7" fill="${m.tierra.visible ? COLOR.tierra : 'none'}" stroke="${COLOR.tierra}" stroke-width="2"/>
     </g>`);
 
+    // Las etiquetas salen hacia fuera del polo con una línea guía: los sitios A y B
+    // están a unos 30 km y sus nombres se encimarían junto al marcador.
     for (const s of sitios) {
       const [x, y] = proyectarPolar(s.lat, s.lon);
       const sel = s.id === activo.id;
       const letra = s.etiqueta.slice(-1);
-      const lado = x > CX ? 'start' : 'end';
-      const dx = x > CX ? 24 : -24;
+      const ang = Math.atan2(x - CX, -(y - CY));
+      const rSitio = Math.hypot(x - CX, y - CY);
+      // Cerca del borde superior o inferior no hay sitio hacia fuera: la etiqueta va a la derecha.
+      const vertical = rSitio > 200 && Math.abs(Math.cos(ang)) > 0.9;
+      const rEtq = vertical ? rSitio : Math.max(rSitio + 70, 165);
+      const ex = vertical ? x + 14 : CX + rEtq * Math.sin(ang);
+      const ey = vertical ? y + 44 : CY - rEtq * Math.cos(ang);
+      const lado = vertical || ex >= CX ? 'start' : 'end';
+      const sep = lado === 'start' ? 8 : -8;
+      const gx = x + 19 * Math.sin(ang);
+      const gy = y - 19 * Math.cos(ang);
       capas.push(`<g class="marcador" data-sitio="${s.id}" tabindex="0" role="button" aria-pressed="${sel}" aria-label="${esc(s.etiqueta)}: ${esc(s.nombre_corto)}, ${Math.abs(s.lat).toFixed(3)}° S, ${s.lon.toFixed(3)}° E">
-        <circle cx="${x}" cy="${y}" r="30" fill="transparent"/>
-        <circle class="marcador__anillo" cx="${x}" cy="${y}" r="14" fill="${sel ? 'rgba(198,168,106,.3)' : 'rgba(27,29,33,.9)'}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.45)'}" stroke-width="2"/>
+        <circle cx="${x}" cy="${y}" r="26" fill="transparent"/>
+        ${vertical ? '' : `<line x1="${gx}" y1="${gy}" x2="${ex}" y2="${ey}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.3)'}" stroke-width="1.2"/>`}
+        <circle class="marcador__anillo" cx="${x}" cy="${y}" r="17" fill="${sel ? 'rgba(198,168,106,.3)' : 'rgba(27,29,33,.9)'}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.45)'}" stroke-width="2"/>
         <text x="${x}" y="${y + 5}" text-anchor="middle" class="etq etq--letra">${letra}</text>
-        <text x="${x + dx}" y="${y - 2}" text-anchor="${lado}" class="etq2 etq--nombre" ${sel ? `fill="${COLOR.texto}"` : ''}>${esc(s.nombre_corto)}</text>
-        <text x="${x + dx}" y="${y + 15}" text-anchor="${lado}" class="ret-etq">${Math.abs(s.lat).toFixed(3)}° S, ${s.lon.toFixed(3)}° E</text>
+        <text x="${ex + sep}" y="${ey + 1}" text-anchor="${lado}" class="etq2 etq--nombre" ${sel ? `fill="${COLOR.texto}"` : ''}>${esc(s.nombre_corto)}</text>
+        <text x="${ex + sep}" y="${ey + 24}" text-anchor="${lado}" class="ret-etq etq--coord">${Math.abs(s.lat).toFixed(3)}° S, ${s.lon.toFixed(3)}° E</text>
       </g>`);
     }
     capa.innerHTML = capas.join('');

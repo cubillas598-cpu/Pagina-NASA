@@ -425,10 +425,7 @@ option { background: var(--panel-solido); color: var(--texto); }
   .tarjeta { padding: var(--e-4); }
   .periodo { width: 100%; justify-content: space-between; padding: 6px 10px; border-radius: 18px; }
   .periodo input { flex: 1; min-width: 0; }
-  .mapa svg text.etq2 { display: none; }
-  .mapa svg text.etq--letra { font-size: 34px; }
-  .mapa svg .marcador__anillo { r: 30px; }
-  .mapa svg .rosa text { font-size: 28px; }
+  .mapa svg text.etq--coord { display: none; }
 }
 
 /* Movimiento: entrada de cada vista, fundido del globo y respuesta al pulsar */

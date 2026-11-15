@@ -58,7 +58,7 @@ export function renderGraficaHorizonte(cont, d) {
   const cardinales = { 0: 'N', 90: 'E', 180: 'S', 270: 'O', 360: 'N' };
   for (let az = 0; az <= 360; az += 45) {
     partes.push(`<line y1="${M.sup}" y2="${H - M.inf}" x1="${x(az)}" x2="${x(az)}" stroke="rgba(255,255,255,.08)"/>`);
-    partes.push(`<text x="${x(az)}" y="${H - M.inf + 18}" text-anchor="middle" class="g-eje">${az}°${cardinales[az] ? ` ${cardinales[az]}` : ''}</text>`);
+    partes.push(`<text x="${x(az)}" y="${H - M.inf + 18}" text-anchor="${az === 0 ? 'start' : az === 360 ? 'end' : 'middle'}" class="g-eje">${az}°${cardinales[az] ? ` ${cardinales[az]}` : ''}</text>`);
   }
   partes.push(`<text x="${(M.izq + W - M.der) / 2}" y="${H - 6}" text-anchor="middle" class="g-titulo">Azimut (°)</text>`);
   partes.push(`<text transform="translate(14 ${(M.sup + H - M.inf) / 2}) rotate(-90)" text-anchor="middle" class="g-titulo">Elevación (°)</text>`);

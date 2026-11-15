@@ -141,10 +141,13 @@
       .preguntas { grid-template-columns: 1fr; }
       .preguntas > li, .preguntas > li + li { padding: 22px 0 6px; border-left: 0; border-top: 1px solid var(--m-borde-suave); }
       .preguntas > li:first-child { border-top: 0; }
-      .sitios, .fuentes, .herramientas { grid-template-columns: 1fr; }
-      .herr--principal ul { columns: 1; }
       .indice { grid-template-columns: 1fr; }
       section.bloque { padding: 64px 0; }
+      .ficha, .herr, .fuentes > div { padding: 20px; }
+    }
+    @media (max-width: 680px) {
+      .sitios, .fuentes, .herramientas { grid-template-columns: 1fr; }
+      .herr--principal ul { columns: 1; }
     }
     @media (max-width: 420px) { .sitio span { font-size: 0.6875rem; padding: 2px 7px; } }
   </style>

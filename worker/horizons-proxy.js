@@ -72,9 +72,13 @@ export default {
     if (v.error) return responder({ error: v.error }, 400, cors);
 
     const destino = `${HORIZONS}?${v.params}`;
+    // La caché es una mejora: si falla, se consulta a Horizons directamente.
     const cache = typeof caches !== 'undefined' ? caches.default : null;
     const clave = new Request(destino);
-    let r = cache ? await cache.match(clave) : null;
+    let r = null;
+    if (cache) {
+      try { r = await cache.match(clave); } catch { r = null; }
+    }
     if (!r) {
       try {
         r = await fetch(destino, { headers: { 'User-Agent': 'lunar-landing-site-navigator (NASA Space Apps 2026)' } });
@@ -84,7 +88,7 @@ export default {
       if (!r.ok) return responder({ error: `JPL Horizons respondió HTTP ${r.status}.` }, 502, cors);
       r = new Response(r.body, r);
       r.headers.set('Cache-Control', `public, max-age=${CACHE_S}`);
-      if (cache) ctx.waitUntil(cache.put(clave, r.clone()));
+      if (cache) ctx.waitUntil(cache.put(clave, r.clone()).catch(() => {}));
     }
     let datos;
     try {

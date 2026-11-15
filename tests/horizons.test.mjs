@@ -116,3 +116,25 @@ test('el Worker reenvía a Horizons y responde con CORS', async () => {
     globalThis.fetch = original;
   }
 });
+
+test('el Worker sigue funcionando si la caché falla', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalCaches = globalThis.caches;
+  const pendientes = [];
+  globalThis.caches = { default: {
+    match: async () => { throw new Error('caché caída'); },
+    put: async () => { throw new Error('caché llena'); },
+  } };
+  globalThis.fetch = async () => new Response(JSON.stringify({ result: respuesta([' 2026-Dec-01 00:00, *, , 10, 1,']) }));
+  try {
+    const req = new Request('https://w.example/?cuerpo=10&lat=-89&lon=126&inicio=2026-12-01&fin=2026-12-02',
+      { headers: { Origin: 'https://cubillas598-cpu.github.io' } });
+    const r = await worker.fetch(req, { ORIGENES: 'https://cubillas598-cpu.github.io' }, { waitUntil: (p) => pendientes.push(p) });
+    assert.equal(r.status, 200);
+    assert.match((await r.json()).result, /\$\$SOE/);
+    await Promise.all(pendientes); // el put fallido no rechaza
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalCaches === undefined) delete globalThis.caches; else globalThis.caches = originalCaches;
+  }
+});

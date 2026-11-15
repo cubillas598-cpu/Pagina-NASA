@@ -418,6 +418,17 @@ option { background: var(--panel-solido); color: var(--texto); }
 .lateral__txt { display: none; }
 .mapa__lista { display: none; }
 
+/* Sitios: relieve 3D en el lugar del mapa polar */
+.segmentado--mini { grid-template-columns: repeat(2, minmax(44px, auto)); }
+.segmentado--mini button { min-height: 32px; padding: 0 var(--e-3); border: 0; border-radius: var(--r-pastilla); background: transparent; color: var(--texto-2); font: 500 var(--t-xs) var(--fuente); cursor: pointer; transition: background var(--transicion), color var(--transicion); }
+.segmentado--mini button[aria-pressed="true"] { background: linear-gradient(145deg, var(--acento-claro), var(--acento)); color: var(--sobre-acento); }
+.segmentado--mini button:focus-visible { outline: 2px solid var(--acento-claro); outline-offset: 2px; }
+.visor3d { position: relative; height: clamp(460px, 68vh, 720px); border-radius: 14px; overflow: hidden; background: #111214; border: 1px solid var(--borde); }
+.visor3d[hidden], .mapa[hidden], .leyenda[hidden] { display: none; }
+.visor3d__marco { display: block; width: 100%; height: 100%; border: 0; }
+.visor3d__estado { margin: var(--e-2) 0 0; font-size: var(--t-xs); color: var(--texto-3); }
+.visor3d__estado:empty { display: none; }
+
 /* Móvil: la navegación pasa a una cápsula inferior y los paneles se apilan */
 @media (max-width: 760px) {
   :root { --ancho-app: calc(100vw - 24px); }
@@ -443,7 +454,8 @@ option { background: var(--panel-solido); color: var(--texto); }
   .mapa svg text.etq--coord, .mapa svg text.etq2, .mapa svg .marcador__guia { display: none; }
   .mapa svg text.etq--letra { font-size: 26px; }
   .mapa__lista { display: flex; flex-wrap: wrap; gap: var(--e-2); margin-top: var(--e-3); }
-  .lateral { padding: 6px 8px; gap: 2px; }
+  .visor3d { height: 78vh; }
+    .lateral { padding: 6px 8px; gap: 2px; }
   .lateral__item { width: 58px; height: 52px; border-radius: 18px; grid-template-rows: auto auto; align-content: center; gap: 2px; }
   .lateral__item svg { width: 19px; height: 19px; }
   .lateral__item { text-decoration: none; }

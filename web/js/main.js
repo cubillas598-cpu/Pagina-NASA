@@ -351,6 +351,51 @@ async function iniciar() {
   const mapaRespaldo = luna ? null : crearMapaPolar($('#luna'), elegirSitio);
   if (!luna) $('#luna').classList.add('luna--sin-webgl');
   const mapaSitios = crearMapaPolar($('#mapa'), elegirSitio);
+
+  // Sitios: el visor 3D de docs/ (relieve LOLA) va en el lugar del mapa; el mapa
+  // polar 2D queda de respaldo. Sin conexión (archivo único) el visor no está
+  // disponible y se usa el 2D. Visor y demo comparten el sitio elegido.
+  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1';
+  const sinConexion = location.protocol === 'file:' || !!document.getElementById('datos-demo');
+  let modoMapa = sinConexion ? '2d' : '3d';
+  let visor = null;
+  function avisarVisor() {
+    if (visor && visor.dataset.listo) visor.contentWindow.postMessage({ tipo: 'sitio', id: estado.sitioId }, location.origin);
+  }
+  function aplicarModoMapa() {
+    const tres = modoMapa === '3d';
+    if (tres && !visor) {
+      visor = document.createElement('iframe');
+      visor.className = 'visor3d__marco';
+      visor.title = 'Vista 3D del relieve LOLA con los tres sitios';
+      visor.src = URL_VISOR;
+      visor.addEventListener('load', () => { visor.dataset.listo = '1'; avisarVisor(); });
+      $('#terreno').append(visor);
+    }
+    $('#tarjeta-mapa').dataset.modo = tres ? '3d' : '2d';
+    $('#terreno').hidden = !tres;
+    $('#mapa').hidden = tres;
+    $('#leyenda-mapa').hidden = tres;
+    $('#sub-mapa').textContent = tres
+      ? 'Relieve real LOLA (promedio de 2 km); arrastra para girar y pulsa un sitio para elegirlo'
+      : 'Proyección polar con coordenadas reales; pulsa un sitio para elegirlo';
+    for (const b of $('#modo-mapa').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.modo === modoMapa));
+  }
+  window.addEventListener('message', (ev) => {
+    if (!visor || ev.source !== visor.contentWindow || ev.origin !== location.origin) return;
+    if (ev.data && ev.data.tipo === 'sitio-visor' && sitios.some((s) => s.id === ev.data.id) && ev.data.id !== estado.sitioId) {
+      actualizar({ sitioId: ev.data.id });
+    }
+  });
+  $('#modo-mapa').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-modo]');
+    if (!b) return;
+    modoMapa = b.dataset.modo;
+    aplicarModoMapa();
+    if (modoMapa === '2d') mapaSitios.render(derivar());
+  });
+  if (sinConexion) $('#estado-terreno').textContent = 'La vista 3D necesita conexión: aquí se muestra el mapa polar 2D.';
+  else $('#modo-mapa').hidden = false;
   $('#luna-sitios').addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
@@ -388,7 +433,8 @@ async function iniciar() {
     } else if (estado.vista === 'sitios') {
       if (completo) leyendaHorizonte($('#leyenda-horizonte'), estado);
       renderPanelEstado($('#estado'), d);
-      mapaSitios.render(d);
+      if (completo && !visor && modoMapa === '3d') aplicarModoMapa();
+      if (modoMapa === '3d') avisarVisor(); else mapaSitios.render(d);
       renderGraficaHorizonte($('#grafica-horizonte'), d);
     } else if (estado.vista === 'comparador') {
       if (completo) renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);

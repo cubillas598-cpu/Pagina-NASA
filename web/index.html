@@ -95,9 +95,20 @@
           <h2>Ubicación y horizonte</h2>
         </div>
         <div class="sitios-rejilla">
-          <article class="tarjeta">
-            <header class="tarjeta__cab"><h3>Mapa polar sur</h3><span class="tarjeta__sub">Coordenadas reales; pulsa un sitio para elegirlo</span></header>
+          <article class="tarjeta" id="tarjeta-mapa" data-modo="2d">
+            <header class="tarjeta__cab">
+              <div>
+                <h3 id="t-mapa">Relieve del polo sur</h3>
+                <p class="tarjeta__sub" id="sub-mapa">Coordenadas reales; pulsa un sitio para elegirlo</p>
+              </div>
+              <div class="segmentado segmentado--mini" role="group" aria-label="Tipo de vista" id="modo-mapa" hidden>
+                <button type="button" data-modo="3d" aria-pressed="false">3D</button>
+                <button type="button" data-modo="2d" aria-pressed="true">2D</button>
+              </div>
+            </header>
+            <div class="visor3d" id="terreno" hidden></div>
             <div class="mapa" id="mapa"></div>
+            <p class="visor3d__estado" id="estado-terreno" role="status"></p>
             <ul class="leyenda" id="leyenda-mapa"></ul>
           </article>
           <article class="tarjeta" id="estado" aria-live="polite"></article>

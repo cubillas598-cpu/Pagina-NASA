@@ -78,6 +78,10 @@
       box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
     }
   </style>
+  <script>
+    // ?embebido=1: el visor vive dentro de la demo (vista Sitios).
+    if (new URLSearchParams(location.search).get('embebido') === '1') document.documentElement.classList.add('m-embebido');
+  </script>
 </head>
 <body class="m-visor">
   <nav class="m-barra" aria-label="Sitio">
@@ -902,9 +906,26 @@
       });
     }
 
+    // La demo usa de_gerlache; este visor, de-gerlache.
+    const ID_DEMO = (id) => id.replace('-', '_');
+    const ID_VISOR = (id) => String(id).replace('_', '-');
+    const EMBEBIDO = window.parent !== window && document.documentElement.classList.contains('m-embebido');
+    let sitioDesdeDemo = false;
+    if (EMBEBIDO) {
+      window.addEventListener('message', (ev) => {
+        if (ev.origin !== location.origin || !ev.data || ev.data.tipo !== 'sitio') return;
+        const id = ID_VISOR(ev.data.id);
+        if (id === selectedSiteId) return;
+        sitioDesdeDemo = true;
+        selectLandingSite(id, true, false);
+        sitioDesdeDemo = false;
+      });
+    }
+
     function selectLandingSite(siteId, moveCamera = true, closeUp = false) {
       const site = LANDING_SITES.find(s => s.id === siteId);
       if (!site) return;
+      if (EMBEBIDO && !sitioDesdeDemo) window.parent.postMessage({ tipo: 'sitio-visor', id: ID_DEMO(site.id) }, location.origin);
 
       selectedSiteId = site.id;
       renderSiteList();

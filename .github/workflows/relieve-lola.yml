@@ -1,6 +1,7 @@
 # Genera el relieve real del polo sur (LOLA) que usan los visores 3D de docs/.
 # Descarga el DEM de NASA PGDA (181 MB, se guarda en cache entre corridas),
-# lo remuestrea con scripts/relieve_3d.py y sube docs/datos/relieve-lola-sur.js.
+# lo remuestrea con scripts/relieve_3d.py y sube docs/datos/relieve-lola-sur.js y la
+# imagen del casquete polar del globo (web/assets/luna/polo-sur-lola.png).
 #
 # Uso: pestana Actions > "Relieve LOLA para visores 3D" > Run workflow.
 name: Relieve LOLA para visores 3D
@@ -54,7 +55,7 @@ jobs:
 
       - name: Publicar en el repositorio
         run: |
-          git add docs/datos/relieve-lola-sur.js
+          git add docs/datos/relieve-lola-sur.js web/assets/luna/polo-sur-lola.png
           if git diff --cached --quiet; then
             echo "El relieve no cambio; no hay nada que publicar."
             exit 0

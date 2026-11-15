@@ -23,7 +23,9 @@ import argparse
 import base64
 import json
 import math
+import struct
 import sys
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -34,6 +36,7 @@ from pyproj import CRS, Transformer
 RAIZ = Path(__file__).resolve().parent.parent
 DEM_DEFECTO = RAIZ / "dem" / "LDEM_80S_80MPP_ADJ.TIF"
 SALIDA_DEFECTO = RAIZ / "docs" / "datos" / "relieve-lola-sur.js"
+PNG_DEFECTO = RAIZ / "web" / "assets" / "luna" / "polo-sur-lola.png"
 SITIOS_PATH = RAIZ / "sitios.json"
 
 RADIO_MOON_M = 1737400.0
@@ -162,12 +165,62 @@ def generar(dem_path, nodos, semilado_km):
     }
 
 
+def sombreado(alturas_m, paso_m, sol_az=315.0, sol_alt=30.0):
+    """Sombreado de relieve (0..1) con luz desde sol_az (0 = arriba de la imagen, horario)."""
+    gy, gx = np.gradient(alturas_m, paso_m)          # gy: hacia abajo (filas), gx: hacia la derecha
+    az = math.radians(sol_az)
+    alt = math.radians(sol_alt)
+    luz = np.array([math.sin(az) * math.cos(alt), -math.cos(az) * math.cos(alt), math.sin(alt)])
+    normal = np.stack([-gx, -gy, np.ones_like(gx)])
+    normal /= np.linalg.norm(normal, axis=0)
+    return np.clip(np.tensordot(luz, normal, axes=1), 0, 1)
+
+
+def png_gris_alfa(gris, alfa):
+    """PNG de 8 bits gris + alfa sin dependencias (zlib)."""
+    alto, ancho = gris.shape
+    pix = np.stack([gris, alfa], axis=-1).astype(np.uint8).reshape(alto, ancho * 2)
+    crudo = b"".join(b"\x00" + fila.tobytes() for fila in pix)
+    def bloque(tipo, datos):
+        return struct.pack(">I", len(datos)) + tipo + datos + struct.pack(">I", zlib.crc32(tipo + datos) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + bloque(b"IHDR", struct.pack(">IIBBBBB", ancho, alto, 8, 4, 0, 0, 0))
+            + bloque(b"IDAT", zlib.compress(crudo, 9)) + bloque(b"IEND", b""))
+
+
+def imagen_polo(dem_path, nodos, semilado_km):
+    """Casquete del polo sur para el globo: relieve sombreado con borde circular difuminado."""
+    datos = generar(dem_path, nodos, semilado_km)
+    h = np.frombuffer(base64.b64decode(datos["alturas_i16_b64"]), "<i2").reshape(nodos, nodos).astype(float)
+    paso_m = 2 * semilado_km * 1000 / (nodos - 1)
+    gris = 255 * (0.30 + 0.70 * sombreado(h, paso_m))
+    c = np.linspace(-1, 1, nodos)
+    r = np.hypot(*np.meshgrid(c, c))
+    alfa = 255 * np.clip((1.0 - r) / 0.25, 0, 1)        # opaco hasta 75 % del radio, se difumina al borde
+    return png_gris_alfa(np.round(gris), np.round(alfa))
+
+
+def escribir_atomico(ruta, contenido):
+    tmp = ruta.with_name(ruta.name + ".tmp")
+    try:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(contenido, bytes):
+            tmp.write_bytes(contenido)
+        else:
+            tmp.write_text(contenido, encoding="utf-8")
+        tmp.replace(ruta)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dem", type=Path, default=DEM_DEFECTO)
     ap.add_argument("--salida", type=Path, default=SALIDA_DEFECTO)
     ap.add_argument("--nodos", type=int, default=241, help="nodos por lado (los visores usan 240 segmentos)")
     ap.add_argument("--semilado-km", type=float, default=240.0, help="mitad del lado de la malla en km")
+    ap.add_argument("--png", type=Path, default=PNG_DEFECTO, help="imagen del casquete polar para el globo")
+    ap.add_argument("--png-nodos", type=int, default=1025, help="pixeles por lado de la imagen (0 = no generarla)")
     args = ap.parse_args()
 
     if not args.dem.exists():
@@ -187,13 +240,9 @@ def main():
 
     texto = ("// Generado por scripts/relieve_3d.py. No editar a mano.\n"
              f"window.RELIEVE_LOLA = {json.dumps(datos, ensure_ascii=False)};\n")
-    tmp = args.salida.with_suffix(".js.tmp")
     try:
-        args.salida.parent.mkdir(parents=True, exist_ok=True)
-        tmp.write_text(texto, encoding="utf-8")
-        tmp.replace(args.salida)
+        escribir_atomico(args.salida, texto)
     except OSError as err:
-        tmp.unlink(missing_ok=True)
         print(f"No se pudo escribir {args.salida}: {err}", file=sys.stderr)
         sys.exit(1)
     print(f"Escrito {args.salida} ({len(texto) // 1024} KB): {datos['nodos']}x{datos['nodos']} nodos, "
@@ -201,6 +250,14 @@ def main():
     for s in datos["sitios"]:
         print(f"  {s['id']}: {s['altura_m']} m")
 
+    if args.png_nodos:
+        try:
+            png = imagen_polo(args.dem, args.png_nodos, args.semilado_km)
+            escribir_atomico(args.png, png)
+        except (rasterio.errors.RasterioError, RuntimeError, MemoryError, OSError) as err:
+            print(f"No se pudo generar {args.png}: {err}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Escrito {args.png} ({len(png) // 1024} KB, {args.png_nodos} px por lado)")
 
 if __name__ == "__main__":
     main()

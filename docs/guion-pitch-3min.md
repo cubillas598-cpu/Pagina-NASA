@@ -64,10 +64,14 @@ Ojo al contarla: a Athena la tumbó el aterrizaje, no la elección del sitio. Lo
 sí conecta con nuestro proyecto es lo que la terminó: sombra, frío y sin forma de
 recargar. No decir que nuestra demo habría salvado a Athena.
 
-### 1. Hook (≈20 s)
+### 1. Hook (≈30 s): dos preguntas y la historia
 
-> "El 6 de marzo de 2025, una nave llamada Athena llegó al polo sur de la Luna.
-> Ocho días de viaje, años de trabajo de cientos de personas... y aterrizó a
+> "¿Y si el éxito de una misión lunar no dependiera solo de llegar a la Luna,
+> sino de elegir exactamente dónde aterrizar? ¿Qué pasa cuando una nave llega...
+> pero al lugar equivocado?
+>
+> El 6 de marzo de 2025, una nave llamada Athena llegó al polo sur de la Luna.
+> Años de trabajo de cientos de personas... y aterrizó a
 > doscientos cincuenta metros de donde debía, dentro de un cráter. Ahí el Sol casi
 > no entra y hace un frío brutal. Sus paneles no pudieron recargar las baterías.
 > Trece horas después, la misión se apagó. Estaba planeada para diez días."
@@ -76,8 +80,8 @@ recargar. No decir que nuestra demo habría salvado a Athena.
 
 > "Y esto no es mala suerte. En el polo sur de la Luna el Sol y la Tierra van
 > pegados al horizonte. Una loma de unos pocos grados decide si tu nave tiene
-> energía, si puede hablar con la Tierra, las dos cosas... o ninguna. Unos metros
-> de diferencia lo cambian todo. Y justo ahí, al polo sur, es a donde van a ir las
+> energía, si puede hablar con la Tierra, las dos cosas... o ninguna. Y justo ahí,
+> al polo sur, es a donde van a ir las
 > próximas misiones, porque ahí está el hielo."
 
 ### 3. Solución (≈60 s)

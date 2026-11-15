@@ -283,3 +283,20 @@ anterior, solo se agrega abajo.
   `docs/guion-pitch-audio-irvin.mp3` (8 min, voz Microsoft Raul es-MX via SAPI
   local, intro + las 4 partes leidas una por una + guion completo seguido al
   final). Pendiente: confirmar que Irvin los recibio y los reviso antes de dormir.
+
+### 2026-11-14 ~17:15 - GitHub Pages: GitHub dice "live", mi entorno no logra verificarlo
+- Irvin mando video de su Settings > Pages: banner dice "Your site is live at
+  https://cubillas598-cpu.github.io/Pagina-NASA/", "Last deployed by
+  pabloleonm0-prog 6 minutes ago", fuente `main` / `(root)`. Config correcta
+  confirmada por captura real, no solo por la API.
+- Intente verificar la carga del sitio 4 veces, con 3 metodos distintos (curl con
+  y sin -k, el navegador de esta sesion via extension, WebFetch): las 4 fallaron
+  con timeout/pagina de error. `github.com` y `api.github.com` SI responden bien
+  desde el mismo entorno en los mismos minutos - el fallo es especifico de
+  `*.github.io`. Mismo patron ya documentado antes en el ecosistema con
+  `git push` a GitHub via IPv6 (ver memoria `git-push-github-falla-por-ipv6`):
+  este entorno tiene problemas de red puntuales con infraestructura de GitHub
+  que no reflejan el estado real del servicio.
+- Conclusion: no es un problema del repo ni de la config de Pages. Pendiente
+  real: que alguien del equipo confirme desde su propio celular/laptop (fuera de
+  este entorno) que `https://cubillas598-cpu.github.io/Pagina-NASA/` carga.

@@ -387,7 +387,23 @@ async function iniciar() {
       visor.className = 'visor3d__marco';
       visor.title = 'Vista 3D del relieve LOLA con los tres sitios';
       visor.src = URL_VISOR;
-      visor.addEventListener('load', () => { visor.dataset.listo = '1'; delete visor.dataset.modo; avisarVisor(derivar(), true); leyendaAlturas(); });
+      visor.addEventListener('load', () => {
+        // Si la página del visor no llegó (404, sin red), se vuelve al mapa 2D con aviso.
+        let ok = false;
+        try { ok = !!visor.contentDocument?.body?.classList.contains('m-visor'); } catch { ok = false; }
+        if (!ok) {
+          modoMapa = '2d';
+          $('#estado-terreno').textContent = 'No se pudo cargar la vista 3D; se muestra el mapa polar 2D.';
+          aplicarModoMapa();
+          mapaSitios.render(derivar());
+          return;
+        }
+        $('#estado-terreno').textContent = '';
+        visor.dataset.listo = '1';
+        delete visor.dataset.modo;
+        avisarVisor(derivar(), true);
+        leyendaAlturas();
+      });
       $('#terreno').append(visor);
     }
     $('#tarjeta-mapa').dataset.modo = tres ? '3d' : '2d';

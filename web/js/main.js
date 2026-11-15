@@ -367,17 +367,26 @@ async function iniciar() {
     if (!visor || !visor.dataset.listo) return;
     const w = visor.contentWindow;
     const m = d.muestra;
-    w.postMessage({ tipo: 'sitio', id: estado.sitioId }, location.origin);
-    w.postMessage({ tipo: 'sol', theta: d.sitio.lon + m.sol.az, el: m.sol.el, visible: m.sol.visible, inmediato }, location.origin);
-    if (visor.dataset.modo !== relieveVisor) {
-      w.postMessage({ tipo: 'modo', modo: relieveVisor }, location.origin);
-      visor.dataset.modo = relieveVisor;
+    try {
+      w.postMessage({ tipo: 'sitio', id: estado.sitioId }, location.origin);
+      w.postMessage({ tipo: 'sol', theta: d.sitio.lon + m.sol.az, el: m.sol.el, visible: m.sol.visible, inmediato }, location.origin);
+      if (visor.dataset.modo !== relieveVisor) {
+        w.postMessage({ tipo: 'modo', modo: relieveVisor }, location.origin);
+        visor.dataset.modo = relieveVisor;
+      }
+    } catch {
+      // El marco cambió de origen o se cerró: el visor queda sin sincronizar, la demo sigue.
+      delete visor.dataset.listo;
     }
   }
   function leyendaAlturas() {
-    const doc = visor && visor.contentDocument;
-    const min = doc?.getElementById('leyenda-min')?.textContent || 'Bajo';
-    const max = doc?.getElementById('leyenda-max')?.textContent || 'Alto';
+    let min = 'Bajo';
+    let max = 'Alto';
+    try {
+      const doc = visor && visor.contentDocument;
+      min = doc?.getElementById('leyenda-min')?.textContent || min;
+      max = doc?.getElementById('leyenda-max')?.textContent || max;
+    } catch { /* marco inaccesible: queda la leyenda genérica */ }
     $('#leyenda-alturas').innerHTML = `<span>${esc(min)}</span><span class="leyenda-alturas__barra" aria-hidden="true"></span><span>${esc(max)}</span>`;
   }
   function aplicarModoMapa() {

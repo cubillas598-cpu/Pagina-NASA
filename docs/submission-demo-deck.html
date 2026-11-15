@@ -69,7 +69,8 @@
         <li><b>Malapert massif</b> — NASA notional site</li>
       </ul>
       <p class="sub" style="font-size:18px;">Solar illumination and Earth visibility from
-      JPL Horizons ephemerides. Terrain horizon from NASA LOLA elevation data (80 m/px).</p>
+      JPL Horizons ephemerides. Terrain horizon from NASA LOLA elevation data (80 m/px);
+      landing terrain (slope, roughness, permanent shadow) from LOLA 20 m/px maps.</p>
     </div>
     <div class="img"><img src="imagenes/sitios-shackleton-de-gerlache-shoemaker.jpeg"></div>
   </div>
@@ -110,9 +111,16 @@
   <p class="tag">Our Differentiator</p>
   <h2>A local backup link, and one number to compare sites</h2>
   <p class="sub">When direct line-of-sight to Earth is lost, a local backup link — radiofrequency
-  or optical — keeps a relay path alive. We combine sunlight, direct communication, and backup
-  availability into a single team-proposed <b>Suitability Index (S)</b> per site, so a mission
-  planner can compare candidates at a glance.</p>
+  or optical — keeps a relay path alive. A single team-proposed <b>Suitability Index (S, 0–100)</b>
+  combines eight factors: sunlight, direct Earth view, backup link, longest night, longest
+  communication blackout, terrain (slope and roughness), approach clearance, and distance to
+  permanently shadowed regions where water ice may exist.</p>
+  <div class="cards">
+    <div class="card"><b>Malapert massif</b><br><span style="font-size:34px;font-weight:700;">91.4</span><br>98% sunlight · Earth in view all month</div>
+    <div class="card"><b>Peak Near Shackleton</b><br><span style="font-size:34px;font-weight:700;">54.8</span><br>Flattest terrain (1.8° slope) · nights up to 127 h</div>
+    <div class="card"><b>De Gerlache ridge</b><br><span style="font-size:34px;font-weight:700;">48.8</span><br>Steeper ridge (9.9° slope) · nights up to 227 h</div>
+  </div>
+  <p class="sub" style="font-size:16px;color:#8a93a8;margin-top:14px;">December 2026, backup link on. Weights and thresholds are team assumptions, not a NASA standard.</p>
   <div class="pagenum">6 / 7</div>
   <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
 </section>
@@ -122,7 +130,7 @@
   <p class="tag">Live Demo</p>
   <h2>A real, working comparator — not just a mockup</h2>
   <div class="cols">
-    <div class="img"><img src="capturas/comparador-tabla-completa.jpg"></div>
+    <div class="img"><img src="capturas/comparador-indice-15nov.jpg"></div>
     <div class="text">
       <p class="sub">Open and interactive demo:<br><b>cubillas598-cpu.github.io/Pagina-NASA/</b></p>
       <p class="sub" style="margin-top:20px;">Built with real NASA data, honest about what is

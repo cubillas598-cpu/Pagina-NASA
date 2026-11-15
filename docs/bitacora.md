@@ -262,3 +262,24 @@ anterior, solo se agrega abajo.
   cerebro, todo pusheado a origin/main, cero commits ni cambios sin subir.** Se
   continua con Codex. Pendiente real mas urgente: terminar el deck de Canva O decidir
   grabar el video de 30s, y activar GitHub Pages (accion de cuenta de Irvin).
+
+### 2026-11-14 ~16:40 - GitHub Pages activado, landing publica, material de estudio para Irvin
+- Irvin activo GitHub Pages. Verificado con dos metodos independientes (API de GitHub
+  + navegador real): el deploy existe y GitHub lo marca `success`, pero el sitio no
+  respondia en el momento de la verificacion - probable propagacion de certificado
+  por ser la primera activacion. Pendiente reconfirmar que cargue.
+- Se integro el push grande de Irvin (Luna 3D interactiva con Three.js, tema dorado,
+  compilacion con esbuild) sin conflictos. 33/33 tests pasan despues del merge.
+  Commit `7389884`.
+- `index.html` de la raiz mejorado: landing publica unica y responsive con 4 tarjetas
+  (demo en vivo, resumen, las 2 vistas 3D ilustrativas) - es lo que carga
+  `cubillas598-cpu.github.io/Pagina-NASA/` en cuanto el deploy este disponible.
+- **Guion de pitch (docs/guion-pitch-3min.md) validado**: el hook y el cierre se
+  compararon linea por linea contra el "Speech 1" del Google Doc de Irvin y
+  coinciden en esencia. Queda como version final para presentar mañana.
+- Material de estudio nuevo para Irvin, generado y subido (commit `7689110`):
+  `docs/guion-pitch-irvin-estudio.pdf` (guion completo + tabla resumen de las 4
+  partes con tiempos + preguntas esperadas del jurado) y
+  `docs/guion-pitch-audio-irvin.mp3` (8 min, voz Microsoft Raul es-MX via SAPI
+  local, intro + las 4 partes leidas una por una + guion completo seguido al
+  final). Pendiente: confirmar que Irvin los recibio y los reviso antes de dormir.

@@ -8,6 +8,16 @@ esta version fusiona la pregunta retorica del borrador independiente "Speech 1" 
 Irvin escribio en el Google Doc de propuesta del equipo (14-nov-2026) con el resto del
 guion ya validado contra la estructura oficial del taller.
 
+**Validado 2026-11-14**: el hook ("¿Y si el exito de una mision lunar no dependiera
+solo de llegar a la Luna, sino de elegir exactamente donde aterrizar?...") y el cierre
+("...empieza mucho antes, cuando elegimos donde queremos llegar") de este guion se
+compararon linea por linea contra el "Speech 1" del Google Doc
+(docs.google.com/document/d/11sfH6Q9cexkyh-bcjTfUE5msVOp63FTCJLX-pTlx71o) y coinciden en
+esencia (texto adaptado al tono hablado del resto del guion, mismo contenido). El cuerpo
+(problema, historia del error de Shackleton, diferenciador RF/optico, indice de
+conveniencia) no viene del Doc - es el que ya estaba validado contra el taller. Version
+final, lista para presentar.
+
 **Estructura oficial del taller** (las slides usan dos nombres para los mismos 4 pasos):
 
 | Paso | Nombre (slide "Estructura") | Nombre (slide comic de ejemplo) | Que hace |

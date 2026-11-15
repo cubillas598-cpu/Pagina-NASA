@@ -300,3 +300,38 @@ anterior, solo se agrega abajo.
 - Conclusion: no es un problema del repo ni de la config de Pages. Pendiente
   real: que alguien del equipo confirme desde su propio celular/laptop (fuera de
   este entorno) que `https://cubillas598-cpu.github.io/Pagina-NASA/` carga.
+
+### 2026-11-15 ~11:30 - Project Demo oficial, declaracion de IA, e Incremento 1 del rediseno
+- Hallazgos criticos del dia de entrega (analisis completo del repo antes de
+  seguir, pedido por Pablo): faltaban el **Project Demo oficial** (7 slides en
+  ingles con link publico, exigido por las reglas de Space Apps) y la
+  **declaracion de uso de Super Intelligence** - ninguno de los dos existia
+  pese a que el repo tiene commits co-autoreados por IA. Resueltos: ver
+  `docs/submission-demo-deck.pdf` (generado de `docs/submission-demo-deck.html`
+  via Chrome headless, hosteado directo en GitHub Pages) y
+  `docs/si-disclosure.md`. Commit `5cd98c6`.
+- Irvin mando `Propuesta_UX_UI_CTO_Pagina_NASA.md`, propuesta de rediseno seria
+  (4 incrementos Kaizen) pidiendo trabajarla HOY. Se archivo como
+  `docs/propuesta-ux-ui-cto-15nov.md` y se acoto el alcance de hoy solo al
+  Incremento 1 (orden/jerarquia del Resumen), sin tocar 3D/WebGL - el resto
+  queda para despues del cierre de hoy.
+- Intento de delegar el Incremento 1 a Codex (codex-rescue) fallo dos veces:
+  primero por sandbox de solo-lectura (no pudo escribir en
+  `D:\PROYECTOS CLAUDE\Pagina-NASA`), aunque SI logro verificar los numeros
+  reales de la propuesta (65.9946% luz, 41.3978% Tierra, 127h sombra, 249h
+  ambos) contra el modelo. Se hizo directo en vez de reintentar.
+- **Trampa real encontrada haciendo el Incremento 1 a mano**: edite
+  `web/js/main.js`, `web/js/views/resumen.js` y `web/css/app.css`, pero el
+  cambio no aparecia en el navegador pese a servir el HTML fresco, sin errores
+  de consola, sin service worker. La causa: `web/index.html` carga
+  `build/app.js` (el bundle de esbuild), **no** los fuentes de `web/js/`
+  directo - cualquier edicion a los fuentes necesita `npm run build` antes de
+  verse reflejada. `node_modules` tampoco estaba instalado en este checkout
+  (hizo falta `npm install` antes del build). Documentado aqui porque es facil
+  de repetir: el sintoma (cero errores, cero cambio visible) no apunta a la
+  causa real.
+- Incremento 1 completado: titulo de cabecera dinamico por vista (ya no
+  "Dashboard de mision" fijo), lectura breve del periodo en Resumen con cifras
+  reales (`m.sombraMax`, ya existia en el modelo, solo no se mostraba), y dos
+  acciones "Ver las ventanas"/"Comparar sitios". 47 tests JS + 19 Python en
+  verde despues de recompilar. Commit `5c35148`.

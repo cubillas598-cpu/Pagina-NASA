@@ -207,7 +207,10 @@ test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
   assert.ok(lineas[1].includes('"Borde, Shackleton"'));
   assert.ok(lineas[1].includes(',si,1,1,0,2,lola_skyline'));
   assert.equal(lineas[0].split(',').length, lineas[1].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).length);
-  assert.ok(lineas[1].endsWith(',0.0,50.0,0,1,,,,,,')); // sin terreno: columnas vacías
+  assert.ok(lineas[1].endsWith(',0.0,50.0,0,1,,,,,,,,,,')); // sin terreno ni procedencia: columnas vacías
+  const conProc = comparativoCsv([{ sitio: { etiqueta: 'Sitio A', nombre_corto: 'X' }, metricas: m }],
+    { inicio: 'x', fin: 'y', enlaceActivo: false, procedencia: { efemerides: 'JPL Horizons', efemeridesUtc: '2026-11-15T16:07Z', terreno: 'LOLA 20 m (NASA PGDA)', terrenoUtc: '2026-11-15T18:58Z' } });
+  assert.ok(conProc.trim().split('\n')[1].endsWith(',JPL Horizons,2026-11-15T16:07Z,LOLA 20 m (NASA PGDA),2026-11-15T18:58Z'));
 });
 
 test('disponibilidad combinada: comunicación y luz con comunicación', () => {

@@ -352,3 +352,11 @@ anterior, solo se agrega abajo.
 - Metodología: glosario (horizonte, azimut, elevación, UTC, enlace local,
   respaldo, sombra permanente, índice). Portada: titular "Explora dónde hay luz y
   conexión en el polo sur lunar" y botón "Explorar los sitios".
+- Incremento 3/4 (partes seguras para hoy): secciones renombradas como pide la
+  propuesta (Explorar, Comparar, Ventanas, Datos y método) conservando los
+  enlaces `#sitios`, `#comparador`, `#enlace`, `#metodologia`; botón "Ver los
+  tres" para el 3D incrustado; la reproducción se pausa al ocultar la pestaña;
+  el CSV lleva la procedencia (fuente y fecha de efemérides y de terreno); la
+  404 ofrece "Abrir el explorador". Pendiente para después de la entrega:
+  explorador unificado (globo + relieve en un solo motor), quitar Tailwind de los
+  visores y revisar el modelo de relevo.

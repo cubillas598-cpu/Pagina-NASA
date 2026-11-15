@@ -472,6 +472,7 @@ option { background: var(--panel-solido); color: var(--texto); }
 .enlace-visor { font-size: var(--t-xs); color: var(--texto-2); text-underline-offset: 3px; }
 .enlace-visor:hover { color: var(--texto); }
 .enlace-visor[hidden] { display: none; }
+.enlace-visor--boton { border: 0; background: none; padding: 0; font: inherit; font-size: var(--t-xs); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
 /* Móvil: la navegación pasa a una cápsula inferior y los paneles se apilan */
 @media (max-width: 760px) {

@@ -609,7 +609,9 @@ export function comparativoCsv(filas, contexto) {
     'pct_sol_y_tierra', 'pct_respaldo_tierra', 'mayor_ventana_tierra_h', 'mayor_sombra_h',
     'pendiente_media_deg', 'pendiente_max_deg', 'pct_llano_500m', 'rugosidad_100m_m',
     'obstaculo_mejor_llegada_deg', 'distancia_sombra_permanente_km',
+    'fuente_efemerides', 'efemerides_consultadas_utc', 'fuente_terreno', 'terreno_calculado_utc',
   ];
+  const pr = contexto.procedencia || {};
   const lineas = [cab.join(',')];
   for (const { sitio, metricas: m } of filas) {
     lineas.push([
@@ -624,6 +626,7 @@ export function comparativoCsv(filas, contexto) {
       m.pctSolTierra.toFixed(1), m.pctRespaldo === null ? '' : m.pctRespaldo.toFixed(1),
       m.ventanaTierra.horas, m.sombraMax.horas,
       ...['pendienteMedia', 'pendienteMax', 'llano', 'rugosidad', 'aproximacion', 'hielo'].map((k) => valorMetrica(m, k) ?? ''),
+      pr.efemerides ?? '', pr.efemeridesUtc ?? '', pr.terreno ?? '', pr.terrenoUtc ?? '',
     ].map(celdaCsv).join(','));
   }
   return lineas.join('\n') + '\n';

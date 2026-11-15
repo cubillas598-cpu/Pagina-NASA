@@ -20,17 +20,17 @@
     <a href="#resumen" class="lateral__item" data-vista="resumen" aria-label="Resumen" data-tip="Resumen">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span class="lateral__txt" aria-hidden="true">Resumen</span>
     </a>
-    <a href="#sitios" class="lateral__item" data-vista="sitios" aria-label="Sitios" data-tip="Sitios">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span class="lateral__txt" aria-hidden="true">Sitios</span>
+    <a href="#sitios" class="lateral__item" data-vista="sitios" aria-label="Explorar" data-tip="Explorar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span class="lateral__txt" aria-hidden="true">Explorar</span>
     </a>
-    <a href="#comparador" class="lateral__item" data-vista="comparador" aria-label="Comparador" data-tip="Comparador">
+    <a href="#comparador" class="lateral__item" data-vista="comparador" aria-label="Comparar" data-tip="Comparar">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span class="lateral__txt" aria-hidden="true">Comparar</span>
     </a>
-    <a href="#enlace" class="lateral__item" data-vista="enlace" aria-label="Enlace local" data-tip="Enlace local">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 12 8l7 11"/><circle cx="12" cy="7" r="2"/><path d="M8 4.5a5.5 5.5 0 0 0 0 5M16 4.5a5.5 5.5 0 0 1 0 5"/></svg><span class="lateral__txt" aria-hidden="true">Enlace</span>
+    <a href="#enlace" class="lateral__item" data-vista="enlace" aria-label="Ventanas" data-tip="Ventanas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 12 8l7 11"/><circle cx="12" cy="7" r="2"/><path d="M8 4.5a5.5 5.5 0 0 0 0 5M16 4.5a5.5 5.5 0 0 1 0 5"/></svg><span class="lateral__txt" aria-hidden="true">Ventanas</span>
     </a>
-    <a href="#metodologia" class="lateral__item" data-vista="metodologia" aria-label="Metodología" data-tip="Metodología">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5V20.5H6z"/><path d="M14.5 3.5V7.5h4M9 12h6M9 16h6"/></svg><span class="lateral__txt" aria-hidden="true">Método</span>
+    <a href="#metodologia" class="lateral__item" data-vista="metodologia" aria-label="Datos y método" data-tip="Datos y método">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5V20.5H6z"/><path d="M14.5 3.5V7.5h4M9 12h6M9 16h6"/></svg><span class="lateral__txt" aria-hidden="true">Datos</span>
     </a>
   </nav>
 
@@ -91,7 +91,7 @@
         </div>
       </section>
 
-      <section class="vista" id="vista-sitios" data-vista="sitios" aria-label="Sitios" hidden>
+      <section class="vista" id="vista-sitios" data-vista="sitios" aria-label="Explorar" hidden>
         <div class="seccion__cab">
           <h2>Ubicación y horizonte</h2>
         </div>
@@ -103,6 +103,7 @@
                 <p class="tarjeta__sub" id="sub-mapa">Coordenadas reales; pulsa un sitio para elegirlo</p>
               </div>
               <div class="mapa-acciones">
+              <button type="button" class="enlace-visor enlace-visor--boton" id="visor-general" hidden>Ver los tres</button>
               <a class="enlace-visor" id="visor-completo" href="../docs/mapeo-lunar-3d-ilustrativo.html" target="_blank" rel="noopener" hidden>Pantalla completa</a>
               <div class="segmentado segmentado--mini" role="group" aria-label="Tipo de vista" id="modo-mapa" hidden>
                 <button type="button" data-modo="3d" aria-pressed="false">3D</button>
@@ -143,7 +144,7 @@
         </article>
       </section>
 
-      <section class="vista" id="vista-comparador" data-vista="comparador" aria-label="Comparador" hidden>
+      <section class="vista" id="vista-comparador" data-vista="comparador" aria-label="Comparar" hidden>
         <div class="seccion__cab">
           <h2>Comparador de sitios</h2>
           <div class="periodo" data-periodo></div>
@@ -166,7 +167,7 @@
         </article>
       </section>
 
-      <section class="vista" id="vista-enlace" data-vista="enlace" aria-label="Enlace local" hidden>
+      <section class="vista" id="vista-enlace" data-vista="enlace" aria-label="Ventanas" hidden>
         <div class="seccion__cab">
           <h2>Línea de tiempo y enlace local</h2>
           <div class="reproductor" role="group" aria-label="Reproducción">
@@ -188,7 +189,7 @@
         <article class="tarjeta" id="porque" aria-live="polite"></article>
       </section>
 
-      <section class="vista metodologia" id="vista-metodologia" data-vista="metodologia" aria-label="Metodología" hidden>
+      <section class="vista metodologia" id="vista-metodologia" data-vista="metodologia" aria-label="Datos y método" hidden>
         <div class="seccion__cab"><h2>Metodología</h2></div>
         <div class="metodologia__rejilla">
           <article class="tarjeta">

@@ -916,6 +916,7 @@
       window.addEventListener('message', (ev) => {
         if (ev.origin !== location.origin || !ev.data) return;
         if (ev.data.tipo === 'sol') { solDesdeDemo(ev.data); return; }
+        if (ev.data.tipo === 'general') { document.getElementById('btn-overview').click(); return; }
         if (ev.data.tipo === 'modo') {
           document.getElementById(ev.data.modo === 'topo' ? 'mode-topo' : 'mode-lunar').click();
           return;

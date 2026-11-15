@@ -19,18 +19,18 @@ const $ = (sel) => document.querySelector(sel);
 const VISTAS = ['resumen', 'sitios', 'comparador', 'enlace', 'metodologia'];
 const SUBTITULOS = {
   resumen: 'Luz, comunicación y enlace local del sitio activo en el periodo elegido.',
-  sitios: 'Ubicación real y horizonte LOLA del sitio en la hora seleccionada.',
+  sitios: 'Dónde está cada sitio, su relieve LOLA y su horizonte en la hora seleccionada.',
   comparador: 'Los tres sitios sobre el mismo periodo y los mismos supuestos.',
-  enlace: 'Estado del enlace de respaldo hora por hora y por qué cambia.',
-  metodologia: 'Qué se calcula, con qué datos y qué límites tiene la demo.',
+  enlace: 'Cuándo hay luz, comunicación o interrupciones, y por qué cambia cada hora.',
+  metodologia: 'De dónde sale cada cifra: fuentes, cálculos, supuestos y límites.',
 };
 
 const TITULOS = {
   resumen: 'Resumen',
-  sitios: 'Sitios',
-  comparador: 'Comparador',
-  enlace: 'Enlace local',
-  metodologia: 'Metodología',
+  sitios: 'Explorar',
+  comparador: 'Comparar',
+  enlace: 'Ventanas',
+  metodologia: 'Datos y método',
 };
 
 function estadoInicial(msRef) {
@@ -312,6 +312,8 @@ async function iniciar() {
     }, 160);
   }
   btnPlay.addEventListener('click', () => (temporizador ? detener() : reproducir()));
+  // La reproducción se detiene si la pestaña queda oculta (no consume en segundo plano).
+  document.addEventListener('visibilitychange', () => { if (document.hidden && temporizador) detener(); });
   $('#t-paso').addEventListener('change', (e) => { estado.paso = Number(e.target.value); });
   $('#t-adelante').addEventListener('click', () => actualizar({ indice: estado.indice + estado.paso }, { completo: false }));
   $('#t-atras').addEventListener('click', () => actualizar({ indice: estado.indice - estado.paso }, { completo: false }));
@@ -331,6 +333,10 @@ async function iniciar() {
     const csv = '﻿' + comparativoCsv(d.filas, {
       inicio: `${d.serie[d.i0].t}Z`, fin: `${d.serie[d.i1].t}Z`, enlaceActivo: estado.enlaceActivo,
       tipoEnlace: estado.tipoEnlace, polvo: estado.polvo, modoHorizonte: codigoHorizonte(estado.modoHorizonte, d.sitio),
+      procedencia: {
+        efemerides: 'JPL Horizons', efemeridesUtc: escenario.generado_utc,
+        terreno: escenario.terreno_meta ? 'LOLA 20 m (NASA PGDA)' : '', terrenoUtc: escenario.terreno_meta?.generado_utc ?? '',
+      },
     });
     const nombre = `comparativo-sitios_${estado.desde}_${estado.hasta}.csv`;
     const host = await descargasHost;
@@ -365,7 +371,7 @@ async function iniciar() {
   // Sitios: el visor 3D de docs/ (relieve LOLA) va en el lugar del mapa; el mapa
   // polar 2D queda de respaldo. Sin conexión (archivo único) el visor no está
   // disponible y se usa el 2D. Visor y demo comparten el sitio elegido.
-  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1&v=20261115e';
+  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1&v=20261115f';
   const sinConexion = location.protocol === 'file:' || !!document.getElementById('datos-demo');
   let modoMapa = sinConexion ? '2d' : '3d';
   let visor = null;
@@ -430,6 +436,7 @@ async function iniciar() {
     $('#mapa').hidden = tres;
     $('#leyenda-mapa').hidden = tres;
     $('#relieve-visor').hidden = !tres;
+    $('#visor-general').hidden = !tres;
     $('#leyenda-alturas').hidden = !(tres && relieveVisor === 'topo');
     $('#sub-mapa').textContent = tres
       ? 'Relieve real LOLA (promedio de 1 km); arrastra para girar y pulsa un sitio para elegirlo'
@@ -450,6 +457,9 @@ async function iniciar() {
     leyendaAlturas();
     aplicarModoMapa();
     avisarVisor();
+  });
+  $('#visor-general').addEventListener('click', () => {
+    if (visor && visor.dataset.listo) visor.contentWindow.postMessage({ tipo: 'general' }, location.origin);
   });
   $('#modo-mapa').addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-modo]');

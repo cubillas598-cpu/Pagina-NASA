@@ -41,6 +41,10 @@ de conveniencia (S) del comparador, ver seccion "Indice de conveniencia" abajo.
 - `docs/propuesta.md` / `docs/propuesta.pdf` — propuesta completa: principio de
   funcionamiento, arquitectura, riesgos con mitigacion, banco de preguntas
   anticipadas
+- `docs/si-disclosure.md` — declaracion de uso de herramientas de IA (Super
+  Intelligence), requerida por las reglas de Space Apps
+- `docs/submission-demo-deck.pdf` — Project Demo oficial de 7 slides para la
+  entrega de Space Apps (en ingles; distinto del pitch de 3 min en vivo)
 
 ## Bitacora
 

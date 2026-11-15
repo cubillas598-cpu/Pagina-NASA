@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lunar Landing Site Navigator — Project Demo</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Arial, sans-serif; background: #06080f; color: #e8ecf4; }
+  .slide {
+    width: 1280px; height: 720px; padding: 64px 72px;
+    page-break-after: always;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+  }
+  .slide:last-child { page-break-after: auto; }
+  .tag { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6ea8ff; margin: 0 0 18px; font-weight: 600; }
+  h1 { font-size: 52px; margin: 0 0 14px; line-height: 1.1; }
+  h2 { font-size: 36px; margin: 0 0 24px; line-height: 1.15; }
+  p.lead { font-size: 22px; color: #aab4c8; max-width: 980px; line-height: 1.5; margin: 0 0 10px; }
+  p.sub { font-size: 20px; color: #ccd4e3; max-width: 1000px; line-height: 1.55; }
+  .cols { display: flex; gap: 40px; align-items: center; }
+  .cols .text { flex: 1.1; }
+  .cols .img { flex: 1; }
+  img { max-width: 100%; border-radius: 14px; border: 1px solid #263046; display: block; }
+  .pagenum { position: absolute; bottom: 28px; right: 40px; font-size: 14px; color: #4a5368; }
+  ul.points { font-size: 20px; color: #ccd4e3; line-height: 1.7; padding-left: 26px; margin: 10px 0 0; }
+  ul.points li { margin-bottom: 8px; }
+  .cards { display: flex; gap: 20px; margin-top: 18px; }
+  .card { flex: 1; background: #0e1320; border: 1px solid #263046; border-radius: 14px; padding: 20px; }
+  .card b { display: block; font-size: 18px; color: #6ea8ff; margin-bottom: 6px; }
+  .card span { font-size: 15px; color: #aab4c8; }
+  .footer-team { position: absolute; bottom: 28px; left: 72px; font-size: 14px; color: #6b7690; }
+  .center { text-align: center; align-items: center; }
+  .badge { display: inline-block; padding: 6px 14px; border-radius: 999px; background: #0e1320; border: 1px solid #263046; color: #9aa5b8; font-size: 14px; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<section class="slide center" style="align-items:center; text-align:center;">
+  <p class="tag">NASA Space Apps Challenge 2026</p>
+  <h1 style="font-size:64px;">Lunar Landing Site Navigator</h1>
+  <p class="lead" style="margin:0 auto;">Comparing three real candidate landing sites at the lunar south pole with real NASA data.</p>
+  <p class="badge">Team buhospace — Hermosillo, Mexico</p>
+  <div class="pagenum">1 / 7</div>
+</section>
+
+<!-- SLIDE 2: The problem -->
+<section class="slide">
+  <p class="tag">The Problem</p>
+  <h2>Where you land decides if you survive</h2>
+  <p class="sub">Near the lunar south pole, the Sun and Earth skim the horizon. A ridge only a
+  few degrees high can decide whether a lander has power, direct communication with Earth,
+  both, or neither. Choosing the wrong spot can end a mission in hours instead of days.</p>
+  <div class="pagenum">2 / 7</div>
+  <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
+</section>
+
+<!-- SLIDE 3: Three real sites -->
+<section class="slide">
+  <p class="tag">Our Approach</p>
+  <h2>Three real candidate sites, compared with real NASA data</h2>
+  <div class="cols">
+    <div class="text">
+      <ul class="points">
+        <li><b>Peak Near Shackleton</b> — Artemis III candidate region</li>
+        <li><b>De Gerlache ridge</b> — peer-reviewed candidate site</li>
+        <li><b>Malapert massif</b> — NASA notional site</li>
+      </ul>
+      <p class="sub" style="font-size:18px;">Solar illumination and Earth visibility from
+      JPL Horizons ephemerides. Terrain horizon from NASA LOLA elevation data (80 m/px).</p>
+    </div>
+    <div class="img"><img src="imagenes/sitios-shackleton-de-gerlache-shoemaker.jpeg"></div>
+  </div>
+  <div class="pagenum">3 / 7</div>
+  <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
+</section>
+
+<!-- SLIDE 4: The bug we found and fixed -->
+<section class="slide">
+  <p class="tag">Found It Ourselves — Then Fixed It</p>
+  <h2>A real error, caught and corrected with rigor</h2>
+  <p class="sub">Our first Shackleton coordinate pointed to the crater floor — a permanently
+  shadowed region where the Sun never reaches — not the candidate area near the rim. We
+  replaced it using peer-reviewed literature. We also found our 30&nbsp;km horizon radius
+  underestimated terrain blocking; extending it to 150&nbsp;km changed the clearest direction
+  by up to +4.38° at the most affected site.</p>
+  <div class="pagenum">4 / 7</div>
+  <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
+</section>
+
+<!-- SLIDE 5: Validated against JPL -->
+<section class="slide">
+  <p class="tag">Validation</p>
+  <h2>Checked by hand against NASA's own tool</h2>
+  <p class="sub">We manually cross-checked our Sun and Earth ephemerides against the official
+  JPL Horizons tool: exact match to the sixth decimal place in azimuth and elevation, across
+  all 8 comparisons performed.</p>
+  <div class="cards">
+    <div class="card"><b>Sun · 00:00 UTC</b><span>az = 153.798584°, el = 0.588174° — matched exactly</span></div>
+    <div class="card"><b>Earth · 00:00 UTC</b><span>az = 240.420213°, el = -2.095542° — matched exactly</span></div>
+  </div>
+  <div class="pagenum">5 / 7</div>
+  <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
+</section>
+
+<!-- SLIDE 6: Differentiator + index -->
+<section class="slide">
+  <p class="tag">Our Differentiator</p>
+  <h2>A local backup link, and one number to compare sites</h2>
+  <p class="sub">When direct line-of-sight to Earth is lost, a local backup link — radiofrequency
+  or optical — keeps a relay path alive. We combine sunlight, direct communication, and backup
+  availability into a single team-proposed <b>Suitability Index (S)</b> per site, so a mission
+  planner can compare candidates at a glance.</p>
+  <div class="pagenum">6 / 7</div>
+  <div class="footer-team">Lunar Landing Site Navigator — buhospace</div>
+</section>
+
+<!-- SLIDE 7: Demo + closing -->
+<section class="slide">
+  <p class="tag">Live Demo</p>
+  <h2>A real, working comparator — not just a mockup</h2>
+  <div class="cols">
+    <div class="img"><img src="capturas/comparador-tabla-completa.jpg"></div>
+    <div class="text">
+      <p class="sub">Open and interactive demo:<br><b>cubillas598-cpu.github.io/Pagina-NASA/</b></p>
+      <p class="sub" style="margin-top:20px;">Built with real NASA data, honest about what is
+      measured versus assumed. Thank you.</p>
+      <p class="badge">Team buhospace</p>
+    </div>
+  </div>
+  <div class="pagenum">7 / 7</div>
+</section>
+
+</body>
+</html>

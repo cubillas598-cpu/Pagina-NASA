@@ -266,6 +266,7 @@ async function iniciar() {
     document.querySelectorAll('.lateral__item').forEach((a) => {
       if (a.dataset.vista === estado.vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
+    $('#contenido').dataset.vista = estado.vista;
     $('#cab-sub').textContent = SUBTITULOS[estado.vista];
     $('#luna-tarjeta').hidden = estado.vista !== 'resumen';
   }

@@ -414,6 +414,9 @@ option { background: var(--panel-solido); color: var(--texto); }
   .lateral { top: auto; bottom: var(--e-3); left: 50%; transform: translateX(-50%); flex-direction: row; padding: 7px 10px; gap: var(--e-2); }
   .lateral__item::after { display: none; }
   .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cab" "luna" "sitio" "principal" "eventos"; }
+  /* Fuera del Resumen, el contenido de la vista va antes que los controles */
+  .app:not([data-vista="resumen"]) { grid-template-areas: "cab" "luna" "principal" "sitio" "eventos"; }
+  .perfil__emblema { display: none; }
   .luna-tarjeta { padding: var(--e-4); }
   .luna-visor { height: 320px; }
   .luna__nombre { display: none; }

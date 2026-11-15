@@ -1,0 +1,58 @@
+# Descarga el mapa de color de la Luna del NASA CGI Moon Kit (SVS 4720, LRO/LROC)
+# para el globo 3D de la demo. Es una imagen equirectangular de 2048 x 1024.
+#
+# Uso: pestana Actions > "Textura NASA del globo" > Run workflow.
+name: Textura NASA del globo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  descargar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      URL: https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg
+      DESTINO: web/assets/luna/lroc_color_2k.jpg
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Descargar y comprobar la imagen
+        run: |
+          mkdir -p web/assets/luna
+          curl -fL --retry 3 --retry-delay 5 -o "$DESTINO" "$URL"
+          python3 - <<'EOF'
+          import os, struct, sys
+          ruta = os.environ["DESTINO"]
+          datos = open(ruta, "rb").read()
+          if datos[:3] != b"\xff\xd8\xff":
+              sys.exit("::error::La descarga no es un JPEG.")
+          # Buscar el marcador SOF para leer ancho y alto.
+          i = 2
+          while i < len(datos):
+              marca, largo = datos[i + 1], struct.unpack(">H", datos[i + 2:i + 4])[0]
+              if 0xC0 <= marca <= 0xC3:
+                  alto, ancho = struct.unpack(">HH", datos[i + 5:i + 9])
+                  break
+              i += 2 + largo
+          else:
+              sys.exit("::error::No se encontraron las dimensiones del JPEG.")
+          print(f"{ancho} x {alto}, {len(datos) // 1024} KB")
+          if (ancho, alto) != (2048, 1024):
+              sys.exit(f"::error::Se esperaba 2048 x 1024 y llego {ancho} x {alto}.")
+          EOF
+
+      - name: Publicar en el repositorio
+        run: |
+          git add "$DESTINO"
+          if git diff --cached --quiet; then
+            echo "La textura no cambio; no hay nada que publicar."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "assets: textura de la Luna del NASA CGI Moon Kit (LROC, 2k)"
+          git push

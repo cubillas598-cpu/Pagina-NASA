@@ -183,9 +183,12 @@ def variables_sitio(sitio, dem, psr, rug, geod):
 
     rug_m, rug_fuente = None, None
     if rug is not None:
-        v, c = rug.ventana(lat, lon, 0)
-        if math.isfinite(v[c]):
-            rug_m, rug_fuente = round(float(v[c]), 2), "LDRM 100 m (LOLA)"
+        try:
+            v, c = rug.ventana(lat, lon, 0)
+            if math.isfinite(v[c]):
+                rug_m, rug_fuente = round(float(v[c]), 2), "LDRM 100 m (LOLA)"
+        except rasterio.errors.RasterioError as err:
+            print(f"Aviso: no se pudo leer la rugosidad en {sitio['id']} ({err}); se estima del DEM.", file=sys.stderr)
     if rug_m is None:
         rug_m, rug_fuente = rugosidad_plano(alt, centro, dem.paso_m), "estimada del DEM de 20 m (plano en 100 m)"
     out["rugosidad_100m_m"] = rug_m

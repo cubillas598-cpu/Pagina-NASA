@@ -5,7 +5,15 @@
     "lat": -85.964,
     "lon": 357.681,
     "elev_km": 0,
-    "fuente": "Kring 2025, JGR Planets (sitio notional de NASA en el macizo Malapert) - verificado por busqueda web 2026-11-14"
+    "fuente": "Kring et al. 2025, JGR Planets, DOI 10.1029/2024JE008905 (sitio notional de NASA en el macizo Malapert). [PENDIENTE R37]: numero (-85.964, 357.681) llego via resumen del motor de busqueda; no se pudo leer el texto primario del paper (agupubs.onlinelibrary.wiley.com da 403 en esta sesion) - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
+  },
+  "meta": {
+    "fuente": "JPL Horizons API (https://ssd.jpl.nasa.gov/api/horizons.api)",
+    "generado_utc": "2026-11-15T00:35Z",
+    "inicio": "2026-12-01",
+    "dias": 30,
+    "escala_tiempo": "UT",
+    "paso": "1h"
   },
   "horas": [
     {

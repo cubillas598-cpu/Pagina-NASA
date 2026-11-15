@@ -7,6 +7,14 @@
     "elev_km": 0,
     "fuente": "corregido 2026-11-14 (misma correccion que shackleton): el numero anterior (89.684S, 196.739E) no tenia cita a un paper real, salio de un resumen de busqueda sin fuente verificable. Reemplazado por el sitio C1 de un paper peer-reviewed en Icarus (abril 2024, 'Potential landing sites characterization on lunar south pole: De-Gerlache to Shackleton ridge region', DOI via ADS 2024Icar..41215988S). [PENDIENTE R37]: el numero exacto (-136.2, -89.406) llego via resumen del motor de busqueda, no se pudo leer el texto primario del paper (sciencedirect.com da 403 en esta sesion) - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
   },
+  "meta": {
+    "fuente": "JPL Horizons API (https://ssd.jpl.nasa.gov/api/horizons.api)",
+    "generado_utc": "2026-11-15T00:35Z",
+    "inicio": "2026-12-01",
+    "dias": 30,
+    "escala_tiempo": "UT",
+    "paso": "1h"
+  },
   "horas": [
     {
       "t": "2026-12-01T00:00",

@@ -5,7 +5,15 @@
     "lat": -89.01701,
     "lon": 126.27302,
     "elev_km": 0,
-    "fuente": "corregido 2026-11-14: la coordenada previa (89 40'S 129 47'E, Wikipedia) era el CENTRO/fondo del crater, no el borde - dio horizonte de ~20 grados en todas direcciones (consistente con zona permanentemente en sombra, PSR). Reemplazada por un sitio candidato real de la literatura academica: 'Peak Near Shackleton', region candidata oficial Artemis III cerca del borde, ~90% de iluminacion anual (LPSC/USRA via iopscience.org 10.3847/PSJ/aca590 y busqueda web)."
+    "fuente": "corregido 2026-11-14: la coordenada previa (89 40'S 129 47'E, Wikipedia) era el CENTRO/fondo del crater, no el borde - dio horizonte de ~20 grados en todas direcciones (consistente con zona permanentemente en sombra, PSR). Reemplazada por un sitio candidato real: 'Peak Near Shackleton', region candidata oficial Artemis III cerca del borde, ~90% de iluminacion anual, paper peer-reviewed via iopscience.org DOI 10.3847/PSJ/aca590. [PENDIENTE R37]: numero (-89.01701, 126.27302) llego via resumen del motor de busqueda, no via lectura directa del PDF - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
+  },
+  "meta": {
+    "fuente": "JPL Horizons API (https://ssd.jpl.nasa.gov/api/horizons.api)",
+    "generado_utc": "2026-11-15T00:35Z",
+    "inicio": "2026-12-01",
+    "dias": 30,
+    "escala_tiempo": "UT",
+    "paso": "1h"
   },
   "horas": [
     {

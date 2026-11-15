@@ -273,7 +273,7 @@ def main():
     doc = {
         "meta": {
             "fuente": "LOLA, NASA PGDA producto 90 (Barker et al. 2023, PSJ 4, 183, doi:10.3847/PSJ/acf3e1)",
-            "productos": [p for p in (args.dem, args.psr, args.rugosidad) if p],
+            "productos": [Path(p).name for p in (args.dem, args.psr, args.rugosidad) if p],
             "generado_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
             "metodo": (f"Pendiente de Horn sobre el DEM de 20 m: media y máxima en {RADIO_PENDIENTE_M:.0f} m de radio, "
                        f"% < {PENDIENTE_LLANA_DEG:.0f}° en {RADIO_LLANO_M:.0f} m. Rugosidad a 100 m de base. "

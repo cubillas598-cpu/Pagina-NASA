@@ -1,7 +1,8 @@
 # Variables de terreno de los tres sitios (pendiente, rugosidad, ruta de
 # aproximación, distancia a sombra permanente) con productos LOLA de 20 m de
-# NASA PGDA. Lee solo ventanas alrededor de cada sitio (GeoTIFF optimizados para
-# la nube), calcula con scripts/terreno_sitios.py y sube data/terreno_sitios.json.
+# NASA PGDA. Descarga los tres productos (unos 3.4 GB; el servidor no responde
+# bien a lecturas por partes) y los guarda en cache entre corridas; calcula con
+# scripts/terreno_sitios.py y sube data/terreno_sitios.json.
 #
 # Uso: pestaña Actions > "Terreno de los sitios (LOLA)" > Run workflow.
 name: Terreno de los sitios (LOLA)
@@ -19,13 +20,10 @@ concurrency:
 jobs:
   calcular:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     env:
       BASE: https://pgda.gsfc.nasa.gov/data/LOLA_20mpp
-      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
-      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: .TIF
-      GDAL_HTTP_MAX_RETRY: "5"
-      GDAL_HTTP_RETRY_DELAY: "5"
+      ARCHIVOS: LDEM_80S_20MPP_ADJ.TIF LPSR_80S_20MPP_ADJ.TIF LDRM_80S_50MPP_ADJ_ROUGH_100M.TIF
     steps:
       - uses: actions/checkout@v6
 
@@ -37,26 +35,42 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Productos LOLA en cache
+        id: cache-lola
+        uses: actions/cache@v5
+        with:
+          path: lola
+          key: lola-20mpp-dem-psr-rough100-v1
+
+      - name: Descargar productos de NASA PGDA
+        if: steps.cache-lola.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p lola
+          for f in $ARCHIVOS; do
+            curl -fL --retry 5 --retry-delay 15 -o "lola/$f" "$BASE/$f"
+            echo "$f: $(stat -c %s "lola/$f") bytes"
+          done
+
       - name: Revisar el mapa de sombra permanente
         run: |
           python3 - <<'EOF'
-          import os, numpy as np, rasterio
+          import numpy as np, rasterio
           from rasterio.windows import Window
-          ruta = f"/vsicurl/{os.environ['BASE']}/LPSR_80S_20MPP_ADJ.TIF"
-          with rasterio.open(ruta) as ds:
+          with rasterio.open("lola/LPSR_80S_20MPP_ADJ.TIF") as ds:
               print("LPSR", ds.dtypes, "nodata", ds.nodata, "tamano", ds.width, ds.height, "paso", ds.transform.a)
               f, c = ds.index(0, 0)
               v = ds.read(1, window=Window(c - 500, f - 500, 1000, 1000))
-              u, n = np.unique(v, return_counts=True)
-              print("valores cerca del polo:", dict(zip(u.tolist()[:20], n.tolist()[:20])))
+              fin = np.isfinite(v)
+              u, n = np.unique(v[fin], return_counts=True)
+              print("NaN:", int((~fin).sum()), "valores:", dict(zip(u.tolist()[:20], n.tolist()[:20])))
           EOF
 
       - name: Calcular variables de terreno
         run: |
           python3 scripts/terreno_sitios.py \
-            --dem "/vsicurl/$BASE/LDEM_80S_20MPP_ADJ.TIF" \
-            --psr "/vsicurl/$BASE/LPSR_80S_20MPP_ADJ.TIF" \
-            --rugosidad "/vsicurl/$BASE/LDRM_80S_50MPP_ADJ_ROUGH_100M.TIF"
+            --dem lola/LDEM_80S_20MPP_ADJ.TIF \
+            --psr lola/LPSR_80S_20MPP_ADJ.TIF \
+            --rugosidad lola/LDRM_80S_50MPP_ADJ_ROUGH_100M.TIF
           cat data/terreno_sitios.json
 
       - uses: actions/setup-node@v6

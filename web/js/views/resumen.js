@@ -29,6 +29,20 @@ export function renderFranja(cont, d) {
     + enlace;
 }
 
+/** Lectura breve del periodo: interpreta las cifras ya calculadas, sin inventar ninguna. */
+export function renderLectura(cont, d) {
+  const { metricas: m } = d;
+  cont.innerHTML = `<p class="lectura">
+    <strong>${num(m.pctSol, 1)} %</strong> de luz solar, <strong>${num(m.pctTierra, 1)} %</strong>
+    con la Tierra visible, y un máximo de <strong>${horasTexto(m.sombraMax.horas)}</strong> seguidas
+    en sombra. Hay <strong>${horasTexto(m.horasSolTierra)}</strong> con Sol y Tierra visibles a la vez.
+  </p>
+  <div class="lectura__acciones">
+    <a href="#enlace" class="boton boton--linea">Ver las ventanas</a>
+    <a href="#comparador" class="boton boton--linea">Comparar sitios</a>
+  </div>`;
+}
+
 /** Módulo de disponibilidad: porcentajes combinados del periodo. */
 export function renderDisponibilidad(cont, d) {
   const { metricas: m, estado } = d;

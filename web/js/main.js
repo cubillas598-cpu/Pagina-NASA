@@ -4,7 +4,7 @@ import { consultarHorizons } from './horizons.js';
 import { problemasEfemerides, calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
 import { isoDia, esc } from './format.js';
 import { ENLACE, etiquetaHorizonte, codigoHorizonte } from './views/estilos.js';
-import { renderFranja, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
+import { renderFranja, renderLectura, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
 import { crearGraficaEvolucion } from './views/grafica-evolucion.js';
 import { renderHora, renderDestacada, renderEventos, renderPorque } from './views/panel-derecho.js';
 import { renderPanelEstado } from './views/panel-estado.js';
@@ -23,6 +23,14 @@ const SUBTITULOS = {
   comparador: 'Los tres sitios sobre el mismo periodo y los mismos supuestos.',
   enlace: 'Estado del enlace de respaldo hora por hora y por qué cambia.',
   metodologia: 'Qué se calcula, con qué datos y qué límites tiene la demo.',
+};
+
+const TITULOS = {
+  resumen: 'Resumen',
+  sitios: 'Sitios',
+  comparador: 'Comparador',
+  enlace: 'Enlace local',
+  metodologia: 'Metodología',
 };
 
 function estadoInicial(msRef) {
@@ -271,6 +279,7 @@ async function iniciar() {
       if (a.dataset.vista === estado.vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     $('#contenido').dataset.vista = estado.vista;
+    $('#cab-titulo').textContent = TITULOS[estado.vista];
     $('#cab-sub').textContent = SUBTITULOS[estado.vista];
     $('#luna-tarjeta').hidden = estado.vista !== 'resumen';
   }
@@ -478,6 +487,7 @@ async function iniciar() {
       if (luna) luna.render(d); else mapaRespaldo.render(d);
       if (completo) {
         renderFranja($('#franja'), d);
+        renderLectura($('#lectura-resumen'), d);
         renderDisponibilidad($('#disponibilidad'), d);
         renderMiniComparativo($('#mini-comparativo'), d);
         evolucion.dibujar(d);

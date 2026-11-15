@@ -181,6 +181,9 @@ def main():
     except (rasterio.errors.RasterioError, RuntimeError, MemoryError) as err:
         print(f"No se pudo procesar el DEM: {err}", file=sys.stderr)
         sys.exit(1)
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as err:
+        print(f"No se pudo leer {SITIOS_PATH}: {err}", file=sys.stderr)
+        sys.exit(1)
 
     texto = ("// Generado por scripts/relieve_3d.py. No editar a mano.\n"
              f"window.RELIEVE_LOLA = {json.dumps(datos, ensure_ascii=False)};\n")

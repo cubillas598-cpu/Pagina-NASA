@@ -202,7 +202,11 @@ def main():
     ap.add_argument("--dias", type=int, default=30)
     args = ap.parse_args()
 
-    sitios = cargar_sitios()
+    try:
+        sitios = cargar_sitios()
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as err:
+        print(f"No se pudo leer {SITIOS_PATH}: {err}", file=sys.stderr)
+        sys.exit(1)
     if args.todos:
         objetivo = list(sitios.values())
     elif args.sitio:

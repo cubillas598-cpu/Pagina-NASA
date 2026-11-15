@@ -139,3 +139,6 @@ html.m-embebido body.m-visor header.fixed.top-4 div:has(> div > #hud-lat),
 html.m-embebido body.m-visor aside.fixed,
 html.m-embebido body.m-visor #detail-panel { display: none !important; }
 html.m-embebido body.m-visor header.fixed.top-4 > div:first-child { padding: 8px 12px; }
+/* La demo ya tiene comparador, título y guía: dentro de ella el visor muestra solo el relieve. */
+html.m-embebido body.m-visor header.fixed.top-4,
+html.m-embebido body.m-visor footer.fixed { display: none !important; }

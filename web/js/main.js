@@ -355,12 +355,30 @@ async function iniciar() {
   // Sitios: el visor 3D de docs/ (relieve LOLA) va en el lugar del mapa; el mapa
   // polar 2D queda de respaldo. Sin conexión (archivo único) el visor no está
   // disponible y se usa el 2D. Visor y demo comparten el sitio elegido.
-  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1&v=20261115d';
+  const URL_VISOR = '../docs/mapeo-lunar-3d-ilustrativo.html?embebido=1&v=20261115e';
   const sinConexion = location.protocol === 'file:' || !!document.getElementById('datos-demo');
   let modoMapa = sinConexion ? '2d' : '3d';
   let visor = null;
-  function avisarVisor() {
-    if (visor && visor.dataset.listo) visor.contentWindow.postMessage({ tipo: 'sitio', id: estado.sitioId }, location.origin);
+  let relieveVisor = 'lunar';
+  // Al visor van el sitio, el Sol de la hora elegida y el tipo de relieve. La
+  // dirección del Sol en el plano del mapa es la longitud del sitio más su
+  // azimut local (el norte local apunta hacia fuera del polo), como en el mapa 2D.
+  function avisarVisor(d = derivar(), inmediato = false) {
+    if (!visor || !visor.dataset.listo) return;
+    const w = visor.contentWindow;
+    const m = d.muestra;
+    w.postMessage({ tipo: 'sitio', id: estado.sitioId }, location.origin);
+    w.postMessage({ tipo: 'sol', theta: d.sitio.lon + m.sol.az, el: m.sol.el, visible: m.sol.visible, inmediato }, location.origin);
+    if (visor.dataset.modo !== relieveVisor) {
+      w.postMessage({ tipo: 'modo', modo: relieveVisor }, location.origin);
+      visor.dataset.modo = relieveVisor;
+    }
+  }
+  function leyendaAlturas() {
+    const doc = visor && visor.contentDocument;
+    const min = doc?.getElementById('leyenda-min')?.textContent || 'Bajo';
+    const max = doc?.getElementById('leyenda-max')?.textContent || 'Alto';
+    $('#leyenda-alturas').innerHTML = `<span>${esc(min)}</span><span class="leyenda-alturas__barra" aria-hidden="true"></span><span>${esc(max)}</span>`;
   }
   function aplicarModoMapa() {
     const tres = modoMapa === '3d';
@@ -369,13 +387,15 @@ async function iniciar() {
       visor.className = 'visor3d__marco';
       visor.title = 'Vista 3D del relieve LOLA con los tres sitios';
       visor.src = URL_VISOR;
-      visor.addEventListener('load', () => { visor.dataset.listo = '1'; avisarVisor(); });
+      visor.addEventListener('load', () => { visor.dataset.listo = '1'; delete visor.dataset.modo; avisarVisor(derivar(), true); leyendaAlturas(); });
       $('#terreno').append(visor);
     }
     $('#tarjeta-mapa').dataset.modo = tres ? '3d' : '2d';
     $('#terreno').hidden = !tres;
     $('#mapa').hidden = tres;
     $('#leyenda-mapa').hidden = tres;
+    $('#relieve-visor').hidden = !tres;
+    $('#leyenda-alturas').hidden = !(tres && relieveVisor === 'topo');
     $('#sub-mapa').textContent = tres
       ? 'Relieve real LOLA (promedio de 2 km); arrastra para girar y pulsa un sitio para elegirlo'
       : 'Proyección polar con coordenadas reales; pulsa un sitio para elegirlo';
@@ -386,6 +406,15 @@ async function iniciar() {
     if (ev.data && ev.data.tipo === 'sitio-visor' && sitios.some((s) => s.id === ev.data.id) && ev.data.id !== estado.sitioId) {
       actualizar({ sitioId: ev.data.id });
     }
+  });
+  $('#relieve-visor').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-relieve]');
+    if (!b) return;
+    relieveVisor = b.dataset.relieve;
+    for (const x of $('#relieve-visor').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    leyendaAlturas();
+    aplicarModoMapa();
+    avisarVisor();
   });
   $('#modo-mapa').addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-modo]');
@@ -434,7 +463,7 @@ async function iniciar() {
       if (completo) leyendaHorizonte($('#leyenda-horizonte'), estado);
       renderPanelEstado($('#estado'), d);
       if (completo && !visor && modoMapa === '3d') aplicarModoMapa();
-      if (modoMapa === '3d') avisarVisor(); else mapaSitios.render(d);
+      if (modoMapa === '3d') avisarVisor(d); else mapaSitios.render(d);
       renderGraficaHorizonte($('#grafica-horizonte'), d);
     } else if (estado.vista === 'comparador') {
       if (completo) renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);

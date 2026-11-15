@@ -7,7 +7,7 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Identidad común del sitio (Poppins local, carbón y dorado) -->
-  <link rel="stylesheet" href="../estilo/marca.css?v=20261115d">
+  <link rel="stylesheet" href="../estilo/marca.css?v=20261115e">
   <!-- Three.js & OrbitControls (r128) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -913,13 +913,57 @@
     let sitioDesdeDemo = false;
     if (EMBEBIDO) {
       window.addEventListener('message', (ev) => {
-        if (ev.origin !== location.origin || !ev.data || ev.data.tipo !== 'sitio') return;
+        if (ev.origin !== location.origin || !ev.data) return;
+        if (ev.data.tipo === 'sol') { solDesdeDemo(ev.data); return; }
+        if (ev.data.tipo === 'modo') {
+          document.getElementById(ev.data.modo === 'topo' ? 'mode-topo' : 'mode-lunar').click();
+          return;
+        }
+        if (ev.data.tipo !== 'sitio') return;
         const id = ID_VISOR(ev.data.id);
         if (id === selectedSiteId) return;
         sitioDesdeDemo = true;
         selectLandingSite(id, true, false);
         sitioDesdeDemo = false;
       });
+    }
+
+    // Sol de la hora elegida en la demo (JPL Horizons). theta: dirección en el
+    // plano del mapa (convención de la longitud este); el: elevación real en
+    // grados. Para que la sombra se lea, la elevación de la luz se exagera igual
+    // que el relieve y se suman 5°; con el Sol oculto la luz queda tenue.
+    const solActual = { theta: 45, el: 9, int: 2.35 };
+    let solMeta = null;
+    let solAnimando = false;
+    function aplicarSol(theta, el, intensidad) {
+      const rad = THREE.MathUtils.degToRad(theta);
+      const dist = 210;
+      sunLight.position.set(Math.sin(rad) * dist, dist * Math.tan(THREE.MathUtils.degToRad(el)), -Math.cos(rad) * dist);
+      sunLight.intensity = intensidad;
+    }
+    function pasoSol() {
+      if (!solMeta) { solAnimando = false; return; }
+      const d = ((solMeta.theta - solActual.theta + 540) % 360) - 180;
+      const k = 0.18;
+      solActual.theta = (solActual.theta + d * k + 360) % 360;
+      solActual.el += (solMeta.el - solActual.el) * k;
+      solActual.int += (solMeta.int - solActual.int) * k;
+      aplicarSol(solActual.theta, solActual.el, solActual.int);
+      if (Math.abs(d) < 0.05 && Math.abs(solMeta.el - solActual.el) < 0.01) { solMeta = null; solAnimando = false; return; }
+      requestAnimationFrame(pasoSol);
+    }
+    function solDesdeDemo({ theta, el, visible, inmediato }) {
+      if (!Number.isFinite(theta) || !Number.isFinite(el)) return;
+      solMeta = { theta: ((theta % 360) + 360) % 360, el: Math.max(el, 0) * 1.8 + 5, int: visible ? 2.6 : 0.9 };
+      sliderSun.value = String(Math.round(solMeta.theta));
+      valSun.textContent = `${Math.round(solMeta.theta)}°`;
+      if (inmediato || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        Object.assign(solActual, solMeta);
+        aplicarSol(solActual.theta, solActual.el, solActual.int);
+        solMeta = null;
+        return;
+      }
+      if (!solAnimando) { solAnimando = true; requestAnimationFrame(pasoSol); }
     }
 
     function selectLandingSite(siteId, moveCamera = true, closeUp = false) {

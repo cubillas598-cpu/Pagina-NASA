@@ -110,6 +110,14 @@
               </div>
             </header>
             <div class="visor3d" id="terreno" hidden></div>
+            <div class="visor3d__pie">
+              <div class="segmentado segmentado--mini" role="group" aria-label="Color del relieve" id="relieve-visor" hidden>
+                <button type="button" data-relieve="lunar" aria-pressed="true">Superficie</button>
+                <button type="button" data-relieve="topo" aria-pressed="false">Mapa de alturas</button>
+              </div>
+              <p class="leyenda-alturas" id="leyenda-alturas" hidden></p>
+              <p class="visor3d__nota">Las sombras siguen al Sol de la hora elegida: dirección real de JPL Horizons, altura de la luz exagerada para que el relieve se lea. Pulsa Reproducir para verlas moverse.</p>
+            </div>
             <div class="mapa" id="mapa"></div>
             <p class="visor3d__estado" id="estado-terreno" role="status"></p>
             <ul class="leyenda" id="leyenda-mapa"></ul>

@@ -1,5 +1,7 @@
 # Guion de pitch, 3 minutos — presenta Irvin
 
+**Versión vigente: la 2 (historia real de Athena), abajo.**
+
 Basado en el taller **"Elevator Pitch — NASA Space Apps Challenge"** (14-nov-2026,
 previo al concurso, impartido en la Universidad Tecnologica). Fuentes: transcripcion
 local del audio (44 min, faster-whisper, cobertura verificada) + 10 fotos reales de las
@@ -47,7 +49,68 @@ no el producto 100% terminado).
 
 ---
 
-## 1. Hook / Conexion (12-15s)
+## Versión 2 (15-nov-2026): historia real y tono natural
+
+Historia: misión IM-2 de Intuitive Machines (lander Athena), 6-mar-2025. Datos
+verificados en prensa (CBS News, Spaceflight Now, SpacePolicyOnline, TechCrunch):
+quedó de lado dentro de un cráter cerca del polo sur, a unos 250 m del punto
+elegido; la empresa dijo que, por la dirección del Sol, la orientación de los
+paneles y el frío del cráter, no podría recargar baterías; la misión terminó unas
+13 horas después de aterrizar, cuando estaba planeada para unos 10 días.
+Cifras de la demo (diciembre de 2026, 744 h, horizonte LOLA): Malapert 98 % de
+horas con Sol y 100 % con la Tierra visible; Shackleton 66 % y 41 %.
+
+Ojo al contarla: a Athena la tumbó el aterrizaje, no la elección del sitio. Lo que
+sí conecta con nuestro proyecto es lo que la terminó: sombra, frío y sin forma de
+recargar. No decir que nuestra demo habría salvado a Athena.
+
+### 1. Hook (≈20 s)
+
+> "El 6 de marzo de 2025, una nave llamada Athena llegó al polo sur de la Luna.
+> Ocho días de viaje, años de trabajo de cientos de personas... y aterrizó a
+> doscientos cincuenta metros de donde debía, dentro de un cráter. Ahí el Sol casi
+> no entra y hace un frío brutal. Sus paneles no pudieron recargar las baterías.
+> Trece horas después, la misión se apagó. Estaba planeada para diez días."
+
+### 2. Problema (≈35 s)
+
+> "Y esto no es mala suerte. En el polo sur de la Luna el Sol y la Tierra van
+> pegados al horizonte. Una loma de unos pocos grados decide si tu nave tiene
+> energía, si puede hablar con la Tierra, las dos cosas... o ninguna. Unos metros
+> de diferencia lo cambian todo. Y justo ahí, al polo sur, es a donde van a ir las
+> próximas misiones, porque ahí está el hielo."
+
+### 3. Solución (≈60 s)
+
+> "Somos el equipo buhospace, de Hermosillo, y hicimos una herramienta para
+> prevenir eso antes de despegar. Tomamos datos reales de la NASA: la posición
+> del Sol y de la Tierra, hora por hora, de JPL Horizons, y el relieve real del
+> terreno, medido por el láser LOLA. Con eso comparamos tres sitios candidatos y
+> vemos, hora por hora, dónde hay luz y dónde hay señal. Pueden ver cómo se
+> mueven las sombras sobre el relieve en 3D.
+>
+> El resultado es claro: en diciembre de 2026, Malapert tiene Sol el 98 % del
+> tiempo y la Tierra a la vista todo el mes. En el borde de Shackleton, la Tierra
+> se ve menos de la mitad del tiempo. Y cuando la señal se pierde, proponemos un
+> punto de apoyo cercano que reenvía los datos, por radio o por láser.
+>
+> Y algo que nos pasó de verdad: al principio una de nuestras coordenadas caía en
+> el fondo del cráter Shackleton, donde nunca llega el Sol. Nuestro propio cálculo
+> nos avisó que algo estaba mal, y lo corregimos. Exactamente para eso sirve esta
+> herramienta: para encontrar el problema en la pantalla, y no en la Luna."
+
+### 4. Cierre (≈20 s)
+
+> "Athena nos enseñó que llegar a la Luna no basta: importa dónde te quedas
+> parado. Queremos que la próxima misión sepa, antes de despegar, cuánta luz y
+> cuánta señal va a tener. Nadie llega solo a la Luna: llegamos juntos. Únanse a
+> nosotros para que la próxima misión no se apague en la sombra."
+
+---
+
+## Versión anterior (14-nov-2026)
+
+### 1. Hook / Conexion (12-15s)
 
 > "Hola, somos el equipo buhospace, estudiantes de Hermosillo. ¿Y si el exito de una
 > mision lunar no dependiera solo de llegar a la Luna, sino de elegir exactamente
@@ -56,7 +119,7 @@ no el producto 100% terminado).
 > luz solar o que se pierde la comunicacion con la Tierra. Creemos que encontramos
 > algo que casi nadie mas en este reto esta viendo."
 
-## 2. Problema / Presentacion (30-40s)
+### 2. Problema / Presentacion (30-40s)
 
 > "En el polo sur de la Luna, el Sol y la Tierra casi rozan el horizonte. Una cresta
 > de solo unos grados de altura decide si un lander tiene energia, comunicacion con
@@ -67,7 +130,7 @@ no el producto 100% terminado).
 > contra la herramienta oficial de la NASA, y coincidieron hasta la sexta cifra
 > decimal."
 
-## 3. Solucion / Valor, con historia de superacion de crisis (40-50s)
+### 3. Solucion / Valor, con historia de superacion de crisis (40-50s)
 
 > "Y aqui hay algo que de verdad nos paso, no es un cuento inventado para la
 > presentacion: al calcular el horizonte de uno de los sitios, el numero no
@@ -84,7 +147,7 @@ no el producto 100% terminado).
 > es mejor. Hoy ese numero dice que Malapert es el mejor candidato, con casi
 > iluminacion y comunicacion constante."
 
-## 4. Impacto / Cierre (15-20s)
+### 4. Impacto / Cierre (15-20s)
 
 > "No buscamos tener un prototipo terminado. Buscamos demostrar que podemos
 > trabajar con datos reales de la NASA, encontrar nuestros propios errores, y

@@ -186,7 +186,9 @@ async function iniciar() {
   const etiquetaEstado = { en_uso: ['En uso', 'var(--ok)'], prevista: ['Integración prevista', 'var(--acento-claro)'] };
   $('#fuentes').innerHTML = Object.values(escenario.fuentes).map((f) => {
     const [txt, col] = etiquetaEstado[f.estado] || [f.estado, 'var(--texto-2)'];
-    return `<div><dt>${esc(f.nombre)} <span class="estado-fuente" style="color:${col}">${txt}</span></dt><dd>${esc(f.detalle)}</dd></div>`;
+    const fecha = f === escenario.fuentes.efemerides && escenario.generado_utc
+      ? ` Datos pedidos a Horizons el ${esc(escenario.generado_utc.replace('T', ' ').replace('Z', ' UTC'))}.` : '';
+    return `<div><dt>${esc(f.nombre)} <span class="estado-fuente" style="color:${col}">${txt}</span></dt><dd>${esc(f.detalle)}${fecha}</dd></div>`;
   }).join('') + `<div><dt>Punto de apoyo, umbrales y momento del evento de polvo <span class="estado-fuente" style="color:var(--acento-claro)">Supuestos de demostración</span></dt><dd>Precedentes: concepto de relevo LunaNet / Lunar Communications Relay (RF), láser O2O de Artemis II y “horizon glow” observado desde Apollo (óptico).</dd></div>`;
   const r = escenario.enlace_local;
   $('#reglas-enlace').innerHTML = `

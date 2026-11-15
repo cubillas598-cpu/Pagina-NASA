@@ -83,7 +83,9 @@ def main():
     docs = {s["id"]: leer_json(RAIZ / s["efemerides"]) for s in escenario["sitios"]}
     efemerides = {i: d["horas"] for i, d in docs.items()}
     coordenadas = {i: d["sitio"] for i, d in docs.items()}
-    datos = json.dumps({"escenario": escenario, "efemerides": efemerides, "coordenadas": coordenadas},
+    generado = {i: (d.get("meta") or {}).get("generado_utc") for i, d in docs.items()}
+    datos = json.dumps({"escenario": escenario, "efemerides": efemerides, "coordenadas": coordenadas,
+                        "generado": generado},
                        ensure_ascii=False, separators=(",", ":"))
     datos = datos.replace("</", "<\\/")
 

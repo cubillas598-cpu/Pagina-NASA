@@ -7,7 +7,7 @@ export async function cargarDatos(base = '../') {
   const incrustado = document.getElementById('datos-demo');
   if (incrustado) {
     const doc = JSON.parse(incrustado.textContent);
-    return validar(doc.escenario, doc.efemerides, doc.coordenadas);
+    return validarDatos(doc.escenario, doc.efemerides, doc.coordenadas, doc.generado);
   }
   const leer = async (ruta) => {
     const r = await fetch(base + ruta, { cache: 'no-cache' });
@@ -17,17 +17,21 @@ export async function cargarDatos(base = '../') {
   const escenario = await leer('data/escenario_demo.json');
   const efemerides = {};
   const coordenadas = {};
+  const generado = {};
   await Promise.all(escenario.sitios.map(async (s) => {
     const doc = await leer(s.efemerides);
     efemerides[s.id] = doc.horas;
     coordenadas[s.id] = doc.sitio;
+    generado[s.id] = doc.meta?.generado_utc ?? null;
   }));
-  return validar(escenario, efemerides, coordenadas);
+  return validarDatos(escenario, efemerides, coordenadas, generado);
 }
 
 // Las coordenadas de cada sitio vienen de los archivos de efemérides (las mismas
 // que usó JPL Horizons) y se copian al sitio del escenario como lat/lon.
-function validar(escenario, efemerides, coordenadas) {
+// `generado` (opcional): fecha UTC en que cada archivo se pidió a Horizons.
+// Exportada para que scripts/validar_datos.mjs aplique las mismas reglas.
+export function validarDatos(escenario, efemerides, coordenadas, generado = {}) {
   const malEscenario = problemasEscenario(escenario);
   if (malEscenario.length) throw new Error(`Escenario no válido. ${malEscenario.slice(0, 5).join(' ')}`);
   const malCoord = problemasCoordenadas(escenario, coordenadas);
@@ -43,5 +47,7 @@ function validar(escenario, efemerides, coordenadas) {
       throw new Error(`Las efemérides de ${id} no cubren las mismas horas que ${ids[0]}.`);
     }
   }
+  const fechas = Object.values(generado || {}).filter(Boolean).sort();
+  escenario.generado_utc = fechas.length ? fechas[0] : null;
   return { escenario, efemerides };
 }

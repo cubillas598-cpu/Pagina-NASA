@@ -4,11 +4,12 @@
   "type": "module",
   "description": "Demo web estatica. Three.js se compila con esbuild en web/build/; Node tambien corre las pruebas.",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs && python3 -m unittest discover -s tests -p \"test_*.py\"",
     "build": "node scripts/compilar.mjs",
     "datos": "python3 scripts/generar_escenario_demo.py",
     "empaquetar": "node scripts/compilar.mjs && python3 scripts/empaquetar_demo.py",
-    "servir": "python3 -m http.server 8000"
+    "servir": "python3 -m http.server 8000",
+    "validar": "node scripts/validar_datos.mjs"
   },
   "license": "Apache-2.0",
   "dependencies": {

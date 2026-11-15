@@ -34,9 +34,11 @@ coinciden.
 import argparse
 import json
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
@@ -77,40 +79,78 @@ def consultar_horizons(cuerpo_id, sitio, inicio, fin):
         "QUANTITIES": "'4'",
         "ANG_FORMAT": "DEG",
         "CSV_FORMAT": "YES",
+        "TIME_TYPE": "UT",
     }
     url = HORIZONS_URL + "?" + urllib.parse.urlencode(params)
-    with urllib.request.urlopen(url, timeout=30) as resp:
-        body = json.loads(resp.read().decode("utf-8"))
-
-    texto = body.get("result", "")
-    if "$$SOE" not in texto or "$$EOE" not in texto:
+    texto = descargar(url).get("result", "")
+    try:
+        return parsear_bloque(texto)
+    except ValueError as err:
         raise RuntimeError(
-            f"Horizons no devolvio un bloque de datos valido para {cuerpo_id} "
-            f"en {sitio['id']}. Respuesta cruda (primeros 500 car.): "
-            f"{texto[:500]!r}"
-        )
+            f"Horizons no devolvio datos validos para {cuerpo_id} en {sitio['id']}: "
+            f"{err} Respuesta (primeros 500 car.): {texto[:500]!r}"
+        ) from err
 
-    bloque = texto.split("$$SOE")[1].split("$$EOE")[0].strip()
+
+def descargar(url, intentos=3, espera_s=5):
+    """GET a Horizons con reintentos ante fallos de red o 5xx/429.
+    Un 4xx distinto de 429 es un error de la consulta: no se reintenta."""
+    ultimo = None
+    for n in range(1, intentos + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=60) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            if err.code != 429 and err.code < 500:
+                raise RuntimeError(f"Horizons rechazo la consulta (HTTP {err.code}).") from err
+            ultimo = err
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as err:
+            ultimo = err
+        if n < intentos:
+            print(f"  intento {n} fallo ({ultimo}); reintento en {espera_s * n} s", file=sys.stderr)
+            time.sleep(espera_s * n)
+    raise RuntimeError(f"Horizons no respondio tras {intentos} intentos: {ultimo}")
+
+
+def parsear_bloque(texto):
+    """Extrae (fecha_raw, el, az) del CSV de Horizons.
+
+    Las columnas se ubican por el encabezado (la linea anterior a $$SOE), no por
+    posicion: Horizons agrega columnas de banderas segun la configuracion. Si el
+    encabezado no trae Azi/Elev se usa el formato verificado el 2026-11-14
+    (fecha, bandera Sol, bandera interferente, AZ, EL)."""
+    if "$$SOE" not in texto or "$$EOE" not in texto:
+        raise ValueError("falta el bloque $$SOE/$$EOE.")
+    antes, resto = texto.split("$$SOE", 1)
+    bloque = resto.split("$$EOE", 1)[0].strip()
+
+    i_az, i_el = 3, 4
+    lineas_previas = [l for l in antes.strip().splitlines() if l.strip() and not l.strip().startswith("*")]
+    if lineas_previas:
+        cols = [c.strip().lower() for c in lineas_previas[-1].split(",")]
+        az = [i for i, c in enumerate(cols) if c.startswith("azi")]
+        el = [i for i, c in enumerate(cols) if c.startswith("elev")]
+        if az and el:
+            i_az, i_el = az[0], el[0]
+
     filas = []
     for linea in bloque.splitlines():
-        linea = linea.strip()
-        if not linea:
+        if not linea.strip():
             continue
         partes = [p.strip() for p in linea.split(",")]
-        # Formato CSV real (verificado 2026-11-14): fecha, flag_sol, flag_cuerpo
-        # interferente, AZ, EL, (coma final). Los dos flags existen porque el
-        # header declara "Vis. interferer: EARTH" - Horizons los mete siempre
-        # que hay un cuerpo interferente configurado, aunque no se pidan.
-        fecha_raw = partes[0]
-        az = float(partes[3])
-        el = float(partes[4])
-        filas.append((fecha_raw, el, az))
+        try:
+            filas.append((partes[0], float(partes[i_el]), float(partes[i_az])))
+        except (IndexError, ValueError) as err:
+            raise ValueError(f"fila ilegible: {linea.strip()!r}") from err
+    if not filas:
+        raise ValueError("el bloque de datos esta vacio.")
     return filas
 
 
 def normalizar_fecha(fecha_raw):
-    # Horizons devuelve algo como "2026-Dec-01 00:00"
-    dt = datetime.strptime(fecha_raw, "%Y-%b-%d %H:%M")
+    # Horizons devuelve algo como "2026-Dec-01 00:00" (a veces con prefijo "b"
+    # para fechas antes de la era comun; no aplica a este proyecto).
+    dt = datetime.strptime(fecha_raw.strip(), "%Y-%b-%d %H:%M")
     return dt.strftime("%Y-%m-%dT%H:%M")
 
 
@@ -124,24 +164,34 @@ def generar_para_sitio(sitio, inicio_dt, dias):
     print(f"[{sitio['id']}] consultando Tierra...", file=sys.stderr)
     tierra = consultar_horizons(CUERPOS["tierra"], sitio, inicio_s, fin_s)
 
-    if len(sol) != len(tierra):
-        raise RuntimeError(
-            f"Sol devolvio {len(sol)} filas y Tierra {len(tierra)} para "
-            f"{sitio['id']}: no se pueden emparejar por indice, revisar "
-            f"los rangos de tiempo pedidos a Horizons."
-        )
+    horas = emparejar(sol, tierra, sitio["id"])
+    meta = {
+        "fuente": "JPL Horizons API (" + HORIZONS_URL + ")",
+        "generado_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
+        "inicio": inicio_s,
+        "dias": dias,
+        "escala_tiempo": "UT",
+        "paso": "1h",
+    }
+    return {"sitio": sitio, "meta": meta, "horas": horas}
 
+
+def emparejar(sol, tierra, id_sitio):
+    """Une Sol y Tierra por marca de tiempo (no por posicion) y exige que
+    ambas series cubran exactamente las mismas horas."""
+    tierra_por_t = {normalizar_fecha(f): (el, az) for f, el, az in tierra}
     horas = []
-    for (fecha_raw, sol_el, sol_az), (_, tierra_el, tierra_az) in zip(sol, tierra):
-        horas.append({
-            "t": normalizar_fecha(fecha_raw),
-            "sol_el": sol_el,
-            "sol_az": sol_az,
-            "tierra_el": tierra_el,
-            "tierra_az": tierra_az,
-        })
-
-    return {"sitio": sitio, "horas": horas}
+    for fecha_raw, sol_el, sol_az in sol:
+        t = normalizar_fecha(fecha_raw)
+        if t not in tierra_por_t:
+            raise RuntimeError(f"{id_sitio}: Horizons no devolvio la Tierra para {t}.")
+        tierra_el, tierra_az = tierra_por_t[t]
+        horas.append({"t": t, "sol_el": sol_el, "sol_az": sol_az,
+                      "tierra_el": tierra_el, "tierra_az": tierra_az})
+    if len(horas) != len(tierra_por_t):
+        raise RuntimeError(f"{id_sitio}: Sol y Tierra no cubren las mismas horas "
+                           f"({len(horas)} contra {len(tierra_por_t)}).")
+    return horas
 
 
 def main():
@@ -165,16 +215,29 @@ def main():
         print("Especifica --sitio <id> o --todos", file=sys.stderr)
         sys.exit(1)
 
-    inicio_dt = datetime.strptime(args.inicio, "%Y-%m-%d")
-    DATA_DIR.mkdir(exist_ok=True)
+    try:
+        inicio_dt = datetime.strptime(args.inicio, "%Y-%m-%d")
+    except ValueError:
+        print(f"Fecha de inicio no valida: {args.inicio!r} (usa YYYY-MM-DD).", file=sys.stderr)
+        sys.exit(1)
+    if not 1 <= args.dias <= 366:
+        print("--dias debe estar entre 1 y 366.", file=sys.stderr)
+        sys.exit(1)
 
-    for sitio in objetivo:
-        resultado = generar_para_sitio(sitio, inicio_dt, args.dias)
-        salida = DATA_DIR / f"{sitio['id']}.json"
+    # Se consultan todos los sitios antes de escribir: si uno falla no queda
+    # una mezcla de archivos nuevos y viejos con periodos distintos.
+    try:
+        resultados = [generar_para_sitio(s, inicio_dt, args.dias) for s in objetivo]
+    except RuntimeError as err:
+        print(f"Error: {err}", file=sys.stderr)
+        sys.exit(1)
+
+    DATA_DIR.mkdir(exist_ok=True)
+    for resultado in resultados:
+        salida = DATA_DIR / f"{resultado['sitio']['id']}.json"
         with open(salida, "w", encoding="utf-8") as f:
             json.dump(resultado, f, ensure_ascii=False, indent=2)
-        print(f"[{sitio['id']}] guardado en {salida} ({len(resultado['horas'])} horas)")
-
+        print(f"[{resultado['sitio']['id']}] guardado en {salida} ({len(resultado['horas'])} horas)")
 
 if __name__ == "__main__":
     main()

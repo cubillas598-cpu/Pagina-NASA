@@ -92,7 +92,8 @@ internet (fuentes y datos incrustados):
 python3 scripts/empaquetar_demo.py   # escribe dist/lunar-navigator-demo.html
 ```
 
-Pruebas del modelo de calculo (Node 18+): `node --test tests/*.test.mjs`
+Pruebas (Node 18+ y Python 3): `npm test` corre las del modelo de calculo y las del
+parser de Horizons. `npm run validar` revisa `data/` con las mismas reglas que la demo.
 
 Scripts de datos en Python: `pip install -r requirements.txt` (solo
 `scripts/horizonte.py` necesita numpy, rasterio y pyproj; los demas usan la biblioteca
@@ -104,7 +105,7 @@ La resolucion es horaria: el inicio y el fin de cada ventana tienen un margen de
 
 | Pieza | Archivo | Estado |
 | --- | --- | --- |
-| Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; falta la verificacion manual del plan |
+| Elevacion/azimut de Sol y Tierra por hora (dic 2026) | `data/<sitio>.json` | JPL Horizons via `scripts/efemerides.py`; cotejadas a mano en Peak Near Shackleton (8 valores iguales a 6 decimales) |
 | Horizonte por azimut de los 3 sitios | `data/escenario_demo.json` (`horizonte.fuente = "lola_skyline"`) | **Real**, calculado con el DEM de LOLA (NASA PGDA, 80 m/px) via `scripts/horizonte.py`: raycasting geodesico (pyproj) con correccion por curvatura, 360 puntos/sitio |
 | Horizonte del punto de apoyo (relevo RF/optico) | `data/escenario_demo.json` (`relevo.horizonte`) | **Real**, mismo metodo LOLA que los sitios. La UBICACION del relevo (az/distancia desde el sitio) sigue siendo supuesto de demostracion de Irvin, no una cita academica |
 | Duracion del evento de polvo (12 s) | `data/escenario_demo.json` | Calibrada con Apollo (10-12 s); con muestras horarias degrada esa hora a robusto |
@@ -117,6 +118,22 @@ descargable de NASA PGDA producto 90). Escribe directo en `elevacion_deg` de cad
 sitio con `"fuente": "lola_skyline"`. Para otro rango de fechas, regenerar las
 efemerides con `scripts/efemerides.py`; el selector de fechas se limita solo a las
 horas disponibles.
+
+### Actualizar efemerides desde JPL Horizons (GitHub Actions)
+
+El navegador no puede consultar Horizons directamente: la API de JPL no permite
+peticiones desde otras paginas (CORS). La consulta la hace GitHub y la demo sigue
+leyendo archivos estaticos, asi que funciona igual sin conexion.
+
+1. En GitHub, abre la pestana **Actions** y elige **Efemerides JPL Horizons**.
+2. Pulsa **Run workflow**, escribe el primer dia (`inicio`, UTC) y el numero de `dias`.
+3. La Action consulta Horizons para los 3 sitios, valida los datos, recompila la demo
+   y el HTML sin conexion, corre las pruebas y sube el resultado a `main`.
+
+Si Horizons falla o los datos no pasan la validacion, no se sube nada. El evento de
+polvo (`evento_polvo.inicio` en `data/escenario_demo.json`) debe caer dentro del
+periodo pedido; si no, la validacion lo indica. La seccion Metodologia de la demo
+muestra la fecha en que se pidieron los datos.
 
 **Correccion importante (2026-11-14)**: el punto de Shackleton original (89°40'S,
 129°47'E, de Wikipedia) resulto ser el CENTRO/fondo del crater, no el borde — dio un

@@ -122,7 +122,7 @@ en `worker/README.md`. Si la consulta falla, la demo sigue con los datos publica
 
 ### Relieve real para los visores 3D
 
-Los visores de `docs/` usan el DEM de LOLA promediado a 2 km
+Los visores de `docs/` usan el DEM de LOLA promediado a 1 km
 (`docs/datos/relieve-lola-sur.js`). Para regenerarlo: **Actions → Relieve LOLA para
 visores 3D → Run workflow**. Descarga el DEM de NASA PGDA (181 MB), corre
 `scripts/relieve_3d.py` y sube el resultado.
@@ -196,25 +196,34 @@ En la vista "Comparador" de la demo, ademas de la tabla metrica por metrica, se
 muestra un indice unico S (0-100, mas alto es mejor) por sitio:
 
 ```
-S = w1*E + w2*C + w3*R
-E = % horas con Sol visible (energia)
-C = % horas con vista directa a la Tierra (comunicacion)
-R = % horas con respaldo que llega a la Tierra: tramo local con servicio
-    (rapido o robusto) Y punto de apoyo con la Tierra visible
-w1=0.40, w2=0.35, w3=0.25 (pesos fijos en web/js/model.js; propuesta del equipo)
+S = suma(peso_i * puntaje_i) / suma(pesos presentes), puntajes de 0 a 100
+  iluminacion     0.25  % horas con Sol visible
+  Tierra directa  0.20  % horas con vista directa a la Tierra
+  respaldo        0.10  % horas con respaldo que llega a la Tierra (solo con enlace local)
+  noche           0.10  sombra continua mas larga: 0 h = 100, >= 72 h = 0
+  apagon          0.05  corte de comunicacion mas largo: 0 h = 100, >= 72 h = 0
+  terreno         0.15  70 % pendiente media en 100 m (<= 5 grados = 100, >= 15 = 0)
+                        + 30 % rugosidad a 100 m (<= 0.5 m = 100, >= 3 m = 0)
+  ruta de llegada 0.05  obstaculo en la direccion mas despejada (<= 2 grados = 100, >= 10 = 0)
+  hielo           0.10  distancia a sombra permanente (<= 1 km = 100, >= 25 km = 0)
 ```
 
-Si el enlace local esta desactivado, R no se mide y los dos pesos restantes se
-renormalizan (`S = (w1*E + w2*C) / (w1+w2)`) para que el indice siga en escala 0-100.
+Pesos y umbrales en `web/js/model.js` (`PESOS_SUITABILITY`, `UMBRALES_INDICE`); son
+supuestos del equipo (15-nov). Si falta un termino (enlace desactivado o sin
+`data/terreno_sitios.json`), los pesos presentes se renormalizan.
+
+Las variables de terreno salen de productos LOLA de 20 m/px de NASA PGDA (producto 90,
+Barker et al. 2023): DEM `LDEM_80S_20MPP_ADJ`, rugosidad `LDRM_80S_50MPP_ADJ_ROUGH_100M`
+y sombra permanente `LPSR_80S_20MPP_ADJ`. Las calcula `scripts/terreno_sitios.py`
+(Action "Terreno de los sitios (LOLA)") y se guardan en `data/terreno_sitios.json`.
 
 Decision del equipo (14-nov): un tramo local que funciona sin que el punto de apoyo
-vea la Tierra no cuenta como respaldo. Con los horizontes LOLA actuales, los puntos de
-apoyo de los sitios A y B nunca ven la Tierra en diciembre de 2026, asi que su R es 0.
+vea la Tierra no cuenta como respaldo.
 
-**Es un indice propuesto por el equipo, NO un estandar oficial de NASA.** No evalua
-pendiente, rocas ni riesgos de descenso: no certifica que un sitio sea seguro. Implementado
-en `web/js/model.js` (`suitabilityScore`), probado en `tests/model.test.mjs`, visible
-en la tabla del comparador y en la columna `indice_conveniencia` del CSV exportado.
+**Es un indice propuesto por el equipo, NO un estandar oficial de NASA.** No ve rocas
+menores al pixel de 20 m ni certifica que un sitio sea seguro. Implementado en
+`web/js/model.js` (`desgloseIndice`), probado en `tests/model.test.mjs`, visible en la
+tabla del comparador (con el puntaje de cada termino) y en el CSV exportado.
 
 ## Sitios candidatos
 

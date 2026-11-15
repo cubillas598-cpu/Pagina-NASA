@@ -217,7 +217,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dem", type=Path, default=DEM_DEFECTO)
     ap.add_argument("--salida", type=Path, default=SALIDA_DEFECTO)
-    ap.add_argument("--nodos", type=int, default=241, help="nodos por lado (los visores usan 240 segmentos)")
+    ap.add_argument("--nodos", type=int, default=481, help="nodos por lado (481 = 1 km; los visores usan nodos-1 segmentos)")
     ap.add_argument("--semilado-km", type=float, default=240.0, help="mitad del lado de la malla en km")
     ap.add_argument("--png", type=Path, default=PNG_DEFECTO, help="imagen del casquete polar para el globo")
     ap.add_argument("--png-nodos", type=int, default=1025, help="pixeles por lado de la imagen (0 = no generarla)")

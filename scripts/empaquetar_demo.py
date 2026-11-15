@@ -86,8 +86,10 @@ def main():
     efemerides = {i: d["horas"] for i, d in docs.items()}
     coordenadas = {i: d["sitio"] for i, d in docs.items()}
     generado = {i: (d.get("meta") or {}).get("generado_utc") for i, d in docs.items()}
+    ruta_terreno = RAIZ / "data" / "terreno_sitios.json"
+    terreno = leer_json(ruta_terreno) if ruta_terreno.exists() else None
     datos = json.dumps({"escenario": escenario, "efemerides": efemerides, "coordenadas": coordenadas,
-                        "generado": generado},
+                        "generado": generado, "terreno": terreno},
                        ensure_ascii=False, separators=(",", ":"))
     datos = datos.replace("</", "<\\/")
 

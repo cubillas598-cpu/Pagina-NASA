@@ -191,7 +191,19 @@
             <h3>Qué se calcula</h3>
             <p>Para cada sitio y cada hora (UTC) se compara la elevación del Sol y de la Tierra con la elevación del horizonte en ese mismo azimut. Si el astro queda por encima, cuenta como visible.</p>
             <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora, así que el inicio y el fin de cada ventana tienen un margen de ±1 h. El script pide a JPL Horizons las horas en UT (TIME_TYPE=UT) y la página las muestra como UTC: entre ambas escalas hay menos de un segundo.</p>
-            <p>El índice de conveniencia S = 0.40·iluminación + 0.35·Tierra directa + 0.25·respaldo es una propuesta del equipo, no un estándar de NASA. El respaldo solo cuenta las horas en que el tramo local funciona y el punto de apoyo ve la Tierra; con el enlace desactivado se usan solo los dos primeros factores. No evalúa pendiente, rocas ni riesgos de descenso.</p>
+            <p>El índice de conveniencia (0 a 100) es un promedio ponderado propuesto por el equipo, no un estándar de NASA: 0.25 iluminación, 0.20 Tierra directa, 0.10 respaldo, 0.10 noche más larga, 0.05 apagón más largo, 0.15 terreno, 0.05 ruta de llegada y 0.10 cercanía al hielo. Si falta un término (enlace desactivado o sin datos de terreno), los demás pesos se reparten para mantener la escala.</p>
+          </article>
+          <article class="tarjeta">
+            <h3>Variables de aterrizaje</h3>
+            <p>Salen de productos LOLA de 20 m por pixel de NASA PGDA (Barker et al. 2023), calculados por la Action «Terreno de los sitios (LOLA)»:</p>
+            <ul>
+              <li><strong>Pendiente</strong>: media y máxima en 100 m alrededor del sitio (método de Horn) y % del área con menos de 10° en 500 m.</li>
+              <li><strong>Rugosidad</strong>: dispersión de alturas alrededor de un plano, a 100 m de base (mapa LDRM).</li>
+              <li><strong>Ruta de llegada</strong>: en 8 direcciones, el ángulo máximo del terreno visto desde el sitio entre 100 m y 2 km; se usa la dirección más despejada.</li>
+              <li><strong>Hielo</strong>: distancia a la región en sombra permanente más cercana (mapa LPSR de 20 m; cuenta también sombras pequeñas), donde puede haber hielo de agua.</li>
+              <li><strong>Noche y apagón</strong>: la sombra continua y el corte de comunicación más largos del periodo elegido.</li>
+            </ul>
+            <p>Puntajes (supuestos del equipo): pendiente media ≤ 5° = 100 y ≥ 15° = 0; rugosidad ≤ 0.5 m = 100 y ≥ 3 m = 0 (terreno = 70 % pendiente + 30 % rugosidad); ruta ≤ 2° = 100 y ≥ 10° = 0; hielo ≤ 1 km = 100 y ≥ 25 km = 0; noche y apagón 0 h = 100 y ≥ 72 h (autonomía supuesta) = 0. No evalúa rocas sueltas menores al pixel de 20 m.</p>
           </article>
           <article class="tarjeta">
             <h3>Fuentes</h3>

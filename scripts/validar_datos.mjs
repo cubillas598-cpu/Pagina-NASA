@@ -1,7 +1,7 @@
 // Valida data/ con las mismas reglas que usa la demo en el navegador.
 // La Action de efemerides lo corre antes de publicar datos nuevos de Horizons.
 // Uso: node scripts/validar_datos.mjs
-import { readFile } from 'node:fs/promises';
+import { readFile, access } from 'node:fs/promises';
 import { validarDatos } from '../web/js/datos.js';
 
 const raiz = new URL('../', import.meta.url);
@@ -24,7 +24,10 @@ try {
     coordenadas[s.id] = doc.sitio;
     generado[s.id] = doc.meta?.generado_utc ?? null;
   }
-  validarDatos(escenario, efemerides, coordenadas, generado);
+  let terreno = null;
+  const hayTerreno = await access(new URL('data/terreno_sitios.json', raiz)).then(() => true, () => false);
+  if (hayTerreno) terreno = await leer('data/terreno_sitios.json');
+  validarDatos(escenario, efemerides, coordenadas, generado, terreno);
 
   const horas = efemerides[escenario.sitios[0].id];
   const desde = horas[0].t;
@@ -34,7 +37,7 @@ try {
     throw new Error(`El evento de polvo (${polvo}) quedó fuera del periodo de las efemérides (${desde} a ${hasta}). `
       + 'Ajusta evento_polvo.inicio en data/escenario_demo.json o pide un periodo que lo incluya.');
   }
-  console.log(`Datos válidos: ${escenario.sitios.length} sitios, ${horas.length} horas (${desde} a ${hasta} UTC).`);
+  console.log(`Datos válidos: ${escenario.sitios.length} sitios, ${horas.length} horas (${desde} a ${hasta} UTC)${terreno ? ', con terreno LOLA' : ', sin terreno'}.`);
 } catch (err) {
   console.error(`Datos no válidos: ${err.message}`);
   process.exitCode = 1;

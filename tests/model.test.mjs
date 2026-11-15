@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
-  suitabilityScore, PESOS_SUITABILITY, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria, problemasCoordenadas,
+  suitabilityScore, PESOS_SUITABILITY, desgloseIndice, puntajeLineal, problemasTerreno, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria, problemasCoordenadas,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -130,23 +130,71 @@ test('comparador marca empates y genera conclusiones prudentes', () => {
   assert.equal(r.resumen[0].total, Object.keys(r.mejores).length);
 });
 
-test('suitabilityScore: pesos suman 1 y la formula es exacta con enlace activo', () => {
-  const suma = PESOS_SUITABILITY.energia + PESOS_SUITABILITY.comunicacion + PESOS_SUITABILITY.respaldo;
-  assert.ok(Math.abs(suma - 1) < 1e-9);
+const TERRENO_EJ = {
+  pendiente_media_deg: 10, pendiente_max_deg: 14, pct_llano_500m: 60, rugosidad_100m_m: 1.75,
+  aproximacion: { mejor_az_deg: 90, mejor_obstaculo_deg: 6, peor_az_deg: 0, peor_obstaculo_deg: 9 },
+  dist_psr_km: 13, en_psr: false,
+};
+const metricasDe = () => ({ pctSol: 50, pctTierra: 10, pctSolTierra: 5, enlace: null, brecha: { horas: 5 },
+  ventanaTierra: { horas: 3 }, sombraMax: { horas: 4 }, ventanaSol: { horas: 6 } });
+const MET_EJ = { pctSol: 80, pctTierra: 40, pctRespaldo: 30, sombraMax: { horas: 36 }, brecha: { horas: 0 } };
 
-  const m = { pctSol: 80, pctTierra: 40, horas: 10, pctRespaldo: 30, enlace: { rapido: 6, robusto: 2, sin_enlace: 2 } };
-  const esperado = PESOS_SUITABILITY.energia * 80 + PESOS_SUITABILITY.comunicacion * 40
-    + PESOS_SUITABILITY.respaldo * 30;
-  assert.ok(Math.abs(suitabilityScore(m, true) - esperado) < 1e-9);
+test('puntajeLineal: 100 en el valor bueno, 0 en el malo y lineal en medio', () => {
+  assert.equal(puntajeLineal(5, 5, 15), 100);
+  assert.equal(puntajeLineal(15, 5, 15), 0);
+  assert.equal(puntajeLineal(10, 5, 15), 50);
+  assert.equal(puntajeLineal(-3, 5, 15), 100);
+  assert.equal(puntajeLineal(36, 0, 72), 50);
+  assert.equal(puntajeLineal(NaN, 0, 1), null);
 });
 
-test('suitabilityScore: sin enlace activo se renormaliza a energia y comunicacion', () => {
-  const m = { pctSol: 60, pctTierra: 20, horas: 10, enlace: null };
-  const w = PESOS_SUITABILITY.energia + PESOS_SUITABILITY.comunicacion;
-  const esperado = (PESOS_SUITABILITY.energia * 60 + PESOS_SUITABILITY.comunicacion * 20) / w;
-  assert.ok(Math.abs(suitabilityScore(m, false) - esperado) < 1e-9);
-  // El indice sin enlace sigue en escala 0-100 (promedio ponderado de dos porcentajes).
-  assert.ok(suitabilityScore(m, false) >= 0 && suitabilityScore(m, false) <= 100);
+test('índice: pesos suman 1 y la fórmula es exacta con todos los términos', () => {
+  const suma = Object.values(PESOS_SUITABILITY).reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(suma - 1) < 1e-9);
+  const d = desgloseIndice(MET_EJ, true, TERRENO_EJ);
+  // terreno = 0.7*pendiente(50) + 0.3*rugosidad(50) = 50; ruta(6°) = 50; hielo(13 km) = 50.
+  assert.deepEqual(Object.fromEntries(Object.entries(d.partes).map(([k, v]) => [k, Math.round(v * 1e9) / 1e9])),
+    { energia: 80, comunicacion: 40, respaldo: 30, noche: 50, apagon: 100, terreno: 50, aproximacion: 50, hielo: 50 });
+  const p = PESOS_SUITABILITY;
+  const esperado = p.energia * 80 + p.comunicacion * 40 + p.respaldo * 30 + p.noche * 50 + p.apagon * 100
+    + p.terreno * 50 + p.aproximacion * 50 + p.hielo * 50;
+  assert.ok(Math.abs(d.total - esperado) < 1e-9);
+  assert.ok(Math.abs(suitabilityScore({ ...MET_EJ, terreno: TERRENO_EJ }, true) - esperado) < 1e-9);
+});
+
+test('índice: sin enlace ni terreno se renormaliza y sigue en 0-100', () => {
+  const d = desgloseIndice(MET_EJ, false, null);
+  const p = PESOS_SUITABILITY;
+  const w = p.energia + p.comunicacion + p.noche + p.apagon;
+  assert.ok(Math.abs(d.total - (p.energia * 80 + p.comunicacion * 40 + p.noche * 50 + p.apagon * 100) / w) < 1e-9);
+  assert.equal(d.partes.respaldo, null);
+  assert.equal(d.partes.terreno, null);
+  assert.ok(d.total >= 0 && d.total <= 100);
+});
+
+test('índice: sin sombra permanente en 25 km el término de hielo vale 0', () => {
+  const d = desgloseIndice(MET_EJ, true, { ...TERRENO_EJ, dist_psr_km: null });
+  assert.equal(d.partes.hielo, 0);
+});
+
+test('problemasTerreno rechaza valores fuera de rango y acepta el ejemplo', () => {
+  const doc = { sitios: Object.fromEntries(escenario.sitios.map((s) => [s.id, TERRENO_EJ])) };
+  assert.deepEqual(problemasTerreno(doc, escenario), []);
+  assert.deepEqual(problemasTerreno(null, escenario), []);
+  const malo = structuredClone(doc);
+  malo.sitios[escenario.sitios[0].id].pendiente_media_deg = 95;
+  delete malo.sitios[escenario.sitios[1].id];
+  const txt = problemasTerreno(malo, escenario).join(' ');
+  assert.match(txt, /pendiente fuera de rango/);
+  assert.match(txt, /faltan sus variables de terreno/);
+});
+
+test('comparador: las métricas de terreno marcan al mejor y se omiten si falta un sitio', () => {
+  const fila = (id, pend) => ({ sitio: { id, etiqueta: id }, metricas: { ...metricasDe(), terreno: pend === null ? null : { ...TERRENO_EJ, pendiente_media_deg: pend } } });
+  const r = compararSitios([fila('a', 4), fila('b', 9)], true);
+  assert.deepEqual(r.mejores.pendienteMedia, ['a']);
+  const r2 = compararSitios([fila('a', 4), fila('b', null)], true);
+  assert.equal(r2.mejores.pendienteMedia, undefined);
 });
 
 test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
@@ -159,7 +207,7 @@ test('CSV: cabecera, una fila por sitio y comillas cuando hacen falta', () => {
   assert.ok(lineas[1].includes('"Borde, Shackleton"'));
   assert.ok(lineas[1].includes(',si,1,1,0,2,lola_skyline'));
   assert.equal(lineas[0].split(',').length, lineas[1].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).length);
-  assert.ok(lineas[1].endsWith(',0.0,50.0,0,1'));
+  assert.ok(lineas[1].endsWith(',0.0,50.0,0,1,,,,,,')); // sin terreno: columnas vacías
 });
 
 test('disponibilidad combinada: comunicación y luz con comunicación', () => {
@@ -195,7 +243,9 @@ test('R del índice solo cuenta respaldo que llega a la Tierra', () => {
   }
   // Tramo local perfecto sin vista del apoyo a la Tierra: R = 0, no 100.
   const m = { pctSol: 50, pctTierra: 50, horas: 10, pctRespaldo: 0, enlace: { rapido: 10, robusto: 0, sin_enlace: 0 } };
-  assert.ok(Math.abs(suitabilityScore(m, true) - (PESOS_SUITABILITY.energia * 50 + PESOS_SUITABILITY.comunicacion * 50)) < 1e-9);
+  const p = PESOS_SUITABILITY;
+  assert.equal(desgloseIndice(m, true, null).partes.respaldo, 0);
+  assert.ok(Math.abs(suitabilityScore(m, true) - (p.energia * 50 + p.comunicacion * 50) / (p.energia + p.comunicacion + p.respaldo)) < 1e-9);
 });
 
 test('Sol y Tierra a la vez no incluye el respaldo', () => {

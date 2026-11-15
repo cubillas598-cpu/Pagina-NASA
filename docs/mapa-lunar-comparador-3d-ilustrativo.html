@@ -117,9 +117,9 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white">POLO SUR LUNAR — MAPA TOPOGRÁFICO 3D</h1>
-          <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="DEM de LOLA, NASA PGDA producto 90 (Barker et al. 2023), promediado en bloques de 2 km.">Relieve real LOLA · promedio 2 km</span>
+          <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="DEM de LOLA, NASA PGDA producto 90 (Barker et al. 2023), promediado en bloques de 1 km.">Relieve real LOLA · promedio 1 km</span>
         </div>
-        <p class="text-xs text-slate-400">Región Polar Sur (82°S – 90°S) • Selección de Sitios de Aterrizaje • Relieve real LOLA, promedio de 2 km</p>
+        <p class="text-xs text-slate-400">Región Polar Sur (82°S – 90°S) • Selección de Sitios de Aterrizaje • Relieve real LOLA, promedio de 1 km</p>
       </div>
     </div>
 
@@ -708,7 +708,7 @@
 
 
     // Relieve real: DEM de LOLA (NASA PGDA producto 90) promediado en bloques de
-    // ~2 km por scripts/relieve_3d.py y cargado desde datos/relieve-lola-sur.js.
+    // ~1 km por scripts/relieve_3d.py y cargado desde datos/relieve-lola-sur.js.
     const RELIEVE = window.RELIEVE_LOLA || null;
     const ALTURAS_M = RELIEVE
       ? new Int16Array(Uint8Array.from(atob(RELIEVE.alturas_i16_b64), (c) => c.charCodeAt(0)).buffer)
@@ -820,7 +820,8 @@
     // =========================================================================
     // 5. CONSTRUCCIÓN DE MALLA 3D DEL TERRENO LUNAR
     // =========================================================================
-    const SEGMENTS = 240;
+    // Una celda de la malla por nodo del relieve (1 km con el archivo actual).
+    const SEGMENTS = window.RELIEVE_LOLA ? window.RELIEVE_LOLA.nodos - 1 : 240;
     const terrainGeom = new THREE.PlaneGeometry(MAP_WORLD_SIZE, MAP_WORLD_SIZE, SEGMENTS, SEGMENTS);
     terrainGeom.rotateX(-Math.PI / 2);
 
@@ -1537,7 +1538,7 @@
     // AVISO (R37, ver docs/fuentes.md del repo): estos valores base son ILUSTRATIVOS, no
     // calculados de un DEM/efemerides reales. Solo las coordenadas lat/lon de LANDING_SITES
     // son reales (citas peer-reviewed). Cuando el usuario mueve un marcador (isModified=true),
-    // evaluateSiteGeometryAtCurrentPos() SI calcula geometria real sobre el relieve LOLA (promedio de 2 km)
+    // evaluateSiteGeometryAtCurrentPos() SI calcula geometria real sobre el relieve LOLA (promedio de 1 km)
     // (horizonte en 36 azimuts) - pero el terreno de base sigue siendo ruido procedural, no LOLA.
     const SITE_ORBITAL_MODELS = {
       'shackleton': {

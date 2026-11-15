@@ -87,7 +87,7 @@ async function iniciar() {
     const [i0, i1] = rangoIndices();
     const sitio = sitios.find((s) => s.id === estado.sitioId);
     const serie = series[sitio.id];
-    const filas = sitios.map((s) => ({ sitio: s, metricas: metricasPeriodo(series[s.id], i0, i1, estado.enlaceActivo) }));
+    const filas = sitios.map((s) => ({ sitio: s, metricas: { ...metricasPeriodo(series[s.id], i0, i1, estado.enlaceActivo), terreno: s.terreno ?? null } }));
     return {
       escenario, sitios, sitio, serie, i0, i1, estado, indice: estado.indice,
       muestra: serie[estado.indice],
@@ -431,7 +431,7 @@ async function iniciar() {
     $('#relieve-visor').hidden = !tres;
     $('#leyenda-alturas').hidden = !(tres && relieveVisor === 'topo');
     $('#sub-mapa').textContent = tres
-      ? 'Relieve real LOLA (promedio de 2 km); arrastra para girar y pulsa un sitio para elegirlo'
+      ? 'Relieve real LOLA (promedio de 1 km); arrastra para girar y pulsa un sitio para elegirlo'
       : 'Proyección polar con coordenadas reales; pulsa un sitio para elegirlo';
     for (const b of $('#modo-mapa').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.modo === modoMapa));
   }

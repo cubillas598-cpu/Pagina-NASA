@@ -1,4 +1,4 @@
-import { problemasEfemerides, problemasEscenario, problemasCoordenadas } from './model.js';
+import { problemasEfemerides, problemasEscenario, problemasCoordenadas, problemasTerreno } from './model.js';
 
 // Carga de datos locales. En la versión empaquetada (un solo HTML) los datos
 // vienen incrustados en <script type="application/json" id="datos-demo">.
@@ -7,7 +7,7 @@ export async function cargarDatos(base = '../') {
   const incrustado = document.getElementById('datos-demo');
   if (incrustado) {
     const doc = JSON.parse(incrustado.textContent);
-    return validarDatos(doc.escenario, doc.efemerides, doc.coordenadas, doc.generado);
+    return validarDatos(doc.escenario, doc.efemerides, doc.coordenadas, doc.generado, doc.terreno ?? null);
   }
   const leer = async (ruta) => {
     const r = await fetch(base + ruta, { cache: 'no-cache' });
@@ -24,14 +24,17 @@ export async function cargarDatos(base = '../') {
     coordenadas[s.id] = doc.sitio;
     generado[s.id] = doc.meta?.generado_utc ?? null;
   }));
-  return validarDatos(escenario, efemerides, coordenadas, generado);
+  // El terreno es opcional: si el archivo no está, el índice se calcula sin esos términos.
+  let terreno = null;
+  try { terreno = await leer('data/terreno_sitios.json'); } catch { terreno = null; }
+  return validarDatos(escenario, efemerides, coordenadas, generado, terreno);
 }
 
 // Las coordenadas de cada sitio vienen de los archivos de efemérides (las mismas
 // que usó JPL Horizons) y se copian al sitio del escenario como lat/lon.
 // `generado` (opcional): fecha UTC en que cada archivo se pidió a Horizons.
 // Exportada para que scripts/validar_datos.mjs aplique las mismas reglas.
-export function validarDatos(escenario, efemerides, coordenadas, generado = {}) {
+export function validarDatos(escenario, efemerides, coordenadas, generado = {}, terreno = null) {
   const malEscenario = problemasEscenario(escenario);
   if (malEscenario.length) throw new Error(`Escenario no válido. ${malEscenario.slice(0, 5).join(' ')}`);
   const malCoord = problemasCoordenadas(escenario, coordenadas);
@@ -47,6 +50,10 @@ export function validarDatos(escenario, efemerides, coordenadas, generado = {}) 
       throw new Error(`Las efemérides de ${id} no cubren las mismas horas que ${ids[0]}.`);
     }
   }
+  const malTerreno = problemasTerreno(terreno, escenario);
+  if (malTerreno.length) throw new Error(`Datos de terreno no válidos. ${malTerreno.join(' ')}`);
+  for (const s of escenario.sitios) s.terreno = terreno ? terreno.sitios[s.id] : null;
+  escenario.terreno_meta = terreno ? terreno.meta ?? null : null;
   const fechas = Object.values(generado || {}).filter(Boolean).sort();
   escenario.generado_utc = fechas.length ? fechas[0] : null;
   return { escenario, efemerides };

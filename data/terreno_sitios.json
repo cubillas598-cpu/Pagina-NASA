@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "fuente": "LOLA, NASA PGDA producto 90 (Barker et al. 2023, PSJ 4, 183, doi:10.3847/PSJ/acf3e1)",
+    "productos": [
+      "LDEM_80S_20MPP_ADJ.TIF",
+      "LPSR_80S_20MPP_ADJ.TIF",
+      "LDRM_80S_50MPP_ADJ_ROUGH_100M.TIF"
+    ],
+    "generado_utc": "2026-11-15T18:58Z",
+    "metodo": "Pendiente de Horn sobre el DEM de 20 m: media y máxima en 100 m de radio, % < 10° en 500 m. Rugosidad a 100 m de base. Aproximación: ángulo máximo del terreno visto desde el sitio entre 100 y 2000 m, en 8 direcciones. Sombra permanente: distancia al pixel PSR más cercano (búsqueda hasta 25 km)."
+  },
+  "sitios": {
+    "shackleton": {
+      "elevacion_m": 1168.0,
+      "pendiente_media_deg": 1.75,
+      "pendiente_max_deg": 4.31,
+      "pct_llano_500m": 84.1,
+      "rugosidad_100m_m": 0.27,
+      "rugosidad_fuente": "LDRM 100 m (LOLA)",
+      "aproximacion": {
+        "mejor_az_deg": 45,
+        "mejor_obstaculo_deg": -1.54,
+        "peor_az_deg": 315,
+        "peor_obstaculo_deg": 1.18,
+        "por_azimut": [
+          {
+            "az_deg": 0,
+            "obstaculo_deg": -1.16
+          },
+          {
+            "az_deg": 45,
+            "obstaculo_deg": -1.54
+          },
+          {
+            "az_deg": 90,
+            "obstaculo_deg": -0.49
+          },
+          {
+            "az_deg": 135,
+            "obstaculo_deg": -0.75
+          },
+          {
+            "az_deg": 180,
+            "obstaculo_deg": -1.0
+          },
+          {
+            "az_deg": 225,
+            "obstaculo_deg": -0.31
+          },
+          {
+            "az_deg": 270,
+            "obstaculo_deg": 0.89
+          },
+          {
+            "az_deg": 315,
+            "obstaculo_deg": 1.18
+          }
+        ]
+      },
+      "dist_psr_km": 0.13,
+      "en_psr": false,
+      "dist_psr_nota": null
+    },
+    "de_gerlache": {
+      "elevacion_m": 1868.4,
+      "pendiente_media_deg": 9.93,
+      "pendiente_max_deg": 15.5,
+      "pct_llano_500m": 41.4,
+      "rugosidad_100m_m": 0.65,
+      "rugosidad_fuente": "LDRM 100 m (LOLA)",
+      "aproximacion": {
+        "mejor_az_deg": 45,
+        "mejor_obstaculo_deg": -7.12,
+        "peor_az_deg": 180,
+        "peor_obstaculo_deg": 9.04,
+        "por_azimut": [
+          {
+            "az_deg": 0,
+            "obstaculo_deg": -6.84
+          },
+          {
+            "az_deg": 45,
+            "obstaculo_deg": -7.12
+          },
+          {
+            "az_deg": 90,
+            "obstaculo_deg": -0.05
+          },
+          {
+            "az_deg": 135,
+            "obstaculo_deg": 5.62
+          },
+          {
+            "az_deg": 180,
+            "obstaculo_deg": 9.04
+          },
+          {
+            "az_deg": 225,
+            "obstaculo_deg": 6.54
+          },
+          {
+            "az_deg": 270,
+            "obstaculo_deg": -1.14
+          },
+          {
+            "az_deg": 315,
+            "obstaculo_deg": -4.49
+          }
+        ]
+      },
+      "dist_psr_km": 0.32,
+      "en_psr": false,
+      "dist_psr_nota": null
+    },
+    "malapert": {
+      "elevacion_m": 4991.9,
+      "pendiente_media_deg": 4.29,
+      "pendiente_max_deg": 12.07,
+      "pct_llano_500m": 65.6,
+      "rugosidad_100m_m": 1.39,
+      "rugosidad_fuente": "LDRM 100 m (LOLA)",
+      "aproximacion": {
+        "mejor_az_deg": 45,
+        "mejor_obstaculo_deg": -4.44,
+        "peor_az_deg": 270,
+        "peor_obstaculo_deg": -0.03,
+        "por_azimut": [
+          {
+            "az_deg": 0,
+            "obstaculo_deg": -3.67
+          },
+          {
+            "az_deg": 45,
+            "obstaculo_deg": -4.44
+          },
+          {
+            "az_deg": 90,
+            "obstaculo_deg": -1.8
+          },
+          {
+            "az_deg": 135,
+            "obstaculo_deg": -0.94
+          },
+          {
+            "az_deg": 180,
+            "obstaculo_deg": -1.79
+          },
+          {
+            "az_deg": 225,
+            "obstaculo_deg": -3.22
+          },
+          {
+            "az_deg": 270,
+            "obstaculo_deg": -0.03
+          },
+          {
+            "az_deg": 315,
+            "obstaculo_deg": -0.76
+          }
+        ]
+      },
+      "dist_psr_km": 0.13,
+      "en_psr": false,
+      "dist_psr_nota": null
+    }
+  }
+}

@@ -121,3 +121,36 @@ export function suavizar(t) {
   const x = Math.min(1, Math.max(0, t));
   return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
 }
+
+/**
+ * Malla del casquete del polo sur que lleva la imagen de relieve LOLA
+ * (scripts/relieve_3d.py). La imagen usa el plano azimutal equidistante de los
+ * visores de docs/: x = r·sen(lon), z = −r·cos(lon), con r en km
+ * (kmPorGrado km por grado de colatitud); la fila 0 de la imagen es z = −semilado.
+ * Devuelve arreglos planos para un BufferGeometry.
+ */
+export function casquetePolar({ semiladoKm = 240, kmPorGrado = 30.32, anillos = 96, sectores = 192, radio = 1 } = {}) {
+  const posiciones = [];
+  const uvs = [];
+  const indices = [];
+  for (let i = 0; i <= anillos; i++) {
+    const rKm = (semiladoKm * i) / anillos;
+    const lat = -(90 - rKm / kmPorGrado);
+    for (let j = 0; j <= sectores; j++) {
+      const lon = (360 * j) / sectores;
+      posiciones.push(...latLonAVector(lat, lon, radio));
+      const x = rKm * Math.sin(lon * RAD);
+      const z = -rKm * Math.cos(lon * RAD);
+      uvs.push((x + semiladoKm) / (2 * semiladoKm), 1 - (z + semiladoKm) / (2 * semiladoKm));
+    }
+  }
+  const fila = sectores + 1;
+  for (let i = 0; i < anillos; i++) {
+    for (let j = 0; j < sectores; j++) {
+      const a = i * fila + j;
+      const b = a + fila;
+      indices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  }
+  return { posiciones, uvs, indices };
+}

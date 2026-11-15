@@ -1,7 +1,8 @@
 import { WebGLRenderer, Scene, PerspectiveCamera, SphereGeometry, MeshStandardMaterial, Mesh, Group,
-  AmbientLight, DirectionalLight, TextureLoader, CanvasTexture, SRGBColorSpace } from 'three';
+  AmbientLight, DirectionalLight, TextureLoader, CanvasTexture, SRGBColorSpace,
+  BufferGeometry, Float32BufferAttribute } from 'three';
 import {
-  latLonAVector, orientacionPoloSur, orientacionParaSitio, quatMultiplicar, quatRotar, quatSlerp, suavizar,
+  casquetePolar, latLonAVector, orientacionPoloSur, orientacionParaSitio, quatMultiplicar, quatRotar, quatSlerp, suavizar,
 } from '../luna-geometria.js';
 import { esc } from '../format.js';
 
@@ -11,7 +12,7 @@ import { esc } from '../format.js';
 
 const DIST_POLAR = 4.3; // globo completo visto desde el polo sur
 const DIST_TRES = 1.32; // encuadra los tres sitios
-const DIST_SITIO = 1.2; // acercamiento a un sitio (más cerca, la textura de 2k se pixela)
+const DIST_SITIO = 1.12; // acercamiento a un sitio; el relieve LOLA del casquete polar da detalle a esta escala
 const DIST_MIN = 1.03;
 const DIST_MAX = 4.5;
 const DURACION_MS = 1000;
@@ -62,7 +63,7 @@ function texturaProvisional() {
  * @param alElegir(id)  callback al seleccionar un sitio desde el globo
  * @returns {render(d), destruir()} o null si no hay WebGL
  */
-export function crearLuna(cont, { alElegir, urlTextura, reducirMovimiento }) {
+export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimiento }) {
   if (!webglDisponible()) return null;
 
   let renderer;
@@ -112,16 +113,39 @@ export function crearLuna(cont, { alElegir, urlTextura, reducirMovimiento }) {
   function usarTexturaProvisional() {
     material.map = texturaProvisional();
     material.needsUpdate = true;
-    credito.textContent = 'Textura provisional (decorativa). Posiciones de los sitios: sitios.json.';
+    credito.textContent = 'Textura provisional, solo visual.';
     pedirCuadro();
   }
+  // Casquete del polo sur con el relieve real de LOLA (la textura global de 2k
+  // se estira en el polo). Si la imagen no carga, queda solo la textura global.
+  if (urlPolo) {
+    new TextureLoader().load(urlPolo, (t) => {
+      t.colorSpace = SRGBColorSpace;
+      t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      const m = casquetePolar({ radio: 1.0008 });
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(m.posiciones, 3));
+      geo.setAttribute('uv', new Float32BufferAttribute(m.uvs, 2));
+      geo.setIndex(m.indices);
+      geo.computeVertexNormals();
+      const cap = new Mesh(geo, new MeshStandardMaterial({
+        map: t, color: 0xefe6d8, transparent: true, depthWrite: false, roughness: 1, metalness: 0,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+      }));
+      cap.renderOrder = 1;
+      globo.add(cap);
+      pedirCuadro();
+    }, undefined, () => {});
+  }
+
   if (urlTextura) {
     new TextureLoader().load(urlTextura, (t) => {
       t.colorSpace = SRGBColorSpace;
       t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
       material.map = t;
       material.needsUpdate = true;
-      credito.textContent = 'Textura: NASA SVS, CGI Moon Kit (LRO). Uso visual; no es el dato científico del modelo.';
+      credito.textContent = `Textura: NASA CGI Moon Kit${urlPolo ? ' + relieve LOLA' : ''} (solo visual)`;
+      credito.title = credito.textContent;
       pedirCuadro();
     }, undefined, usarTexturaProvisional);
   } else {

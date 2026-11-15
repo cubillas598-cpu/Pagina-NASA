@@ -127,7 +127,7 @@ button, input, select { font: inherit; color: inherit; }
 .luna__grupo { transform: translate(-50%, -50%); padding: 6px 12px; border-radius: var(--r-pastilla); background: rgba(17, 18, 20, 0.8); border: 1px solid var(--acento); color: var(--acento-claro); }
 .luna__controles { position: absolute; right: var(--e-3); bottom: var(--e-3); display: flex; gap: 6px; }
 .luna__controles .boton-icono { width: 36px; height: 36px; background: rgba(17, 18, 20, 0.7); }
-.luna__credito { position: absolute; left: var(--e-3); bottom: var(--e-3); max-width: 60%; margin: 0; font-size: 11px; color: var(--texto-3); }
+.luna__credito { position: absolute; left: var(--e-3); bottom: var(--e-3); max-width: 60%; margin: 0; padding: 3px 9px; border-radius: var(--r-pastilla); background: rgba(17, 18, 20, 0.72); font-size: 11px; color: var(--texto-2); }
 .luna-ficha { display: flex; justify-content: space-between; align-items: center; gap: var(--e-3); flex-wrap: wrap; margin-top: var(--e-3); }
 .luna-ficha__nombre { font-weight: 600; }
 .luna-ficha__coord { font-size: var(--t-xs); color: var(--texto-2); }
@@ -264,7 +264,7 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Chips, botones y controles */
 .chip { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-xs); font-weight: 500; padding: 3px 10px; border-radius: var(--r-pastilla); border: 1px solid var(--borde); color: var(--texto-2); background: rgba(10, 11, 13, 0.4); }
-.chip--simulado { border-style: dashed; border-color: rgba(198, 168, 106, 0.55); color: var(--acento-claro); }
+.chip--fuente { border-color: rgba(198, 168, 106, 0.55); color: var(--acento-claro); }
 .chip--aviso { border-color: rgba(198, 168, 106, 0.5); color: var(--acento-claro); }
 .boton { min-height: 40px; padding: 0 var(--e-4); border-radius: var(--r-pastilla); border: 1px solid var(--borde); background: rgba(255, 255, 255, 0.1); color: var(--texto); font-size: var(--t-sm); font-weight: 500; cursor: pointer; transition: background var(--transicion); }
 .boton:hover { background: rgba(255, 255, 255, 0.18); }
@@ -357,9 +357,9 @@ option { background: var(--panel-solido); color: var(--texto); }
 .tabla thead th b { display: block; color: var(--texto); font-weight: 600; font-size: var(--t-sm); }
 .tabla tbody th { font-weight: 500; color: var(--texto-2); font-size: var(--t-sm); width: 32%; }
 .tabla td { font-size: var(--t-lg); font-weight: 600; }
-.tabla td small { font-size: var(--t-xs); color: var(--texto-3); font-weight: 400; }
+.tabla td small { display: block; margin-top: 2px; white-space: nowrap; font-size: var(--t-xs); color: var(--texto-3); font-weight: 400; }
 .tabla td.mejor { background: rgba(198, 168, 106, 0.10); box-shadow: inset 2px 0 0 var(--acento); }
-.marca-mejor { display: inline-block; margin-left: var(--e-2); font-size: var(--t-xs); font-weight: 600; color: var(--sobre-acento); background: linear-gradient(145deg, var(--acento-claro), var(--acento)); border-radius: var(--r-pastilla); padding: 0 8px; vertical-align: middle; }
+.marca-mejor { display: table; margin: 6px 0 0; font-size: var(--t-xs); font-weight: 600; color: var(--sobre-acento); background: linear-gradient(145deg, var(--acento-claro), var(--acento)); border-radius: var(--r-pastilla); padding: 0 8px; vertical-align: middle; }
 .tabla tr.sin-datos td { color: var(--texto-3); font-size: var(--t-sm); font-weight: 400; }
 .tabla tr.fila-score th, .tabla tr.fila-score td { border-bottom: 2px solid var(--borde); background: rgba(255, 255, 255, 0.03); }
 .tabla tr.fila-score td strong { font-size: var(--t-xl); }
@@ -414,7 +414,7 @@ option { background: var(--panel-solido); color: var(--texto); }
   .luna-visor { height: 320px; }
   .luna__nombre { display: none; }
   .luna__sitio.activo .luna__nombre { display: inline; }
-  .luna__credito { max-width: 50%; }
+  .luna__credito { max-width: calc(100% - 150px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
   .franja { grid-template-columns: minmax(0, 1fr); padding: var(--e-4); }
   .modulos, .metodologia__rejilla { grid-template-columns: minmax(0, 1fr); }
   #estado .estado__lista { grid-template-columns: minmax(0, 1fr); }

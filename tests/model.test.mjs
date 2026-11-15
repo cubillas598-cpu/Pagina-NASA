@@ -124,6 +124,10 @@ test('comparador marca empates y genera conclusiones prudentes', () => {
   assert.deepEqual(r.mejores.brecha, ['a', 'b']);
   assert.ok(r.conclusiones.includes('Sitio B presenta más horas de iluminación en el periodo seleccionado.'));
   assert.ok(!r.conclusiones.some((c) => /seguro|ideal/i.test(c)));
+  // Resumen por sitio: solo cuenta métricas ganadas sin empate, de más a menos.
+  // pctSol -> b; brecha empata a/b; pctTierra, pctSolTierra, ventanas y sombra empatan los tres.
+  assert.deepEqual(r.resumen.map((g) => [g.sitio.id, g.metricas]), [['b', ['iluminación solar']]]);
+  assert.equal(r.resumen[0].total, Object.keys(r.mejores).length);
 });
 
 test('suitabilityScore: pesos suman 1 y la formula es exacta con enlace activo', () => {

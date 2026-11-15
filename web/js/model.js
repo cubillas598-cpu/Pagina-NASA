@@ -363,24 +363,24 @@ export function segmentar(serie, i0, i1, clave) {
 }
 
 export const METRICAS_COMPARADOR = [
-  { clave: 'pctSol', etiqueta: 'Horas con iluminación solar', unidad: '%', mejor: 'max',
+  { clave: 'pctSol', corta: 'iluminación solar', etiqueta: 'Horas con iluminación solar', unidad: '%', mejor: 'max',
     frase: (s) => `${s} presenta más horas de iluminación en el periodo seleccionado.` },
-  { clave: 'pctTierra', etiqueta: 'Horas con vista directa a la Tierra', unidad: '%', mejor: 'max',
+  { clave: 'pctTierra', corta: 'vista directa a la Tierra', etiqueta: 'Horas con vista directa a la Tierra', unidad: '%', mejor: 'max',
     frase: (s) => `${s} mantiene más horas de vista directa a la Tierra.` },
-  { clave: 'pctSolTierra', etiqueta: 'Horas con Sol y Tierra visibles a la vez', unidad: '%', mejor: 'max',
+  { clave: 'pctSolTierra', corta: 'Sol y Tierra a la vez', etiqueta: 'Horas con Sol y Tierra visibles a la vez', unidad: '%', mejor: 'max',
     frase: (s) => `${s} tiene más horas con Sol y vista directa a la Tierra al mismo tiempo.` },
-  { clave: 'ventanaTierra', etiqueta: 'Mayor ventana continua con la Tierra visible', unidad: 'h', mejor: 'max',
+  { clave: 'ventanaTierra', corta: 'ventana continua con la Tierra', etiqueta: 'Mayor ventana continua con la Tierra visible', unidad: 'h', mejor: 'max',
     frase: (s) => `${s} ofrece la ventana continua más larga con la Tierra visible.` },
-  { clave: 'sombraMax', etiqueta: 'Mayor periodo continuo en sombra', unidad: 'h', mejor: 'min',
+  { clave: 'sombraMax', corta: 'sombra continua más corta', etiqueta: 'Mayor periodo continuo en sombra', unidad: 'h', mejor: 'min',
     frase: (s) => `${s} tiene el periodo en sombra más corto.` },
-  { clave: 'pctRespaldo', etiqueta: 'Horas con respaldo que llega a la Tierra', unidad: '%', mejor: 'max', enlace: true,
+  { clave: 'pctRespaldo', corta: 'respaldo que llega a la Tierra', etiqueta: 'Horas con respaldo que llega a la Tierra', unidad: '%', mejor: 'max', enlace: true,
     frase: (s) => `${s} tiene más horas de respaldo efectivo hacia la Tierra.` },
-  { clave: 'rapido', etiqueta: 'Enlace local rápido', unidad: 'h', mejor: 'max', enlace: true,
+  { clave: 'rapido', corta: 'enlace local rápido', etiqueta: 'Enlace local rápido', unidad: 'h', mejor: 'max', enlace: true,
     frase: (s) => `${s} acumula más horas de enlace local rápido.` },
   { clave: 'robusto', etiqueta: 'Enlace local robusto', unidad: 'h', mejor: null, enlace: true },
-  { clave: 'sin_enlace', etiqueta: 'Sin enlace local', unidad: 'h', mejor: 'min', enlace: true,
+  { clave: 'sin_enlace', corta: 'menos horas sin enlace local', etiqueta: 'Sin enlace local', unidad: 'h', mejor: 'min', enlace: true,
     frase: (s) => `${s} pasa menos horas sin enlace local.` },
-  { clave: 'brecha', etiqueta: 'Mayor intervalo sin comunicación', unidad: 'h', mejor: 'min',
+  { clave: 'brecha', corta: 'interrupción más corta', etiqueta: 'Mayor intervalo sin comunicación', unidad: 'h', mejor: 'min',
     frase: (s) => `${s} tiene la interrupción continua más corta.` },
 ];
 
@@ -411,7 +411,25 @@ export function compararSitios(filas, enlaceActivo) {
       conclusiones.push(def.frase(ganadores[0].sitio.etiqueta));
     }
   }
-  return { mejores, conclusiones };
+  return { mejores, conclusiones, resumen: resumirGanadores(filas, mejores) };
+}
+
+/**
+ * Agrupa las métricas ganadas por cada sitio (sin empates), de más a menos.
+ * @returns [{sitio, metricas: [corta], total}] y solo sitios con al menos una.
+ */
+export function resumirGanadores(filas, mejores) {
+  const total = Object.keys(mejores).length;
+  return filas
+    .map((f) => ({
+      sitio: f.sitio,
+      metricas: METRICAS_COMPARADOR
+        .filter((def) => mejores[def.clave] && mejores[def.clave].length === 1 && mejores[def.clave][0] === f.sitio.id)
+        .map((def) => def.corta),
+      total,
+    }))
+    .filter((g) => g.metricas.length > 0)
+    .sort((a, b) => b.metricas.length - a.metricas.length);
 }
 
 /**

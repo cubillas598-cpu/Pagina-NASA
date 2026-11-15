@@ -76,7 +76,6 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
     // Zona visible (sobre el horizonte) apenas sombreada.
     partes.push(`<rect x="${ME.izq}" y="${ME.sup}" width="${ancho}" height="${y(0) - ME.sup}" fill="rgba(255,255,255,.03)"/>`);
     partes.push(`<line x1="${ME.izq}" x2="${W - ME.der}" y1="${y(0)}" y2="${y(0)}" stroke="rgba(255,255,255,.4)" stroke-dasharray="4 5"/>`);
-    partes.push(`<text x="${W - ME.der}" y="${y(0) + 14}" text-anchor="end" class="ev-eje">0° = horizonte local</text>`);
 
     // Días en el eje x.
     const dias = [];
@@ -93,10 +92,12 @@ export function crearGraficaEvolucion(cont, { alCambiarIndice }) {
     };
     partes.push(`<path d="${linea((s) => s.tierra.el - s.tierra.horizonte)}" fill="none" stroke="${COLOR.tierra}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`);
     partes.push(`<path d="${linea((s) => s.sol.el - s.sol.horizonte)}" fill="none" stroke="${COLOR.sol}" stroke-width="2.6" stroke-linejoin="round"/>`);
+    // Rótulo del horizonte encima de las curvas, con halo para que se lea al cruzarlas.
+    partes.push(`<text x="${W - ME.der}" y="${y(0) + 14}" text-anchor="end" class="ev-eje ev-eje--halo">0° = horizonte local</text>`);
 
     cont.innerHTML = `
       <svg viewBox="0 0 ${W} ${H}" aria-hidden="true">
-        <style>.ev-eje{font:400 11px var(--fuente);fill:${COLOR.texto3}}.ev-burbuja{font:600 11px var(--fuente);fill:${COLOR.texto}}</style>
+        <style>.ev-eje{font:400 11px var(--fuente);fill:${COLOR.texto3}}.ev-eje--halo{paint-order:stroke;stroke:#22242a;stroke-width:4px;stroke-linejoin:round}.ev-burbuja{font:600 11px var(--fuente);fill:${COLOR.texto}}</style>
         ${partes.join('')}
         <g id="ev-cursor"></g>
       </svg>`;

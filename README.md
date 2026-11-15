@@ -82,8 +82,9 @@ python3 -m http.server 8000      # desde la raiz del repo
 ```
 
 Sin WebGL, la pagina muestra un mapa polar 2D en lugar del globo. La textura del
-globo es provisional y decorativa; las posiciones de los sitios salen de las
-coordenadas de `data/<sitio>.json` (iguales a `sitios.json`).
+globo es el NASA CGI Moon Kit (LRO) y el polo sur lleva el relieve sombreado de LOLA;
+ambos son solo visuales. Las posiciones de los sitios salen de las coordenadas de
+`data/<sitio>.json` (iguales a `sitios.json`).
 
 Version de respaldo para el jurado (`npm run empaquetar`), un solo HTML que abre con doble clic y sin
 internet (fuentes y datos incrustados):

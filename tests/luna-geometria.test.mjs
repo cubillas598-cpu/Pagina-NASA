@@ -74,3 +74,22 @@ test('suavizar va de 0 a 1 y se acota fuera del rango', () => {
   assert.equal(suavizar(7), 1);
   assert.ok(cerca(suavizar(0.5), 0.5));
 });
+
+test('casquetePolar: el polo cae al centro de la imagen y la longitud 0 hacia la fila 0', async () => {
+  const { casquetePolar, vectorALatLon } = await import('../web/js/luna-geometria.js');
+  const m = casquetePolar({ semiladoKm: 240, anillos: 2, sectores: 4 });
+  assert.equal(m.posiciones.length / 3, 3 * 5);
+  assert.equal(m.uvs.length / 2, 3 * 5);
+  assert.equal(m.indices.length, 2 * 4 * 6);
+  // Polo: uv (0.5, 0.5) y vector (0, -1, 0)
+  assert.deepEqual(m.uvs.slice(0, 2), [0.5, 0.5]);
+  assert.ok(Math.abs(m.posiciones[1] + 1) < 1e-12);
+  // Anillo 1 (120 km), lon 0: z = -120 km -> v = 0.75; lat = -(90 - 120/30.32)
+  const k = 5 + 0;
+  assert.ok(Math.abs(m.uvs[2 * k] - 0.5) < 1e-12 && Math.abs(m.uvs[2 * k + 1] - 0.75) < 1e-12);
+  const ll = vectorALatLon(m.posiciones.slice(3 * k, 3 * k + 3));
+  assert.ok(Math.abs(ll.lat + (90 - 120 / 30.32)) < 1e-9);
+  // Anillo 2, lon 90 E: x = +240 km -> u = 1
+  const k2 = 10 + 1;
+  assert.ok(Math.abs(m.uvs[2 * k2] - 1) < 1e-12 && Math.abs(m.uvs[2 * k2 + 1] - 0.5) < 1e-12);
+});

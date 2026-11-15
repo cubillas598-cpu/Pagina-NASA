@@ -19,7 +19,7 @@ const $ = (sel) => document.querySelector(sel);
 const VISTAS = ['resumen', 'sitios', 'comparador', 'enlace', 'metodologia'];
 const SUBTITULOS = {
   resumen: 'Luz, comunicación y enlace local del sitio activo en el periodo elegido.',
-  sitios: 'Terreno conceptual y horizonte del sitio en la hora seleccionada.',
+  sitios: 'Ubicación real y horizonte LOLA del sitio en la hora seleccionada.',
   comparador: 'Los tres sitios sobre el mismo periodo y los mismos supuestos.',
   enlace: 'Estado del enlace de respaldo hora por hora y por qué cambia.',
   metodologia: 'Qué se calcula, con qué datos y qué límites tiene la demo.',
@@ -328,6 +328,7 @@ async function iniciar() {
   const luna = crearLuna($('#luna'), {
     alElegir: elegirSitio,
     urlTextura: document.getElementById('textura-luna')?.getAttribute('href') || null,
+    urlPolo: document.getElementById('relieve-polo')?.getAttribute('href') || null,
     reducirMovimiento,
   });
   const mapaRespaldo = luna ? null : crearMapaPolar($('#luna'), elegirSitio);

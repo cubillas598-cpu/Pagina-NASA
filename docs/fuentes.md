@@ -44,7 +44,8 @@ La resolución es horaria: el inicio y el fin de cada ventana tienen un margen d
 
 | Recurso | Origen | Uso |
 |---|---|---|
-| Textura del globo lunar | Provisional, generada en el navegador | Solo visual. Sustituirla por el NASA CGI Moon Kit (https://svs.gsfc.nasa.gov/4720/, LRO) en `web/assets/luna/` cuando se descargue; NASA advierte que esos mapas son para visualización, no para análisis. |
+| Textura del globo lunar | NASA SVS, CGI Moon Kit (https://svs.gsfc.nasa.gov/4720/, LRO/LROC, 2048 × 1024) en `web/assets/luna/lroc_color_2k.jpg`, descargada por la Action `Textura NASA del globo` | Solo visual; NASA advierte que esos mapas son para visualización, no para análisis. |
+| Casquete del polo sur en el globo | Relieve sombreado del DEM de LOLA (`web/assets/luna/polo-sur-lola.png`, ~470 m/px, generado por la Action `Relieve LOLA para visores 3D`) | Solo visual: evita que la textura global se estire en el polo al acercarse a un sitio. |
 | Posición de los marcadores en el globo | Latitud y longitud de `data/<sitio>.json`, convertidas a la esfera en `web/js/luna-geometria.js` | Ubicación geográfica real de los sitios; la prueba `tests/luna-geometria.test.mjs` cubre la conversión. |
 | Three.js 0.187.0 (MIT) | npm | Render del globo. |
 | Relieve de los visores 3D de `docs/` | DEM de LOLA (NASA PGDA producto 90, 80 m/px; Barker et al. 2023) promediado en bloques de 2 km por `scripts/relieve_3d.py` → `docs/datos/relieve-lola-sur.js` | Solo visual. La Action `Relieve LOLA para visores 3D` lo regenera. Los paneles de métricas de esos visores siguen siendo ilustrativos; los cálculos validados están en `web/`. |

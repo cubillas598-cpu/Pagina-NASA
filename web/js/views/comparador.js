@@ -40,12 +40,19 @@ export function renderComparador(tabla, meta, lista, d) {
       const esMejor = mejores.includes(f.sitio.id);
       const texto = def.unidad === '%' ? `${num(v, 1)} %` : `${v} h`;
       const HORAS = { pctSol: 'horasSol', pctTierra: 'horasTierra', pctSolTierra: 'horasSolTierra', pctRespaldo: 'horasRespaldo' };
-      const extra = def.unidad === '%' ? `<small> ${f.metricas[HORAS[def.clave]]} h</small>` : '';
+      const extra = def.unidad === '%' ? `<small>${f.metricas[HORAS[def.clave]]} h</small>` : '';
       return `<td class="${esMejor ? 'mejor' : ''}">${texto}${extra}${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
     }).join('');
     return `<tr><th scope="row">${etiqueta}<br><small class="c-neutro">${criterio}</small></th>${celdas}</tr>`;
   }).join('');
 
   tabla.innerHTML = `<caption class="sr">Comparación de los tres sitios en el periodo seleccionado</caption>${cab}<tbody>${filaScore}${cuerpo}</tbody>`;
-  lista.innerHTML = comparacion.conclusiones.map((c) => `<li>${esc(c)}</li>`).join('');
+  // Resumen por sitio (qué métricas gana cada uno) y, aparte, los empates.
+  const lineas = comparacion.resumen.map((g) => {
+    const n = g.metricas.length;
+    return `<li><strong>${esc(g.sitio.etiqueta)}, ${esc(g.sitio.nombre_corto)}</strong>: mejor en ${n} de ${g.total} métricas `
+      + `(${esc(g.metricas.join(', '))}).</li>`;
+  });
+  const empates = comparacion.conclusiones.filter((c) => c.includes('empat'));
+  lista.innerHTML = [...lineas, ...empates.map((c) => `<li>${esc(c)}</li>`)].join('');
 }

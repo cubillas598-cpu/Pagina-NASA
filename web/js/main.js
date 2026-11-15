@@ -57,6 +57,9 @@ async function iniciar() {
   let estado = estadoInicial(msRef);
   const vistaHash = location.hash.slice(1);
   if (VISTAS.includes(vistaHash)) estado.vista = vistaHash;
+  // ?sitio=<id> (enlaces de la portada): abre la demo con ese sitio activo.
+  const sitioPedido = sitios.find((s) => s.id === new URLSearchParams(location.search).get('sitio'));
+  if (sitioPedido) estado.sitioId = sitioPedido.id;
 
   // ---- Derivados con caché: las series solo cambian con los supuestos del modelo.
   let claveSeries = '';
@@ -250,7 +253,16 @@ async function iniciar() {
 
   // ---- Navegación lateral
   function mostrarVista() {
-    for (const v of VISTAS) $(`#vista-${v}`).hidden = v !== estado.vista;
+    for (const v of VISTAS) {
+      const el = $(`#vista-${v}`);
+      const visible = v === estado.vista;
+      if (visible && el.hidden) {
+        el.classList.remove('vista--entra');
+        void el.offsetWidth; // reinicia la animación de entrada
+        el.classList.add('vista--entra');
+      }
+      el.hidden = !visible;
+    }
     document.querySelectorAll('.lateral__item').forEach((a) => {
       if (a.dataset.vista === estado.vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
@@ -398,6 +410,8 @@ async function iniciar() {
 
   leyendaMapa($('#leyenda-mapa'));
   render(true);
+  // Con un sitio pedido desde la portada, el globo va del polo a ese sitio.
+  if (sitioPedido && luna && estado.vista === 'resumen') setTimeout(() => luna.enfocarSitio(sitioPedido), 450);
 }
 
 iniciar();

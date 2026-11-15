@@ -431,6 +431,14 @@ option { background: var(--panel-solido); color: var(--texto); }
   .mapa svg .rosa text { font-size: 28px; }
 }
 
+/* Movimiento: entrada de cada vista, fundido del globo y respuesta al pulsar */
+@keyframes vista-entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.vista--entra { animation: vista-entra 280ms cubic-bezier(.2, .7, .2, 1); }
+.luna__lienzo canvas { opacity: 0; transition: opacity 700ms ease; }
+.luna--lista .luna__lienzo canvas { opacity: 1; }
+.boton, .boton-icono, .accion__circulo, .chip-sitio, .lateral__item { transition-property: background, color, border-color, transform; }
+.boton:active, .boton-icono:active, .accion:active .accion__circulo, .chip-sitio:active, .lateral__item:active { transform: scale(0.96); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }

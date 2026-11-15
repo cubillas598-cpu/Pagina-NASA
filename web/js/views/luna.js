@@ -114,6 +114,7 @@ export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimien
     material.map = texturaProvisional();
     material.needsUpdate = true;
     credito.textContent = 'Textura provisional, solo visual.';
+    cont.classList.add('luna--lista');
     pedirCuadro();
   }
   // Casquete del polo sur con el relieve real de LOLA (la textura global de 2k
@@ -146,6 +147,7 @@ export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimien
       material.needsUpdate = true;
       credito.textContent = `Textura: NASA CGI Moon Kit${urlPolo ? ' + relieve LOLA' : ''} (solo visual)`;
       credito.title = credito.textContent;
+      cont.classList.add('luna--lista');
       pedirCuadro();
     }, undefined, usarTexturaProvisional);
   } else {

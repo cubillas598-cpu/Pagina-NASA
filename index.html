@@ -34,7 +34,12 @@
     figure { margin: 0; }
     .polo { position: relative; width: 100%; max-width: 520px; margin-inline: auto; aspect-ratio: 1; }
     .polo img { display: block; width: 100%; height: 100%; border-radius: 50%; }
-    .sitio { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; }
+    .sitio { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; color: var(--m-texto); text-decoration: none; }
+    .sitio:hover b, .sitio:focus-visible b { background: var(--m-acento); color: var(--m-sobre-acento); }
+    .sitio:hover span, .sitio:focus-visible span { background: rgba(198, 168, 106, 0.92); color: var(--m-sobre-acento); }
+    .sitio b, .sitio span { transition: background .2s, color .2s; }
+    .sitio:focus-visible { outline: none; }
+    .sitio:focus-visible b { box-shadow: 0 0 0 3px rgba(226, 201, 144, 0.45); }
     .sitio b {
       display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
       background: var(--m-fondo); border: 1.5px solid var(--m-acento-claro); color: var(--m-acento-claro);
@@ -79,6 +84,28 @@
     .ficha dt { color: var(--m-texto-3); }
     .ficha dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
     .ficha p { margin: 16px 0 0; font-size: 0.875rem; color: var(--m-texto-2); }
+    .ficha { display: flex; flex-direction: column; }
+    .ficha__ir { margin-top: auto; padding-top: 16px; font-size: 0.875rem; font-weight: 500; color: var(--m-acento-claro); text-decoration: none; }
+    .ficha__ir:hover { text-decoration: underline; text-underline-offset: 4px; }
+    .m-barra__enlaces a.activo { color: var(--m-texto); }
+    .m-barra__enlaces a { position: relative; transition: color .2s; }
+    .m-barra__enlaces a.activo::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; border-radius: 2px; background: var(--m-acento); }
+
+    /* Entrada de la portada: una sola secuencia (texto, relieve, sitios) */
+    @keyframes sube { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes aparece { from { opacity: 0; transform: scale(0.965); } to { opacity: 1; transform: none; } }
+    @keyframes marca { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    @keyframes onda { from { opacity: 0.7; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
+    @media (prefers-reduced-motion: no-preference) {
+      .entra { animation: sube 620ms cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--paso) * 90ms); }
+      .polo img { animation: aparece 1100ms cubic-bezier(.2, .7, .2, 1) 120ms both; }
+      .sitio { animation: marca 460ms cubic-bezier(.3, 1.4, .5, 1) both; animation-delay: calc(900ms + var(--orden) * 140ms); }
+      .sitio b { position: relative; }
+      .sitio b::after {
+        content: ""; position: absolute; inset: -1.5px; border-radius: 50%; border: 1.5px solid var(--m-acento-claro);
+        animation: onda 1200ms ease-out both; animation-delay: calc(1250ms + var(--orden) * 140ms);
+      }
+    }
 
     .herramientas { margin: 44px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .herr {
@@ -143,10 +170,10 @@
     <div class="portada">
       <div class="ancho portada__rejilla">
         <div>
-          <p class="marca-evento">NASA Space Apps Challenge 2026 · Hermosillo · equipo buhospace</p>
-          <h1>Lunar Landing Site Navigator</h1>
-          <p class="bajada">Compara tres sitios de aterrizaje del polo sur lunar: cuántas horas reciben Sol, cuántas ven la Tierra y si un enlace local de respaldo mantiene la comunicación. Con efemérides de JPL Horizons y el relieve real de LOLA.</p>
-          <div class="acciones">
+          <p class="marca-evento entra" style="--paso:0">NASA Space Apps Challenge 2026 · Hermosillo · equipo buhospace</p>
+          <h1 class="entra" style="--paso:1">Lunar Landing Site Navigator</h1>
+          <p class="bajada entra" style="--paso:2">Compara tres sitios de aterrizaje del polo sur lunar: cuántas horas reciben Sol, cuántas ven la Tierra y si un enlace local de respaldo mantiene la comunicación. Con efemérides de JPL Horizons y el relieve real de LOLA.</p>
+          <div class="acciones entra" style="--paso:3">
             <a class="m-boton" href="web/">Abrir la demo</a>
             <a class="subrayado" href="#como-funciona">Ver cómo funciona</a>
           </div>
@@ -154,11 +181,11 @@
         <figure>
           <div class="polo">
             <img src="web/assets/luna/polo-sur-lola.png" width="1025" height="1025" alt="Relieve sombreado del polo sur lunar a partir del mapa de alturas de LOLA, con los tres sitios marcados.">
-            <span class="sitio sitio--der" style="left:55.01%;top:53.67%"><b>A</b><span>Peak Near Shackleton</span></span>
-            <span class="sitio sitio--izq" style="left:47.4%;top:52.71%"><b>B</b><span>Cresta de Gerlache</span></span>
-            <span class="sitio sitio--der" style="left:48.97%;top:24.53%"><b>C</b><span>Macizo Malapert</span></span>
+            <a class="sitio sitio--der" style="left:55.01%;top:53.67%;--orden:0" href="web/?sitio=shackleton" aria-label="Abrir la demo en Peak Near Shackleton"><b>A</b><span>Peak Near Shackleton</span></a>
+            <a class="sitio sitio--izq" style="left:47.4%;top:52.71%;--orden:1" href="web/?sitio=de_gerlache" aria-label="Abrir la demo en Cresta de Gerlache–Shackleton"><b>B</b><span>Cresta de Gerlache</span></a>
+            <a class="sitio sitio--der" style="left:48.97%;top:24.53%;--orden:2" href="web/?sitio=malapert" aria-label="Abrir la demo en Macizo Malapert"><b>C</b><span>Macizo Malapert</span></a>
           </div>
-          <figcaption>Polo sur lunar, 480 km de diámetro (hasta unos 82° S). Relieve: LOLA, NASA PGDA (Barker et al. 2023).</figcaption>
+          <figcaption>Polo sur lunar, 480 km de diámetro (hasta unos 82° S). Elige un sitio para abrirlo en la demo. Relieve: LOLA, NASA PGDA (Barker et al. 2023).</figcaption>
         </figure>
       </div>
     </div>
@@ -198,16 +225,19 @@
             <div class="ficha__cab"><span class="ficha__letra" aria-hidden="true">A</span><h3>Peak Near Shackleton</h3></div>
             <dl><dt>Latitud</dt><dd>89.017° S</dd><dt>Longitud</dt><dd>126.273° E</dd><dt>Altura (LOLA)</dt><dd>1 168 m</dd></dl>
             <p>Borde del cráter Shackleton, en una región candidata de Artemis III.</p>
+            <a class="ficha__ir" href="web/?sitio=shackleton">Ver este sitio en la demo</a>
           </article>
           <article class="ficha">
             <div class="ficha__cab"><span class="ficha__letra" aria-hidden="true">B</span><h3>Cresta de Gerlache–Shackleton</h3></div>
             <dl><dt>Latitud</dt><dd>89.406° S</dd><dt>Longitud</dt><dd>223.800° E</dd><dt>Altura (LOLA)</dt><dd>1 872 m</dd></dl>
             <p>La cresta que une los cráteres de Gerlache y Shackleton, a unos 18 km del polo.</p>
+            <a class="ficha__ir" href="web/?sitio=de_gerlache">Ver este sitio en la demo</a>
           </article>
           <article class="ficha">
             <div class="ficha__cab"><span class="ficha__letra" aria-hidden="true">C</span><h3>Macizo Malapert</h3></div>
             <dl><dt>Latitud</dt><dd>85.964° S</dd><dt>Longitud</dt><dd>357.681° E</dd><dt>Altura (LOLA)</dt><dd>4 990 m</dd></dl>
             <p>Un macizo de unos 5 km de altura, el más alejado del polo de los tres.</p>
+            <a class="ficha__ir" href="web/?sitio=malapert">Ver este sitio en la demo</a>
           </article>
         </div>
       </div>
@@ -282,5 +312,23 @@
       <p>Código en <a href="https://github.com/cubillas598-cpu/Pagina-NASA">GitHub</a> · Licencia Apache 2.0 · Tipografía Poppins (OFL)</p>
     </div>
   </footer>
+  <script>
+    // Resalta en la barra la sección visible.
+    (() => {
+      const enlaces = [...document.querySelectorAll('.m-barra__enlaces a[href^="#"]')];
+      const secciones = enlaces.map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+      if (!('IntersectionObserver' in window) || !secciones.length) return;
+      const marcar = (id) => enlaces.forEach((a) => {
+        const activo = a.getAttribute('href') === '#' + id;
+        a.classList.toggle('activo', activo);
+        if (activo) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+      });
+      const io = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => { if (e.isIntersecting) marcar(e.target.id); });
+      }, { rootMargin: '-45% 0px -50% 0px' });
+      secciones.forEach((s) => io.observe(s));
+      window.addEventListener('scroll', () => { if (window.scrollY < 200) marcar(''); }, { passive: true });
+    })();
+  </script>
 </body>
 </html>

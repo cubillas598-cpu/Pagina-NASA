@@ -7,7 +7,7 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Identidad común del sitio (Poppins local, carbón y dorado) -->
-  <link rel="stylesheet" href="../estilo/marca.css?v=20261115">
+  <link rel="stylesheet" href="../estilo/marca.css?v=20261115b">
   <!-- Three.js & OrbitControls (r128) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -213,6 +213,7 @@
 
   <!-- Panel Derecho: Ficha Técnica y Resultados del Sitio Seleccionado -->
   <section id="detail-panel" class="fixed right-4 top-24 z-20 w-[calc(100%-2rem)] sm:w-96 bg-slate-950/90 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 translate-x-[120%] opacity-0 pointer-events-auto max-h-[calc(100vh-8rem)] flex flex-col">
+    <p class="m-ilustrativo m-ilustrativo--ficha" role="note">Simulación ilustrativa: estas cifras salen de reglas aproximadas sobre el relieve, no del modelo validado. Los resultados con JPL Horizons y LOLA están en <a href="../web/#comparador">la demo</a>.</p>
     <!-- Cabecera de Ficha -->
     <div class="p-4 border-b border-slate-800/90 flex items-start justify-between gap-3 bg-gradient-to-r from-slate-900 to-slate-950">
       <div>
@@ -344,7 +345,7 @@
               <option value="balanced" selected>Equilibrado (Energía + Comms + Relieve)</option>
               <option value="solar">Máxima Energía Solar (Potencia continua)</option>
               <option value="comms">Máxima Comunicación Directa (Telemetría)</option>
-              <option value="safety">Seguridad Topográfica (Pendientes &lt;10°)</option>
+              <option value="safety">Pendiente aproximada (ilustrativa)</option>
             </select>
           </div>
 
@@ -408,6 +409,29 @@
 
   <script src="datos/relieve-lola-sur.js"></script>
   <script>
+    // Sin WebGL (o si falló la descarga de Three.js) el visor no puede dibujar el
+    // relieve: se muestra un aviso con caminos útiles en vez de una pantalla vacía.
+    (() => {
+      let ok = false;
+      try {
+        const c = document.createElement('canvas');
+        ok = typeof THREE !== 'undefined' && !!window.WebGLRenderingContext && !!(c.getContext('webgl2') || c.getContext('webgl'));
+      } catch (e) { ok = false; }
+      window.__visorListo = ok;
+      if (ok) return;
+      const aviso = document.createElement('section');
+      aviso.className = 'm-sin-webgl';
+      aviso.setAttribute('role', 'alert');
+      aviso.innerHTML = '<h1>Este navegador no puede mostrar la vista 3D</h1>'
+        + '<p>Hace falta WebGL, que está desactivado o no disponible aquí, o no se pudo descargar la biblioteca 3D. '
+        + 'La demo principal sí funciona sin WebGL: muestra un mapa polar 2D con los mismos tres sitios y los cálculos validados.</p>'
+        + '<p class="m-sin-webgl__acciones"><a class="m-boton" href="../web/">Abrir la demo</a> <a href="../">Volver al inicio</a></p>';
+      document.addEventListener('DOMContentLoaded', () => document.body.appendChild(aviso));
+      if (document.body) document.body.appendChild(aviso);
+    })();
+  </script>
+  <script>
+  if (window.__visorListo) {
     // =========================================================================
     // 1. DATOS DE LOS 3 SITIOS CANDIDATOS DE ATERRIZAJE (POLO SUR LUNAR)
     // =========================================================================
@@ -578,6 +602,9 @@
       aviso.setAttribute('role', 'alert');
       aviso.style.cssText = 'position:fixed;left:50%;top:5.5rem;transform:translateX(-50%);z-index:60;max-width:34rem;padding:.75rem 1rem;border-radius:.75rem;background:#3b0d0d;color:#fecaca;font:13px/1.4 system-ui,sans-serif;border:1px solid #7f1d1d';
       aviso.textContent = 'No se encontró datos/relieve-lola-sur.js: el terreno se muestra plano. Genera el relieve con la Action "Relieve LOLA para visores 3D" (ver README).';
+      document.querySelectorAll('span').forEach((el) => {
+        if (el.textContent.trim().startsWith('Relieve real LOLA')) el.textContent = 'Relieve no disponible: terreno plano';
+      });
       document.body.appendChild(aviso);
     }
 
@@ -1171,7 +1198,7 @@
         maxOutageNoRelayCycleH: 154.0, // ~6.4 días de interrupción máxima sin enlace local
         safetyScore: 91,
         prosWithRelay: [
-          'Mejor equilibrio entre seguridad de aterrizaje (<10° en la Cresta de Conexión) y acceso científico.',
+          'Equilibrio aproximado entre pendiente y acceso científico (valor ilustrativo, no evaluado).',
           'El respaldo de enlace local cubre los periodos de libración negativa, elevando la disponibilidad a >97%.',
           'Terrazas amplias permiten desplazamiento seguro de rovers hacia micro-trampas frías cercanas.'
         ],
@@ -1533,6 +1560,7 @@
     simPrioritySelect.addEventListener('change', () => renderComparatorResults(false));
     simRelayToggle.addEventListener('change', () => renderComparatorResults(false));
     simRelayTypeSelect.addEventListener('change', () => renderComparatorResults(false));
+  }
   </script>
   <script>
     // Coloca los paneles laterales justo debajo del encabezado del visor.

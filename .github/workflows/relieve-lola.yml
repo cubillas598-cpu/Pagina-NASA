@@ -53,9 +53,20 @@ jobs:
       - name: Remuestrear el relieve
         run: python3 scripts/relieve_3d.py --dem "$DEM"
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Recompilar el HTML sin conexion (lleva copia de las imagenes)
+        run: |
+          npm ci
+          npm run empaquetar
+          npm test
+
       - name: Publicar en el repositorio
         run: |
-          git add docs/datos/relieve-lola-sur.js web/assets/luna/polo-sur-lola.png
+          git add docs/datos/relieve-lola-sur.js web/assets/luna/polo-sur-lola.png web/build dist
           if git diff --cached --quiet; then
             echo "El relieve no cambio; no hay nada que publicar."
             exit 0

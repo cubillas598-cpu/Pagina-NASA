@@ -216,10 +216,14 @@ async function iniciar() {
       boton.textContent = 'Consultando…';
       mostrarAviso(`Pidiendo a JPL Horizons el Sol y la Tierra de ${sitios.length} sitios…`);
       try {
-        const nuevos = await consultarHorizons({
-          proxy: HORIZONS_PROXY_URL, sitios,
-          inicio: horasRef[0].t.slice(0, 10), fin: horasRef[horasRef.length - 1].t.slice(0, 10),
+        // El intermediario pide días completos con fin incluido; se pide hasta el
+        // día siguiente a la última muestra y se conservan solo las horas publicadas.
+        const ultimo = new Date(parseUtc(horasRef[horasRef.length - 1].t) + 86400000).toISOString().slice(0, 10);
+        const crudos = await consultarHorizons({
+          proxy: HORIZONS_PROXY_URL, sitios, inicio: horasRef[0].t.slice(0, 10), fin: ultimo,
         });
+        const horasPublicadas = new Set(horasRef.map((h) => h.t));
+        const nuevos = Object.fromEntries(Object.entries(crudos).map(([id, h]) => [id, h.filter((x) => horasPublicadas.has(x.t))]));
         let difMax = 0;
         for (const s of sitios) {
           const h = nuevos[s.id];

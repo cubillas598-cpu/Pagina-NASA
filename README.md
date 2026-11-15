@@ -57,7 +57,7 @@ Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
       (30 vs 100 vs 150 km). Si cambiaba los % de Malapert/de Gerlache - si cambio
       (+3.4 a +4.4 grados en la direccion mas despejada). Datos de produccion ya
       regenerados a 150 km, sin huecos de cobertura. Detalle en `docs/fuentes.md`.
-- [ ] Activar GitHub Pages (Settings > Pages > rama `main`, carpeta raiz)
+- [x] GitHub Pages activo (rama `main`, carpeta raiz)
 
 
 - [x] Script de efemerides (Sol/Tierra por hora, JSON) para los 3 sitios candidatos
@@ -164,8 +164,9 @@ muestra la fecha en que se pidieron los datos.
 horizonte de ~20 grados en todas direcciones, consistente con zona permanentemente en
 sombra (PSR), no con un sitio de aterrizaje. El de de Gerlache tampoco tenia cita a un
 paper real. Los dos se reemplazaron por sitios candidatos de literatura academica
-peer-reviewed (ver `sitios.json` para la cita completa de cada uno: Icarus 2024 para
-de Gerlache, iopscience/LPSC para Peak Near Shackleton). Regla aplicada de aqui en
+(ver `sitios.json` para la cita completa de cada uno: Icarus 2024 para de Gerlache;
+Gracy y Lee, LPSC 2024 abstract 1695, para Peak Near Shackleton, cotejada en el PDF
+primario el 2026-11-15; es un resumen de congreso, no un articulo revisado por pares). Regla aplicada de aqui en
 adelante en todo el proyecto: nunca Wikipedia como fuente de un dato que se presenta
 como hecho; siempre la mejor fuente academica disponible (paper peer-reviewed >
 organismo oficial > .edu > Wikipedia nunca). Los tres sitios ya dan horizontes
@@ -180,8 +181,8 @@ coordenada no esta confirmado letra por letra contra el texto original. Se marca
 
 Estructura: `web/js/model.js` (calculos puros, probados), `web/js/datos.js`
 (carga), `web/js/views/*` (una vista por panel), `web/css/tokens.css` (paleta y
-espaciado), `web/css/app.css` (componentes y responsive), `web/assets/fondo-estacion.svg`
-(fondo ambiental dibujado para la demo).
+espaciado), `web/css/app.css` (componentes y responsive), `web/assets/luna/` (textura NASA CGI Moon
+Kit y casquete polar LOLA del globo).
 
 Secciones (barra lateral): Resumen, Sitios, Comparador, Enlace local y Metodologia.
 
@@ -196,7 +197,7 @@ E = % horas con Sol visible (energia)
 C = % horas con vista directa a la Tierra (comunicacion)
 R = % horas con respaldo que llega a la Tierra: tramo local con servicio
     (rapido o robusto) Y punto de apoyo con la Tierra visible
-w1=0.40, w2=0.35, w3=0.25 (pesos editables, deben sumar 1)
+w1=0.40, w2=0.35, w3=0.25 (pesos fijos en web/js/model.js; propuesta del equipo)
 ```
 
 Si el enlace local esta desactivado, R no se mide y los dos pesos restantes se

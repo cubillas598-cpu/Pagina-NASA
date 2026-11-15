@@ -10,9 +10,15 @@ const ESTADO_POR_NIVEL = ['sin_enlace', 'robusto', 'rapido'];
 
 const FORMATO_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
-/** true si t tiene la forma AAAA-MM-DDTHH:MM y es una fecha real. */
+/**
+ * true si t tiene la forma AAAA-MM-DDTHH:MM y es una fecha real. Date.parse
+ * "corrige" fechas imposibles (30 de febrero, hora 24), así que el resultado
+ * se vuelve a escribir y debe coincidir con el texto original.
+ */
 export function esMarcaHoraria(t) {
-  return typeof t === 'string' && FORMATO_HORA.test(t) && !Number.isNaN(Date.parse(`${t}:00Z`));
+  if (typeof t !== 'string' || !FORMATO_HORA.test(t)) return false;
+  const ms = Date.parse(`${t}:00Z`);
+  return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 16) === t;
 }
 
 export function parseUtc(t) {
@@ -69,16 +75,33 @@ export function problemasEscenario(escenario) {
   const problemas = [];
   const num = (x) => typeof x === 'number' && Number.isFinite(x);
   if (!escenario || !Array.isArray(escenario.sitios) || escenario.sitios.length === 0) return ['El escenario no tiene sitios.'];
+  const vistos = new Set();
   for (const s of escenario.sitios) {
     const id = s && s.id ? s.id : 'sitio sin id';
+    if (!s || !s.id) problemas.push('Hay un sitio sin id.');
+    else if (vistos.has(s.id)) problemas.push(`${id}: el id está repetido.`);
+    else vistos.add(s.id);
     problemas.push(...problemasPerfil(s.horizonte, id));
     const r = s.relevo;
     if (!r || ![r.az_deg, r.el_deg, r.distancia_km].every(num)) problemas.push(`${id}: el punto de apoyo necesita azimut, elevación y distancia numéricos.`);
-    else problemas.push(...problemasPerfil(r.horizonte, `${id}/punto de apoyo`));
+    else {
+      if (r.distancia_km <= 0) problemas.push(`${id}: la distancia al punto de apoyo debe ser mayor que 0 km.`);
+      if (r.az_deg < 0 || r.az_deg >= 360 || Math.abs(r.el_deg) > 90) problemas.push(`${id}: azimut o elevación del punto de apoyo fuera de rango.`);
+      problemas.push(...problemasPerfil(r.horizonte, `${id}/punto de apoyo`));
+    }
   }
   const e = escenario.enlace_local;
   if (!e || !num(e.rf?.bateria_relevo_h) || !num(e.optico?.sep_sin_enlace_deg) || !num(e.optico?.sep_robusto_deg)) {
     problemas.push('Faltan umbrales numéricos del enlace local.');
+  } else {
+    if (e.rf.bateria_relevo_h <= 0) problemas.push('La batería del punto de apoyo debe durar más de 0 h.');
+    if (e.optico.sep_sin_enlace_deg < 0 || e.optico.sep_sin_enlace_deg >= e.optico.sep_robusto_deg) {
+      problemas.push('Umbrales ópticos incoherentes: la separación "sin enlace" debe ser menor que la de "robusto".');
+    }
+  }
+  const f = escenario.fuentes;
+  if (!f || typeof f !== 'object' || !f.efemerides || !Object.values(f).every((x) => x && typeof x.nombre === 'string')) {
+    problemas.push('Faltan las fuentes del escenario (nombre de cada una, incluida la de efemérides).');
   }
   const p = escenario.evento_polvo;
   if (!p || !esMarcaHoraria(p.inicio) || !num(p.duracion_s) || p.duracion_s < 0) problemas.push('El evento de polvo necesita inicio y duración válidos.');
@@ -92,6 +115,7 @@ export function problemasCoordenadas(escenario, coordenadas) {
     const c = coordenadas && coordenadas[s.id];
     const ok = c && Number.isFinite(c.lat) && Number.isFinite(c.lon) && Math.abs(c.lat) <= 90 && c.lon >= 0 && c.lon < 360;
     if (!ok) problemas.push(`${s.id}: faltan latitud o longitud válidas.`);
+    else if (c.elev_km !== undefined && !Number.isFinite(c.elev_km)) problemas.push(`${s.id}: la elevación debe ser numérica.`);
   }
   return problemas;
 }

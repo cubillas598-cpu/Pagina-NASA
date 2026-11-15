@@ -155,9 +155,12 @@ def normalizar_fecha(fecha_raw):
 
 
 def generar_para_sitio(sitio, inicio_dt, dias):
-    fin_dt = inicio_dt + timedelta(days=dias)
+    # Intervalo semiabierto [inicio, inicio + dias): cada muestra representa la
+    # hora que empieza en su marca, asi "31 dias" son 744 muestras y la ultima es
+    # el 31 a las 23:00, no el 1 del mes siguiente.
+    fin_dt = inicio_dt + timedelta(days=dias) - timedelta(hours=1)
     inicio_s = inicio_dt.strftime("%Y-%m-%d")
-    fin_s = fin_dt.strftime("%Y-%m-%d")
+    fin_s = fin_dt.strftime("%Y-%m-%d %H:%M")
 
     print(f"[{sitio['id']}] consultando Sol...", file=sys.stderr)
     sol = consultar_horizons(CUERPOS["sol"], sitio, inicio_s, fin_s)
@@ -172,6 +175,7 @@ def generar_para_sitio(sitio, inicio_dt, dias):
         "dias": dias,
         "escala_tiempo": "UT",
         "paso": "1h",
+        "intervalo": "semiabierto: cada muestra cubre la hora que empieza en su marca",
     }
     return {"sitio": sitio, "meta": meta, "horas": horas}
 
@@ -238,23 +242,51 @@ def main():
 
     # Primero se escriben archivos temporales y luego se renombran: un fallo de
     # disco o permisos no deja una mezcla de sitios nuevos y viejos.
-    temporales = []
     try:
-        DATA_DIR.mkdir(exist_ok=True)
-        for resultado in resultados:
-            salida = DATA_DIR / f"{resultado['sitio']['id']}.json"
-            tmp = salida.with_suffix(".json.tmp")
-            temporales.append((tmp, salida, len(resultado["horas"])))
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(resultado, f, ensure_ascii=False, indent=2)
-        for tmp, salida, n in temporales:
-            tmp.replace(salida)
-            print(f"[{salida.stem}] guardado en {salida} ({n} horas)")
+        publicar_conjunto(DATA_DIR, {f"{r['sitio']['id']}.json": r for r in resultados})
     except OSError as err:
-        for tmp, _, _ in temporales:
-            tmp.unlink(missing_ok=True)
         print(f"Error al escribir en {DATA_DIR}: {err}", file=sys.stderr)
         sys.exit(1)
+    for r in resultados:
+        print(f"[{r['sitio']['id']}] guardado en {DATA_DIR / (r['sitio']['id'] + '.json')} ({len(r['horas'])} horas)")
+
+
+def publicar_conjunto(carpeta, documentos):
+    """Escribe varios JSON como un conjunto: o quedan todos los nuevos o todos los
+    anteriores. Primero escribe temporales; luego guarda copia de los destinos
+    existentes, reemplaza uno por uno y, si un reemplazo falla, restaura los que
+    ya habia cambiado. Lanza OSError si no pudo publicar."""
+    carpeta.mkdir(exist_ok=True)
+    temporales, respaldos, hechos = [], [], []
+    try:
+        for nombre, doc in documentos.items():
+            destino = carpeta / nombre
+            tmp = destino.with_name(nombre + ".tmp")
+            temporales.append((tmp, destino))
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(doc, f, ensure_ascii=False, indent=2)
+        for tmp, destino in temporales:
+            if destino.exists():
+                bak = destino.with_name(destino.name + ".bak")
+                bak.write_bytes(destino.read_bytes())
+                respaldos.append((bak, destino))
+        for tmp, destino in temporales:
+            tmp.replace(destino)
+            hechos.append(destino)
+    except OSError:
+        respaldo_de = {d: b for b, d in respaldos}
+        for destino in hechos:
+            if destino in respaldo_de:
+                respaldo_de[destino].replace(destino)
+            else:
+                destino.unlink(missing_ok=True)
+        raise
+    finally:
+        for tmp, _ in temporales:
+            tmp.unlink(missing_ok=True)
+        for bak, _ in respaldos:
+            bak.unlink(missing_ok=True)
+
 
 if __name__ == "__main__":
     main()

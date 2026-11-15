@@ -1,5 +1,5 @@
 {
-  "_nota": "Coordenadas selenograficas (lat sur negativa, lon este 0-360). Elevacion en km sobre la esfera de referencia de la Luna (radio 1737.4 km): PENDIENTE, placeholder en 0 hasta que P2 la saque de LOLA. No usar estos numeros como definitivos para el README sin refinar elevacion.",
+  "_nota": "Coordenadas selenograficas (lat sur negativa, lon este 0-360). elev_km=0 para Horizons: el observador se pone sobre la esfera de 1737.4 km; la altura LOLA de cada punto (aprox. 1.2, 1.9 y 5.0 km) cambia los angulos del Sol y la Tierra en milesimas de grado, y el horizonte si usa el DEM.",
   "sitios": [
     {
       "id": "shackleton",
@@ -7,7 +7,7 @@
       "lat": -89.01701,
       "lon": 126.27302,
       "elev_km": 0,
-      "fuente": "corregido 2026-11-14: la coordenada previa (89 40'S 129 47'E, Wikipedia) era el CENTRO/fondo del crater, no el borde - dio horizonte de ~20 grados en todas direcciones (consistente con zona permanentemente en sombra, PSR). Reemplazada por un sitio candidato real: 'Peak Near Shackleton', region candidata oficial Artemis III cerca del borde, ~90% de iluminacion anual, paper peer-reviewed via iopscience.org DOI 10.3847/PSJ/aca590. [PENDIENTE R37]: numero (-89.01701, 126.27302) llego via resumen del motor de busqueda, no via lectura directa del PDF - el paper es real y citable, el numero puntual no esta confirmado letra por letra."
+      "fuente": "Gracy y Lee, LPSC 2024, abstract 1695, 'Candidate Landing Sites for Artemis 3 in Two NASA Candidate Landing Regions Nearest the Lunar South Pole' (https://www.hou.usra.edu/meetings/lpsc2024/pdf/1695.pdf). Coordenada 89.01701 S, 126.27302 E cotejada en el PDF primario el 2026-11-15: centro propuesto de una zona de exploracion de 2 km de radio cerca del borde del crater, dentro de la region candidata 'Peak Near Shackleton' de Artemis III. Es un resumen de congreso, no un articulo revisado por pares; el texto no da una cifra de ~90 % de iluminacion anual. Historial: la coordenada previa (89 40'S 129 47'E, Wikipedia) era el centro/fondo del crater."
     },
     {
       "id": "de_gerlache",

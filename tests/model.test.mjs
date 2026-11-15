@@ -46,7 +46,7 @@ test('clasificar toma el factor más limitante', () => {
 test('la serie es determinista y cubre todas las horas', () => {
   const a = serieDe('shackleton');
   const b = serieDe('shackleton');
-  assert.equal(a.length, 721);
+  assert.equal(a.length, leer('data/shackleton.json').horas.length);
   assert.deepEqual(a.map((m) => m.enlace.estado), b.map((m) => m.enlace.estado));
 });
 
@@ -265,7 +265,7 @@ test('el respaldo sin conexión contiene exactamente los mismos datos que la web
 
 test('esMarcaHoraria exige AAAA-MM-DDTHH:MM real', () => {
   assert.ok(esMarcaHoraria('2026-12-06T08:20'));
-  for (const malo of ['no-es-fecha', '2026-12-06', '2026-13-01T00:00', '2026-12-06T8:20', null]) assert.ok(!esMarcaHoraria(malo), String(malo));
+  for (const malo of ['no-es-fecha', '2026-12-06', '2026-13-01T00:00', '2026-12-06T8:20', '2026-02-30T00:00', '2026-12-31T24:00', '2026-12-31T23:60', null]) assert.ok(!esMarcaHoraria(malo), String(malo));
   assert.match(problemasEfemerides([{ t: 'x', sol_el: 1, sol_az: 1, tierra_el: 1, tierra_az: 1 }])[0], /fecha válida/);
 });
 
@@ -276,4 +276,26 @@ test('problemasCoordenadas: usa las coordenadas de las efemérides y rechaza fal
   for (const s of sitiosJson) assert.deepEqual([coords[s.id].lat, coords[s.id].lon], [s.lat, s.lon], `${s.id} coincide con sitios.json`);
   assert.match(problemasCoordenadas(escenario, { ...coords, malapert: { lat: -86 } }).join(' '), /malapert/);
   assert.match(problemasCoordenadas(escenario, { ...coords, shackleton: { lat: -89, lon: -10 } }).join(' '), /shackleton/);
+});
+
+test('problemasEscenario rechaza escenarios incoherentes antes de dibujar', () => {
+  const casos = [
+    [(e) => { e.sitios[1].id = e.sitios[0].id; }, /id está repetido/],
+    [(e) => { e.sitios[0].relevo.distancia_km = -4; }, /mayor que 0 km/],
+    [(e) => { e.enlace_local.rf.bateria_relevo_h = -72; }, /batería/],
+    [(e) => { e.enlace_local.optico.sep_sin_enlace_deg = 20; }, /Umbrales ópticos incoherentes/],
+    [(e) => { delete e.fuentes; }, /fuentes/],
+    [(e) => { e.evento_polvo.inicio = '2026-02-30T00:00'; }, /evento de polvo/],
+  ];
+  for (const [mutar, esperado] of casos) {
+    const copia = structuredClone(escenario);
+    mutar(copia);
+    assert.match(problemasEscenario(copia).join(' '), esperado);
+  }
+});
+
+test('problemasCoordenadas rechaza elevaciones no numéricas', () => {
+  const coords = Object.fromEntries(escenario.sitios.map((s) => [s.id, { ...leer(s.efemerides).sitio }]));
+  coords[escenario.sitios[0].id].elev_km = 'alto';
+  assert.match(problemasCoordenadas(escenario, coords).join(' '), /elevación debe ser numérica/);
 });

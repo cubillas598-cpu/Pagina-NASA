@@ -61,7 +61,8 @@ export function crearMapaPolar(cont, alElegir) {
       <rect width="${MAPA_W}" height="${MAPA_H}" fill="rgba(10,11,13,.35)"/>
       <g>${reticula()}</g>
       <g class="mapa-dinamico"></g>
-    </svg>`;
+    </svg>
+    <div class="mapa__lista" role="group" aria-label="Elegir sitio"></div>`;
   cont.addEventListener('click', (ev) => {
     const g = ev.target.closest('[data-sitio]');
     if (g) alElegir(g.dataset.sitio);
@@ -71,6 +72,7 @@ export function crearMapaPolar(cont, alElegir) {
     if (g && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); alElegir(g.dataset.sitio); }
   });
   const capa = cont.querySelector('.mapa-dinamico');
+  const lista = cont.querySelector('.mapa__lista');
 
   function render(d) {
     const { sitios, sitio: activo, muestra: m, estado } = d;
@@ -121,7 +123,7 @@ export function crearMapaPolar(cont, alElegir) {
       const gy = y - 19 * Math.cos(ang);
       capas.push(`<g class="marcador" data-sitio="${s.id}" tabindex="0" role="button" aria-pressed="${sel}" aria-label="${esc(s.etiqueta)}: ${esc(s.nombre_corto)}, ${Math.abs(s.lat).toFixed(3)}° S, ${s.lon.toFixed(3)}° E">
         <circle cx="${x}" cy="${y}" r="26" fill="transparent"/>
-        ${vertical ? '' : `<line x1="${gx}" y1="${gy}" x2="${ex}" y2="${ey}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.3)'}" stroke-width="1.2"/>`}
+        ${vertical ? '' : `<line class="marcador__guia" x1="${gx}" y1="${gy}" x2="${ex}" y2="${ey}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.3)'}" stroke-width="1.2"/>`}
         <circle class="marcador__anillo" cx="${x}" cy="${y}" r="17" fill="${sel ? 'rgba(198,168,106,.3)' : 'rgba(27,29,33,.9)'}" stroke="${sel ? COLOR.acentoClaro : 'rgba(255,255,255,.45)'}" stroke-width="2"/>
         <text x="${x}" y="${y + 5}" text-anchor="middle" class="etq etq--letra">${letra}</text>
         <text x="${ex + sep}" y="${ey + 1}" text-anchor="${lado}" class="etq2 etq--nombre" ${sel ? `fill="${COLOR.texto}"` : ''}>${esc(s.nombre_corto)}</text>
@@ -129,6 +131,9 @@ export function crearMapaPolar(cont, alElegir) {
       </g>`);
     }
     capa.innerHTML = capas.join('');
+    // En pantallas angostas los nombres del SVG serían ilegibles: lista HTML para elegir.
+    lista.innerHTML = sitios.map((s) => `<button type="button" class="chip-sitio${s.id === activo.id ? ' activo' : ''}" data-sitio="${s.id}" aria-pressed="${s.id === activo.id}">`
+      + `<span class="chip-sitio__letra">${esc(s.etiqueta.slice(-1))}</span>${esc(s.nombre_corto)}</button>`).join('');
   }
   return { render };
 }

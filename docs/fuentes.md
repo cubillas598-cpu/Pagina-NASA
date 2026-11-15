@@ -31,8 +31,8 @@ La resolución es horaria: el inicio y el fin de cada ventana tienen un margen d
 
 | Supuesto | Valor | Dónde | Comentario |
 |---|---|---|---|
-| Coordenadas de los sitios | `sitios.json` | `sitios.json` | Tomadas de artículos revisados por pares (cita en el campo `fuente`). Las cifras exactas no se cotejaron letra por letra con el texto original (pendiente R37). |
-| Elevación del sitio | `elev_km = 0` | `sitios.json` | Es un marcador. Su efecto en el ángulo del Sol y la Tierra es despreciable; el horizonte sí usa la altura del DEM. |
+| Coordenadas de los sitios | `sitios.json` | `sitios.json` | Cita en el campo `fuente`. Peak Near Shackleton: cotejada el 2026-11-15 en el PDF primario (Gracy y Lee, LPSC 2024, abstract 1695; resumen de congreso). De Gerlache (Icarus 2024) y Malapert (Kring et al. 2025, JGR Planets): cifras exactas aún sin cotejar letra por letra (pendiente R37). |
+| Elevación del sitio | `elev_km = 0` | `sitios.json` | Horizons pone al observador sobre la esfera de 1737.4 km. La altura LOLA real (≈1.2, 1.9 y 5.0 km) mueve los ángulos del Sol y la Tierra en milésimas de grado por paralaje; no se modela. El horizonte sí usa la altura del DEM. |
 | Ubicación del punto de apoyo | Azimut y distancia por sitio | `data/escenario_demo.json` (`relevo`) | Elegida por el equipo, sin optimización. Su horizonte sí viene de LOLA. |
 | Elevación angular del punto de apoyo visto desde el lander | `relevo.el_deg` | `data/escenario_demo.json` | Valor fijo; todavía no se deriva del DEM. |
 | Umbrales del enlace | RF: batería de 72 h. Óptico: Sol a menos de 12° pasa a robusto; a menos de 4°, sin enlace. | `data/escenario_demo.json` (`enlace_local`) | No es un presupuesto de enlace. "Rápido" y "robusto" son categorías del modelo, sin Mbps ni BER. |

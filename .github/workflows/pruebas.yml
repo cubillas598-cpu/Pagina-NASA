@@ -1,0 +1,48 @@
+# Pruebas en cada cambio: modelo (Node), parser y relieve (Python), validación
+# de los datos publicados y comprobación de que web/build y el HTML sin conexión
+# corresponden al código y a los datos del commit.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: |
+          npm ci
+          pip install -r requirements.txt
+
+      - name: Pruebas (Node y Python, sin omitir las de relieve)
+        run: |
+          node --test tests/*.test.mjs
+          python3 -m unittest discover -s tests -p "test_*.py" -v 2>&1 | tee /tmp/py.log
+          if grep -q "skipped" /tmp/py.log; then echo "::error::Se omitieron pruebas de Python"; exit 1; fi
+
+      - name: Validar datos publicados
+        run: npm run validar
+
+      - name: El respaldo y el bundle estan al dia
+        run: |
+          npm run empaquetar
+          git diff --exit-code -- web/build dist || { echo "::error::web/build o dist no corresponden al codigo y datos de este commit; corre npm run empaquetar"; exit 1; }

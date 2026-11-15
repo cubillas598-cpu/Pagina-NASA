@@ -108,3 +108,23 @@ body.m-visor #detail-panel { max-height: calc(100vh - var(--m-panel-top, calc(6r
   /* En pantallas angostas el panel lateral no tapa todo el relieve */
   body.m-visor aside.fixed { max-height: min(42vh, calc(100vh - var(--m-panel-top, 152px) - 1rem)) !important; }
 }
+
+/* Aviso permanente en cifras ilustrativas de los visores */
+body.m-visor .m-ilustrativo {
+  margin: 6px 0 0; padding: 6px 10px; border-radius: 10px;
+  background: rgba(198, 168, 106, 0.12); border: 1px solid rgba(198, 168, 106, 0.4);
+  color: var(--m-acento-claro); font-size: 12px; line-height: 1.45;
+}
+body.m-visor .m-ilustrativo a { color: var(--m-texto); text-decoration: underline; text-underline-offset: 3px; }
+body.m-visor .m-ilustrativo--ficha { margin: 10px 12px 0; }
+
+/* Visor sin WebGL: aviso con salida útil en lugar de un lienzo vacío */
+.m-sin-webgl {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; gap: 14px;
+  padding: 96px 24px 40px; text-align: center; font-family: var(--m-fuente);
+  background: radial-gradient(900px 560px at 50% 45%, #1d1e22 0%, var(--m-fondo) 62%); color: var(--m-texto);
+}
+.m-sin-webgl h1 { margin: 0; font-size: clamp(1.4rem, 3.4vw, 2rem); font-weight: 600; }
+.m-sin-webgl p { margin: 0 auto; max-width: 52ch; color: var(--m-texto-2); line-height: 1.6; }
+.m-sin-webgl__acciones { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: center; align-items: center; margin-top: 10px !important; }
+.m-sin-webgl__acciones a:not(.m-boton) { color: var(--m-texto); text-underline-offset: 4px; }

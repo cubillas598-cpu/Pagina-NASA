@@ -71,6 +71,7 @@ test('el Worker valida cuerpo, coordenadas y periodo', () => {
   assert.equal(ok.params.get('TIME_TYPE'), 'UT');
   assert.equal(ok.params.get('COMMAND'), "'10'");
   for (const malo of [{ cuerpo: '301' }, { lat: '-91' }, { lon: '360' }, { lat: '' }, { lon: 'x' }, { inicio: '2026-13-01' },
+    { inicio: '2026-02-30', fin: '2026-03-03' }, { fin: '2026-12-32' },
     { fin: '2026-12-01' }, { fin: '2027-03-01' }, { elev: '50' }]) {
     assert.ok(validarConsulta(q(malo)).error, JSON.stringify(malo));
   }

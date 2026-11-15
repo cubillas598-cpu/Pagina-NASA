@@ -125,5 +125,55 @@ class Main(unittest.TestCase):
             self.assertEqual(list(datos.iterdir()), [])
 
 
+class PublicarConjunto(unittest.TestCase):
+    def test_fallo_en_el_segundo_reemplazo_restaura_el_primero(self):
+        with tempfile.TemporaryDirectory() as d:
+            carpeta = Path(d)
+            (carpeta / "a.json").write_text('"viejo-a"', encoding="utf-8")
+            (carpeta / "b.json").write_text('"viejo-b"', encoding="utf-8")
+            original = Path.replace
+            llamadas = []
+
+            def replace_roto(self_ruta, destino):
+                if self_ruta.name.endswith(".tmp"):
+                    llamadas.append(self_ruta.name)
+                    if len(llamadas) == 2:
+                        raise OSError(13, "Permission denied")
+                return original(self_ruta, destino)
+
+            with mock.patch.object(Path, "replace", replace_roto), self.assertRaises(OSError):
+                ef.publicar_conjunto(carpeta, {"a.json": "nuevo-a", "b.json": "nuevo-b"})
+            self.assertEqual((carpeta / "a.json").read_text(encoding="utf-8"), '"viejo-a"')
+            self.assertEqual((carpeta / "b.json").read_text(encoding="utf-8"), '"viejo-b"')
+            self.assertEqual(sorted(p.name for p in carpeta.iterdir()), ["a.json", "b.json"])
+
+    def test_archivo_nuevo_se_borra_si_el_conjunto_falla(self):
+        with tempfile.TemporaryDirectory() as d:
+            carpeta = Path(d)
+            (carpeta / "b.json").write_text('"viejo-b"', encoding="utf-8")
+            original = Path.replace
+            def replace_roto(self_ruta, destino):
+                if self_ruta.name == "b.json.tmp":
+                    raise OSError(28, "No space left on device")
+                return original(self_ruta, destino)
+            with mock.patch.object(Path, "replace", replace_roto), self.assertRaises(OSError):
+                ef.publicar_conjunto(carpeta, {"a.json": 1, "b.json": 2})
+            self.assertEqual(sorted(p.name for p in carpeta.iterdir()), ["b.json"])
+
+
+class Intervalo(unittest.TestCase):
+    def test_un_dia_son_24_horas_semiabiertas(self):
+        urls = []
+        fila = [" 2026-Dec-01 00:00, *, , 10.0, 1.0,"]
+        def falso(url):
+            urls.append(url)
+            return {"result": respuesta(fila)}
+        sitio = {"id": "s", "lat": -89.0, "lon": 126.0, "elev_km": 0}
+        from datetime import datetime
+        with mock.patch.object(ef, "descargar", side_effect=falso):
+            ef.generar_para_sitio(sitio, datetime(2026, 12, 1), 1)
+        self.assertTrue(all("STOP_TIME=%272026-12-01+23%3A00%27" in u for u in urls), urls[0])
+
+
 if __name__ == "__main__":
     unittest.main()

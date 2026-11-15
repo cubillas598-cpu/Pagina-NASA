@@ -19,7 +19,13 @@ export function origenPermitido(origen, permitidos) {
   return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origen) && permitidos.includes('localhost');
 }
 
-const esFecha = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '') && !Number.isNaN(Date.parse(`${s}T00:00:00Z`));
+// Date.parse corrige fechas imposibles (2026-02-30 -> 2 de marzo): se exige que
+// la fecha reescrita coincida con el texto.
+const esFecha = (s) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s || '')) return false;
+  const ms = Date.parse(`${s}T00:00:00Z`);
+  return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === s;
+};
 
 /** Valida la consulta. Devuelve { error } o { params } para Horizons. */
 export function validarConsulta(q) {

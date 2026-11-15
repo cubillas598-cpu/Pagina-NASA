@@ -113,12 +113,21 @@ export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimien
   function usarTexturaProvisional() {
     material.map = texturaProvisional();
     material.needsUpdate = true;
-    credito.textContent = 'Textura provisional, solo visual.';
+    actualizarCredito();
     cont.classList.add('luna--lista');
     pedirCuadro();
   }
   // Casquete del polo sur con el relieve real de LOLA (la textura global de 2k
   // se estira en el polo). Si la imagen no carga, queda solo la textura global.
+  // El crédito solo nombra lo que de verdad se cargó.
+  let texturaNasa = false;
+  let poloLola = false;
+  const actualizarCredito = () => {
+    const base = texturaNasa ? 'Textura: NASA CGI Moon Kit' : 'Textura provisional';
+    credito.textContent = `${base}${poloLola ? ' + relieve LOLA' : ''} (solo visual)`;
+    credito.title = credito.textContent;
+  };
+
   if (urlPolo) {
     new TextureLoader().load(urlPolo, (t) => {
       t.colorSpace = SRGBColorSpace;
@@ -135,6 +144,8 @@ export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimien
       }));
       cap.renderOrder = 1;
       globo.add(cap);
+      poloLola = true;
+      actualizarCredito();
       pedirCuadro();
     }, undefined, () => {});
   }
@@ -145,8 +156,8 @@ export function crearLuna(cont, { alElegir, urlTextura, urlPolo, reducirMovimien
       t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
       material.map = t;
       material.needsUpdate = true;
-      credito.textContent = `Textura: NASA CGI Moon Kit${urlPolo ? ' + relieve LOLA' : ''} (solo visual)`;
-      credito.title = credito.textContent;
+      texturaNasa = true;
+      actualizarCredito();
       cont.classList.add('luna--lista');
       pedirCuadro();
     }, undefined, usarTexturaProvisional);

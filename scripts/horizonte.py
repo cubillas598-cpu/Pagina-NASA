@@ -40,8 +40,9 @@ RAIZ_DATOS = Path(__file__).resolve().parent.parent
 SITIOS_PATH = RAIZ_DATOS / "sitios.json"
 DEM_PATH = RAIZ_DATOS / "dem" / "LDEM_80S_80MPP_ADJ.TIF"
 
-REPO_PAGINA = Path(r"D:/PROYECTOS CLAUDE/Pagina-NASA")
-ESCENARIO_PATH = REPO_PAGINA / "data" / "escenario_demo.json"
+# Rutas relativas a este repo (antes fijas en D:/PROYECTOS CLAUDE/...); se pueden
+# cambiar con --dem y --salida.
+ESCENARIO_PATH = RAIZ_DATOS / "data" / "escenario_demo.json"
 
 RADIO_MOON_M = 1737400.0
 RADIO_MAX_KM = 150.0  # subido de 30km: la prueba de sensibilidad mostro que
@@ -126,13 +127,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sitio")
     ap.add_argument("--todos", action="store_true")
+    ap.add_argument("--dem", type=Path, default=DEM_PATH, help="GeoTIFF del DEM de LOLA")
+    ap.add_argument("--salida", type=Path, default=ESCENARIO_PATH, help="escenario_demo.json a actualizar")
     args = ap.parse_args()
+    dem_path, escenario_path = args.dem, args.salida
 
-    if not DEM_PATH.exists():
-        print(f"Falta el DEM en {DEM_PATH}. Descargalo primero.", file=sys.stderr)
+    if not dem_path.exists():
+        print(f"Falta el DEM en {dem_path}. Descargalo de https://pgda.gsfc.nasa.gov/products/90", file=sys.stderr)
         sys.exit(1)
-    if not ESCENARIO_PATH.exists():
-        print(f"No encuentro {ESCENARIO_PATH}. Revisar que el repo este clonado ahi.",
+    if not escenario_path.exists():
+        print(f"No encuentro {escenario_path}. Usa --salida para indicar el escenario.",
               file=sys.stderr)
         sys.exit(1)
 
@@ -150,12 +154,12 @@ def main():
 
     geod = Geod(a=RADIO_MOON_M, b=RADIO_MOON_M)
 
-    with open(ESCENARIO_PATH, "r", encoding="utf-8") as f:
+    with open(escenario_path, "r", encoding="utf-8") as f:
         escenario = json.load(f)
 
     sitios_por_id = {s["id"]: s for s in escenario["sitios"]}
 
-    with rasterio.open(DEM_PATH) as dataset:
+    with rasterio.open(dem_path) as dataset:
         transformador = construir_transformador(dataset.crs)
         banda = dataset.read(1)
         for sitio in objetivo:
@@ -204,9 +208,9 @@ def main():
                       f"min={min(validos_r):.2f} deg, max={max(validos_r):.2f} deg, "
                       f"{len(validos_r)}/360 puntos validos")
 
-    with open(ESCENARIO_PATH, "w", encoding="utf-8") as f:
+    with open(escenario_path, "w", encoding="utf-8") as f:
         json.dump(escenario, f, ensure_ascii=False, indent=2)
-    print(f"Guardado: {ESCENARIO_PATH}")
+    print(f"Guardado: {escenario_path}")
 
 
 if __name__ == "__main__":

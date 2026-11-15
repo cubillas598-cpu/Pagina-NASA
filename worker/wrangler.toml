@@ -1,0 +1,10 @@
+# Cloudflare Worker: intermediario CORS para JPL Horizons (ver README.md).
+name = "lunar-horizons-proxy"
+main = "horizons-proxy.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+# Origenes que pueden usar el intermediario, separados por coma.
+# "localhost" cubre http://localhost y http://127.0.0.1 en cualquier puerto;
+# "null" cubre el HTML sin conexion abierto con doble clic.
+ORIGENES = "https://cubillas598-cpu.github.io,localhost,null"

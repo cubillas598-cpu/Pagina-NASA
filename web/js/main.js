@@ -1,5 +1,7 @@
 import { cargarDatos } from './datos.js';
-import { calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
+import { HORIZONS_PROXY_URL } from './config.js';
+import { consultarHorizons } from './horizons.js';
+import { problemasEfemerides, calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
 import { isoDia, esc } from './format.js';
 import { ENLACE, etiquetaHorizonte, codigoHorizonte } from './views/estilos.js';
 import { renderFranja, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
@@ -194,6 +196,57 @@ async function iniciar() {
   $('#reglas-enlace').innerHTML = `
     <li><strong>Radiofrecuencia:</strong> requiere línea de vista al punto de apoyo. Si el punto de apoyo queda en sombra opera con batería (robusto); tras ${r.rf.bateria_relevo_h} h en sombra se considera sin enlace.</li>
     <li><strong>Óptico:</strong> si el Sol queda a menos de ${r.optico.sep_robusto_deg}° de la línea de vista el enlace pasa a robusto; a menos de ${r.optico.sep_sin_enlace_deg}° queda sin enlace. El evento de polvo dura ${escenario.evento_polvo.duracion_s} s, calibrado con Apollo (10–12 s de polvo visible en el descenso final). Como cada muestra vale una hora, esa hora pasa a robusto; solo un evento de media hora o más la dejaría sin enlace. El momento del aterrizaje cercano es un supuesto.</li>`;
+
+  // ---- Consulta en vivo a JPL Horizons (solo si hay intermediario configurado).
+  // Pide el mismo periodo que los datos publicados; si responde bien, reemplaza
+  // las efemérides en memoria y muestra cuánto difieren de las publicadas.
+  if (HORIZONS_PROXY_URL) {
+    const boton = $('#consultar-horizons');
+    const aviso = $('#estado-horizons');
+    $('#consulta-vivo').hidden = false;
+    const mostrarAviso = (texto, error = false) => {
+      aviso.textContent = texto;
+      aviso.classList.toggle('consulta-vivo__estado--error', error);
+    };
+    boton.addEventListener('click', async () => {
+      boton.disabled = true;
+      boton.textContent = 'Consultando…';
+      mostrarAviso(`Pidiendo a JPL Horizons el Sol y la Tierra de ${sitios.length} sitios…`);
+      try {
+        const nuevos = await consultarHorizons({
+          proxy: HORIZONS_PROXY_URL, sitios,
+          inicio: horasRef[0].t.slice(0, 10), fin: horasRef[horasRef.length - 1].t.slice(0, 10),
+        });
+        let difMax = 0;
+        for (const s of sitios) {
+          const h = nuevos[s.id];
+          const mal = problemasEfemerides(h, s.id);
+          if (mal.length) throw new Error(mal[0]);
+          const actual = efemerides[s.id];
+          if (h.length !== actual.length || h.some((x, i) => x.t !== actual[i].t)) {
+            throw new Error(`Horizons devolvió otras horas para ${s.id}; se conservan los datos publicados.`);
+          }
+          for (let i = 0; i < h.length; i++) {
+            for (const k of ['sol_el', 'sol_az', 'tierra_el', 'tierra_az']) {
+              let d = Math.abs(h[i][k] - actual[i][k]);
+              if (k.endsWith('_az')) d = Math.min(d, 360 - d);
+              difMax = Math.max(difMax, d);
+            }
+          }
+        }
+        Object.assign(efemerides, nuevos);
+        claveSeries = '';
+        render(true);
+        const hora = new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+        mostrarAviso(`Datos en vivo de JPL Horizons (${hora}). Diferencia máxima con los publicados: ${difMax.toFixed(6)}°.`);
+      } catch (err) {
+        mostrarAviso(`${err.message} La demo sigue con los datos publicados.`, true);
+      } finally {
+        boton.disabled = false;
+        boton.textContent = 'Consultar JPL Horizons ahora';
+      }
+    });
+  }
 
   // ---- Navegación lateral
   function mostrarVista() {

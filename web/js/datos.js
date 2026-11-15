@@ -36,7 +36,7 @@ export function validarDatos(escenario, efemerides, coordenadas, generado = {}) 
   if (malEscenario.length) throw new Error(`Escenario no válido. ${malEscenario.slice(0, 5).join(' ')}`);
   const malCoord = problemasCoordenadas(escenario, coordenadas);
   if (malCoord.length) throw new Error(`Coordenadas no válidas. ${malCoord.join(' ')}`);
-  for (const s of escenario.sitios) Object.assign(s, { lat: coordenadas[s.id].lat, lon: coordenadas[s.id].lon });
+  for (const s of escenario.sitios) Object.assign(s, { lat: coordenadas[s.id].lat, lon: coordenadas[s.id].lon, elev_km: coordenadas[s.id].elev_km ?? 0 });
   const ids = escenario.sitios.map((s) => s.id);
   const ref = efemerides[ids[0]];
   for (const id of ids) {

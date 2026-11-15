@@ -58,34 +58,39 @@ body.m-visor { background-color: var(--m-fondo) !important; color: var(--m-texto
 body.m-visor .font-mono-tech { font-family: var(--m-fuente) !important; letter-spacing: 0 !important; }
 body.m-visor .uppercase { text-transform: none !important; letter-spacing: 0 !important; }
 
-/* Superficies: carbón translúcido como las tarjetas de la demo */
-body.m-visor .bg-slate-950,
-body.m-visor .bg-slate-950\/90,
-body.m-visor .bg-slate-950\/85,
-body.m-visor .bg-slate-950\/80 { background-color: rgba(27, 29, 33, 0.86) !important; }
-body.m-visor .bg-slate-900,
-body.m-visor .bg-slate-900\/80 { background-color: rgba(34, 36, 41, 0.9) !important; }
-body.m-visor .bg-slate-800 { background-color: rgba(255, 255, 255, 0.08) !important; }
+/* Superficies: carbón translúcido como las tarjetas de la demo.
+   Selectores por atributo: cubren variantes con opacidad (/80, /90…) y las
+   clases que el visor añade por JavaScript. */
+body.m-visor [class*="bg-slate-950"],
+body.m-visor [class*="bg-slate-900"] { background-color: rgba(27, 29, 33, 0.88) !important; }
+body.m-visor [class*="bg-slate-800"] { background-color: rgba(255, 255, 255, 0.07) !important; }
 body.m-visor [class*="border-slate-"] { border-color: var(--m-borde) !important; }
 body.m-visor [class*="rounded-2xl"] { border-radius: 22px !important; }
 body.m-visor [class*="shadow-"] { box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.65) !important; }
-body.m-visor .bg-gradient-to-r.from-slate-900 { background-image: none !important; }
+body.m-visor [class*="from-slate-9"] { background-image: none !important; }
 
 /* Texto */
 body.m-visor .text-white, body.m-visor .text-slate-200 { color: var(--m-texto) !important; }
 body.m-visor .text-slate-300, body.m-visor .text-slate-400 { color: var(--m-texto-2) !important; }
 body.m-visor .text-slate-500 { color: var(--m-texto-3) !important; }
 
-/* Acentos: azul cielo y ámbar pasan al dorado de la marca; esmeralda queda para "real/ok" */
-body.m-visor .text-sky-300, body.m-visor .text-sky-400, body.m-visor .text-amber-300, body.m-visor .text-amber-400 { color: var(--m-acento-claro) !important; }
-body.m-visor .bg-sky-500\/15, body.m-visor .bg-amber-500\/15 { background-color: rgba(198, 168, 106, 0.14) !important; }
-body.m-visor .border-sky-400\/30, body.m-visor .border-amber-500\/30, body.m-visor .border-amber-400\/30 { border-color: rgba(198, 168, 106, 0.45) !important; }
-body.m-visor .bg-sky-500 { background-color: var(--m-acento) !important; }
-body.m-visor .bg-gradient-to-r.from-sky-500 {
+/* Acentos: azul cielo, índigo y ámbar pasan al dorado de la marca; esmeralda queda para "real/ok" */
+body.m-visor [class*="text-sky-"], body.m-visor [class*="text-amber-"] { color: var(--m-acento-claro) !important; }
+body.m-visor [class*="border-sky-"], body.m-visor [class*="border-amber-"] { border-color: rgba(198, 168, 106, 0.5) !important; }
+body.m-visor [class*="bg-sky-500/"], body.m-visor [class*="bg-amber-500/"] { background-color: rgba(198, 168, 106, 0.16) !important; }
+body.m-visor [class~="bg-sky-500"], body.m-visor [class~="bg-sky-400"] { background-color: var(--m-acento) !important; color: var(--m-sobre-acento) !important; }
+body.m-visor [class*="from-sky-"] {
   background-image: linear-gradient(145deg, var(--m-acento-claro), var(--m-acento)) !important;
   color: var(--m-sobre-acento) !important; border-color: transparent !important;
 }
-body.m-visor .bg-gradient-to-r.from-sky-500 svg { color: var(--m-sobre-acento) !important; }
+body.m-visor [class*="from-sky-"] svg, body.m-visor [class*="from-sky-"] * { color: var(--m-sobre-acento) !important; }
+
+/* Controles deslizantes y barras de desplazamiento */
+body.m-visor input[type="range"] { background: rgba(255, 255, 255, 0.12) !important; accent-color: var(--m-acento); }
+body.m-visor input[type="range"]::-webkit-slider-thumb { background: var(--m-acento-claro) !important; border-color: var(--m-fondo) !important; box-shadow: 0 0 0 3px rgba(198, 168, 106, 0.25) !important; }
+body.m-visor input[type="range"]::-moz-range-thumb { background: var(--m-acento-claro); border: 2px solid var(--m-fondo); }
+body.m-visor ::-webkit-scrollbar-track { background: transparent !important; }
+body.m-visor ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18) !important; }
 
 /* Barra superior sobre el lienzo 3D */
 body.m-visor .m-barra {
@@ -93,8 +98,13 @@ body.m-visor .m-barra {
   background: rgba(17, 18, 20, 0.82); border-bottom: 1px solid var(--m-borde-suave);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
 }
-/* Los paneles del visor bajan para dejar sitio a la barra (56 px) */
+/* Los paneles del visor bajan para dejar sitio a la barra y al encabezado del visor.
+   --m-panel-top lo calcula cada visor con la altura real de su encabezado. */
 body.m-visor header.fixed.top-4 { top: calc(1rem + 56px) !important; }
-body.m-visor .fixed.top-24 { top: calc(6rem + 56px) !important; }
-body.m-visor aside.fixed { max-height: calc(100vh - 7.5rem - 56px) !important; }
-body.m-visor #detail-panel { max-height: calc(100vh - 8rem - 56px) !important; }
+body.m-visor .fixed.top-24 { top: var(--m-panel-top, calc(6rem + 56px)) !important; }
+body.m-visor aside.fixed { max-height: calc(100vh - var(--m-panel-top, calc(6rem + 56px)) - 1rem) !important; }
+body.m-visor #detail-panel { max-height: calc(100vh - var(--m-panel-top, calc(6rem + 56px)) - 1rem) !important; }
+@media (max-width: 1023px) {
+  /* En pantallas angostas el panel lateral no tapa todo el relieve */
+  body.m-visor aside.fixed { max-height: min(42vh, calc(100vh - var(--m-panel-top, 152px) - 1rem)) !important; }
+}

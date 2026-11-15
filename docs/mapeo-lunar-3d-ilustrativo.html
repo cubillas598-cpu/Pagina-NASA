@@ -1534,5 +1534,17 @@
     simRelayToggle.addEventListener('change', () => renderComparatorResults(false));
     simRelayTypeSelect.addEventListener('change', () => renderComparatorResults(false));
   </script>
+  <script>
+    // Coloca los paneles laterales justo debajo del encabezado del visor.
+    (() => {
+      const ajustar = () => {
+        const cab = document.querySelector('header.fixed');
+        if (cab) document.documentElement.style.setProperty('--m-panel-top', `${Math.round(cab.getBoundingClientRect().bottom + 12)}px`);
+      };
+      ajustar();
+      window.addEventListener('resize', ajustar);
+      if (document.fonts) document.fonts.ready.then(ajustar);
+    })();
+  </script>
 </body>
 </html>

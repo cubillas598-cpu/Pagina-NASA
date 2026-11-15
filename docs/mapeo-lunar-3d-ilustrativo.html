@@ -102,9 +102,9 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white">POLO SUR LUNAR — MAPA TOPOGRÁFICO 3D</h1>
-          <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">VISTA ILUSTRATIVA — relieve sintético, no DEM real</span>
+          <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="DEM de LOLA, NASA PGDA producto 90 (Barker et al. 2023), promediado en bloques de 2 km.">Relieve real LOLA · promedio 2 km</span>
         </div>
-        <p class="text-xs text-slate-400">Región Polar Sur (83°S – 90°S) • Selección de Sitios de Aterrizaje. Terreno generado por ruido procedural, NO es el DEM real de LOLA. Datos reales y validados: ver <code>docs/fuentes.md</code> y la demo en <code>web/</code> del repositorio.</p>
+        <p class="text-xs text-slate-400">Región Polar Sur (82°S – 90°S) • Selección de Sitios de Aterrizaje. Relieve real del DEM de LOLA (NASA PGDA) promediado a 2 km; los paneles de métricas siguen siendo ilustrativos. Datos validados: ver <code>docs/fuentes.md</code> y la demo en <code>web/</code> del repositorio.</p>
       </div>
     </div>
 
@@ -192,8 +192,8 @@
       <!-- Leyenda Hipsométrica (visible en modo topográfico) -->
       <div id="topo-legend" class="hidden pt-1 border-t border-slate-800/80">
         <div class="text-[10px] text-slate-400 mb-1 flex justify-between font-mono-tech">
-          <span>-7.5 km (Valle/Cráter)</span>
-          <span>+5.0 km (Pico)</span>
+          <span id="leyenda-min">Mínimo</span>
+          <span id="leyenda-max">Máximo</span>
         </div>
         <div class="h-2.5 w-full rounded-full" style="background: linear-gradient(90deg, #1e1b4b 0%, #1d4ed8 22%, #06b6d4 42%, #22c55e 60%, #eab308 78%, #ef4444 91%, #ffffff 100%);"></div>
       </div>
@@ -372,7 +372,7 @@
         <div id="sim-loading" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3">
           <div class="w-10 h-10 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
           <div class="text-sm font-semibold text-white">Calculando oclusiones topográficas y libración Tierra-Luna...</div>
-          <p id="sim-loading-step" class="text-xs font-mono-tech text-sky-300">Generando vista ilustrativa del terreno (ruido sintetico, no DEM real)...</p>
+          <p id="sim-loading-step" class="text-xs font-mono-tech text-sky-300">Cargando el relieve real de LOLA (NASA PGDA)...</p>
         </div>
 
         <!-- Resumen Ejecutivo Superior -->
@@ -395,6 +395,7 @@
     </div>
   </div>
 
+  <script src="datos/relieve-lola-sur.js"></script>
   <script>
     // =========================================================================
     // 1. DATOS DE LOS 3 SITIOS CANDIDATOS DE ATERRIZAJE (POLO SUR LUNAR)
@@ -520,45 +521,8 @@
       return n - Math.floor(n);
     }
 
-    function valueNoise(x, y) {
-      const ix = Math.floor(x);
-      const iy = Math.floor(y);
-      const fx = x - ix;
-      const fy = y - iy;
-      const ux = fx * fx * (3.0 - 2.0 * fx);
-      const uy = fy * fy * (3.0 - 2.0 * fy);
-      const a = hash2D(ix, iy);
-      const b = hash2D(ix + 1, iy);
-      const c = hash2D(ix, iy + 1);
-      const d = hash2D(ix + 1, iy + 1);
-      return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
-    }
 
-    function fbm(x, y, octaves = 5) {
-      let value = 0.0;
-      let amp = 0.5;
-      let freq = 1.0;
-      for (let i = 0; i < octaves; i++) {
-        value += amp * (valueNoise(x * freq, y * freq) * 2.0 - 1.0);
-        freq *= 2.04;
-        amp *= 0.48;
-      }
-      return value;
-    }
 
-    function craterProfile(dist, radius, depth, rimHeight) {
-      const rNorm = dist / radius;
-      if (rNorm > 2.2) return 0;
-      if (rNorm < 1.0) {
-        // Interior en cuenco con fondo ligeramente aplanado en cráteres grandes
-        const bowl = Math.pow(rNorm, 2.25) - 1.0;
-        return bowl * Math.abs(depth) + rimHeight * Math.pow(rNorm, 3.0);
-      } else {
-        // Eyerta exterior decaimiento exponencial
-        const t = rNorm - 1.0;
-        return rimHeight * Math.exp(-t * 3.4);
-      }
-    }
 
     // Precalcular posiciones 3D de rasgos mayores
     const SHACKLETON_XZ = latLonToXZ(-89.01701, 126.27302);
@@ -570,63 +534,47 @@
       rUnits: c.radiusKm / KM_PER_UNIT
     }));
 
-    // Cráteres menores procedurales deterministas
-    const MICRO_CRATERS = [];
-    for (let i = 0; i < 160; i++) {
-      const angle = hash2D(i, 1.3) * Math.PI * 2;
-      const rad = 10 + hash2D(i, 7.9) * 105;
-      const cx = Math.cos(angle) * rad;
-      const cz = Math.sin(angle) * rad;
-      const cr = 1.4 + hash2D(i, 3.7) * 4.2;
-      MICRO_CRATERS.push({ x: cx, z: cz, r: cr, d: cr * 0.24, rim: cr * 0.07 });
-    }
 
-    // Devuelve elevación base en kilómetros reales (-7.5 km a +5.2 km)
+    // Relieve real: DEM de LOLA (NASA PGDA producto 90) promediado en bloques de
+    // ~2 km por scripts/relieve_3d.py y cargado desde datos/relieve-lola-sur.js.
+    const RELIEVE = window.RELIEVE_LOLA || null;
+    const ALTURAS_M = RELIEVE
+      ? new Int16Array(Uint8Array.from(atob(RELIEVE.alturas_i16_b64), (c) => c.charCodeAt(0)).buffer)
+      : null;
+    const ELEV_MIN_KM = RELIEVE ? RELIEVE.min_m / 1000 : -1;
+    const ELEV_MAX_KM = RELIEVE ? RELIEVE.max_m / 1000 : 1;
+    const ELEV_RANGO_KM = Math.max(0.001, ELEV_MAX_KM - ELEV_MIN_KM);
+
+    // Elevación en km en un punto del plano (unidades de escena), interpolación bilineal.
     function getBaseElevationKm(x, z) {
-      let h = fbm(x * 0.022 + 3.1, z * 0.022 - 1.7, 5) * 1.45;
-      h += fbm(x * 0.075, z * 0.075, 3) * 0.32;
-
-      // 1. Cráter Shackleton (diámetro 21 km -> radio 5.25 u)
-      const dShack = Math.hypot(x - SHACKLETON_XZ.x, z - SHACKLETON_XZ.z);
-      h += craterProfile(dShack, 5.25, 4.2, 1.35);
-
-      // 2. Cráter de Gerlache (diámetro 32.4 km -> radio 8.1 u) + Cresta de Conexión
-      const dGerl = Math.hypot(x - DE_GERLACHE_XZ.x, z - DE_GERLACHE_XZ.z);
-      h += craterProfile(dGerl, 8.1, 3.8, 1.15);
-
-      // Cresta de Conexión entre Shackleton y de Gerlache
-      const ridgeMidX = (SHACKLETON_XZ.x + DE_GERLACHE_XZ.x) * 0.52;
-      const ridgeMidZ = (SHACKLETON_XZ.z + DE_GERLACHE_XZ.z) * 0.52;
-      const dRidge = Math.hypot((x - ridgeMidX) * 0.85, (z - ridgeMidZ) * 1.25);
-      h += 1.65 * Math.exp(-(dRidge * dRidge) / 55.0);
-
-      // 3. Macizo Malapert (+5.0 km de pico con meseta somital)
-      const dMal = Math.hypot(x - MALAPERT_XZ.x, z - MALAPERT_XZ.z);
-      h += 4.85 * Math.exp(-(dMal * dMal) / 72.0);
-      // Cráter Malapert adyacente
-      const dMalCrater = Math.hypot(x - (MALAPERT_XZ.x + 11.0), z - (MALAPERT_XZ.z - 8.5));
-      h += craterProfile(dMalCrater, 7.5, 3.1, 0.75);
-
-      // 4. Cráteres mayores de referencia
-      for (let i = 0; i < REF_CRATERS_XZ.length; i++) {
-        const c = REF_CRATERS_XZ[i];
-        const d = Math.hypot(x - c.x, z - c.z);
-        h += craterProfile(d, c.rUnits, Math.abs(c.depth), 0.85);
-      }
-
-      // 5. Micro-cráteres de impacto
-      for (let i = 0; i < MICRO_CRATERS.length; i++) {
-        const mc = MICRO_CRATERS[i];
-        const dx = x - mc.x;
-        const dz = z - mc.z;
-        if (Math.abs(dx) < mc.r * 2.1 && Math.abs(dz) < mc.r * 2.1) {
-          const d = Math.hypot(dx, dz);
-          h += craterProfile(d, mc.r, mc.d, mc.rim);
-        }
-      }
-
-      return THREE.MathUtils.clamp(h, -7.5, 5.2);
+      if (!ALTURAS_M) return 0;
+      const n = RELIEVE.nodos;
+      const s = RELIEVE.semilado_km;
+      const fc = THREE.MathUtils.clamp(((x * KM_PER_UNIT + s) / (2 * s)) * (n - 1), 0, n - 1);
+      const fr = THREE.MathUtils.clamp(((z * KM_PER_UNIT + s) / (2 * s)) * (n - 1), 0, n - 1);
+      const c0 = Math.min(Math.floor(fc), n - 2);
+      const r0 = Math.min(Math.floor(fr), n - 2);
+      const tc = fc - c0;
+      const tr = fr - r0;
+      const i = r0 * n + c0;
+      const arriba = ALTURAS_M[i] * (1 - tc) + ALTURAS_M[i + 1] * tc;
+      const abajo = ALTURAS_M[i + n] * (1 - tc) + ALTURAS_M[i + n + 1] * tc;
+      return (arriba * (1 - tr) + abajo * tr) / 1000;
     }
+
+    if (!RELIEVE) {
+      const aviso = document.createElement('div');
+      aviso.setAttribute('role', 'alert');
+      aviso.style.cssText = 'position:fixed;left:50%;top:5.5rem;transform:translateX(-50%);z-index:60;max-width:34rem;padding:.75rem 1rem;border-radius:.75rem;background:#3b0d0d;color:#fecaca;font:13px/1.4 system-ui,sans-serif;border:1px solid #7f1d1d';
+      aviso.textContent = 'No se encontró datos/relieve-lola-sur.js: el terreno se muestra plano. Genera el relieve con la Action "Relieve LOLA para visores 3D" (ver README).';
+      document.body.appendChild(aviso);
+    }
+
+    const legMin = document.getElementById('leyenda-min');
+    const legMax = document.getElementById('leyenda-max');
+    if (legMin && RELIEVE) legMin.textContent = `${(RELIEVE.min_m / 1000).toFixed(1)} km`;
+    if (legMax && RELIEVE) legMax.textContent = `+${(RELIEVE.max_m / 1000).toFixed(1)} km`;
+
 
     // =========================================================================
     // 4. INICIALIZACIÓN DE ESCENA THREE.JS (SIN NEBLINA)
@@ -708,8 +656,8 @@
     const topoColors = new Float32Array(vertexCount * 3);
 
     function getHypsometricColor(elevKm) {
-      // Normalizar [-7.5, +5.2] -> [0, 1]
-      const t = THREE.MathUtils.clamp((elevKm + 7.5) / 12.7, 0, 1);
+      // Normalizar el rango real del relieve -> [0, 1]
+      const t = THREE.MathUtils.clamp((elevKm - ELEV_MIN_KM) / ELEV_RANGO_KM, 0, 1);
       const c = new THREE.Color();
       if (t < 0.22) c.setHex(0x1e1b4b).lerp(new THREE.Color(0x1d4ed8), t / 0.22);
       else if (t < 0.42) c.setHex(0x1d4ed8).lerp(new THREE.Color(0x06b6d4), (t - 0.22) / 0.20);
@@ -1529,7 +1477,7 @@
         simSummaryBanner.classList.add('hidden');
         simCardsGrid.classList.add('hidden');
         simLoading.classList.remove('hidden');
-        simLoadingStep.textContent = 'Generando vista ilustrativa del terreno (ruido sintetico, no DEM real)...';
+        simLoadingStep.textContent = 'Cargando el relieve real de LOLA (NASA PGDA)...';
 
         setTimeout(() => {
           simLoadingStep.textContent = 'Integrando libración latitudinal Tierra-Luna y cobertura de enlace...';

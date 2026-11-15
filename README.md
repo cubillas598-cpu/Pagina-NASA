@@ -101,6 +101,20 @@ estandar).
 
 La resolucion es horaria: el inicio y el fin de cada ventana tienen un margen de +-1 h.
 
+### Consultar JPL Horizons en vivo desde la pagina
+
+La seccion Metodologia muestra el boton **Consultar JPL Horizons ahora** cuando
+`web/js/config.js` tiene la URL del intermediario (`HORIZONS_PROXY_URL`). El
+intermediario es un Cloudflare Worker en `worker/`; los pasos para desplegarlo estan
+en `worker/README.md`. Si la consulta falla, la demo sigue con los datos publicados.
+
+### Relieve real para los visores 3D
+
+Los visores de `docs/` usan el DEM de LOLA promediado a 2 km
+(`docs/datos/relieve-lola-sur.js`). Para regenerarlo: **Actions → Relieve LOLA para
+visores 3D → Run workflow**. Descarga el DEM de NASA PGDA (181 MB), corre
+`scripts/relieve_3d.py` y sube el resultado.
+
 ### Que es real y que es supuesto
 
 | Pieza | Archivo | Estado |
@@ -124,6 +138,8 @@ horas disponibles.
 El navegador no puede consultar Horizons directamente: la API de JPL no permite
 peticiones desde otras paginas (CORS). La consulta la hace GitHub y la demo sigue
 leyendo archivos estaticos, asi que funciona igual sin conexion.
+
+La Action corre sola cada lunes. Para correrla a mano con otro periodo:
 
 1. En GitHub, abre la pestana **Actions** y elige **Efemerides JPL Horizons**.
 2. Pulsa **Run workflow**, escribe el primer dia (`inicio`, UTC) y el numero de `dias`.

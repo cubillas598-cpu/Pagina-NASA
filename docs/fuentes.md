@@ -47,6 +47,7 @@ La resolución es horaria: el inicio y el fin de cada ventana tienen un margen d
 | Textura del globo lunar | Provisional, generada en el navegador | Solo visual. Sustituirla por el NASA CGI Moon Kit (https://svs.gsfc.nasa.gov/4720/, LRO) en `web/assets/luna/` cuando se descargue; NASA advierte que esos mapas son para visualización, no para análisis. |
 | Posición de los marcadores en el globo | Latitud y longitud de `data/<sitio>.json`, convertidas a la esfera en `web/js/luna-geometria.js` | Ubicación geográfica real de los sitios; la prueba `tests/luna-geometria.test.mjs` cubre la conversión. |
 | Three.js 0.187.0 (MIT) | npm | Render del globo. |
+| Relieve de los visores 3D de `docs/` | DEM de LOLA (NASA PGDA producto 90, 80 m/px; Barker et al. 2023) promediado en bloques de 2 km por `scripts/relieve_3d.py` → `docs/datos/relieve-lola-sur.js` | Solo visual. La Action `Relieve LOLA para visores 3D` lo regenera. Los paneles de métricas de esos visores siguen siendo ilustrativos; los cálculos validados están en `web/`. |
 
 ## Precedentes citados (contexto, no datos)
 

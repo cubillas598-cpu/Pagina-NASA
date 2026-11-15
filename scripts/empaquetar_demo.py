@@ -78,6 +78,8 @@ def main():
             raise SystemExit(f"index.html: no se sabe incrustar {ruta.name}.")
         return f'{m.group(1)}"data:{TIPOS[ruta.suffix]};base64,{base64.b64encode(leer_bytes(ruta)).decode("ascii")}"'
     html = re.sub(r'(href=)"(assets/[^"]+)"', incrustar_href, html)
+    # Sin servidor, "../" no lleva a la portada: se apunta al sitio publicado.
+    html = html.replace('href="../" data-inicio', 'href="https://cubillas598-cpu.github.io/Pagina-NASA/" data-inicio')
 
     escenario = leer_json(RAIZ / "data" / "escenario_demo.json")
     docs = {s["id"]: leer_json(RAIZ / s["efemerides"]) for s in escenario["sitios"]}

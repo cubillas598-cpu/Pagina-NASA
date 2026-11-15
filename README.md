@@ -68,7 +68,14 @@ Pendientes que bloquean conclusiones (ver `docs/fuentes.md`):
 
 ## Demo web
 
-En linea: https://cubillas598-cpu.github.io/Pagina-NASA/web/ (GitHub Pages, rama `main`). La raiz del sitio redirige a la demo; el esqueleto inicial quedo en `esqueleto.html`.
+En linea: https://cubillas598-cpu.github.io/Pagina-NASA/ (GitHub Pages, rama `main`).
+
+- `index.html`: portada con el proyecto, los tres sitios, las herramientas y las fuentes.
+- `web/`: la demo. `docs/*.html`: las dos vistas 3D. `dist/`: la version sin conexion.
+- `estilo/marca.css`: identidad comun (Poppins, carbon y dorado) de la portada, la pagina
+  404 y las vistas 3D; la demo usa los mismos tokens en `web/css/tokens.css`.
+- `404.html`: GitHub Pages la muestra en cualquier ruta inexistente y lleva al inicio.
+- El esqueleto inicial quedo en `esqueleto.html`.
 
 Pagina estatica (HTML, CSS y JS). Lee los JSON de `data/` y calcula todo en el
 navegador. La Luna 3D usa Three.js; esbuild compila `web/js/` en `web/build/app.js`,

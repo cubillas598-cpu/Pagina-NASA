@@ -264,6 +264,10 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Chips, botones y controles */
 .chip { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-xs); font-weight: 500; padding: 3px 10px; border-radius: var(--r-pastilla); border: 1px solid var(--borde); color: var(--texto-2); background: rgba(10, 11, 13, 0.4); }
+.cab__inicio { display: inline-flex; align-items: center; gap: 8px; margin-bottom: var(--e-3); color: var(--texto-2); text-decoration: none; font-size: var(--t-sm); font-weight: 500; }
+.cab__inicio svg { width: 18px; height: 18px; }
+.cab__inicio:hover { color: var(--texto); }
+.cab__inicio:focus-visible { outline: 2px solid var(--acento-claro); outline-offset: 3px; border-radius: 8px; }
 .chip--fuente { border-color: rgba(198, 168, 106, 0.55); color: var(--acento-claro); }
 .chip--aviso { border-color: rgba(198, 168, 106, 0.5); color: var(--acento-claro); }
 .boton { min-height: 40px; padding: 0 var(--e-4); border-radius: var(--r-pastilla); border: 1px solid var(--borde); background: rgba(255, 255, 255, 0.1); color: var(--texto); font-size: var(--t-sm); font-weight: 500; cursor: pointer; transition: background var(--transicion); }

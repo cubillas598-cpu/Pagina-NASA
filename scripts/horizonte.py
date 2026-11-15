@@ -219,7 +219,8 @@ def main():
             json.dump(escenario, f, ensure_ascii=False, indent=2)
         tmp.replace(escenario_path)
     except OSError as err:
-        tmp.unlink(missing_ok=True)
+        if tmp.is_file():
+            tmp.unlink()
         print(f"No se pudo escribir {escenario_path}: {err}", file=sys.stderr)
         sys.exit(1)
     print(f"Guardado: {escenario_path}")

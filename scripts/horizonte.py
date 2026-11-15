@@ -154,8 +154,12 @@ def main():
 
     geod = Geod(a=RADIO_MOON_M, b=RADIO_MOON_M)
 
-    with open(escenario_path, "r", encoding="utf-8") as f:
-        escenario = json.load(f)
+    try:
+        with open(escenario_path, "r", encoding="utf-8") as f:
+            escenario = json.load(f)
+    except (OSError, json.JSONDecodeError) as err:
+        print(f"No se pudo leer {escenario_path}: {err}", file=sys.stderr)
+        sys.exit(1)
 
     sitios_por_id = {s["id"]: s for s in escenario["sitios"]}
 
@@ -208,8 +212,16 @@ def main():
                       f"min={min(validos_r):.2f} deg, max={max(validos_r):.2f} deg, "
                       f"{len(validos_r)}/360 puntos validos")
 
-    with open(escenario_path, "w", encoding="utf-8") as f:
-        json.dump(escenario, f, ensure_ascii=False, indent=2)
+    # Se escribe a un temporal y se reemplaza: un fallo no deja el escenario a medias.
+    tmp = escenario_path.with_name(escenario_path.name + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(escenario, f, ensure_ascii=False, indent=2)
+        tmp.replace(escenario_path)
+    except OSError as err:
+        tmp.unlink(missing_ok=True)
+        print(f"No se pudo escribir {escenario_path}: {err}", file=sys.stderr)
+        sys.exit(1)
     print(f"Guardado: {escenario_path}")
 
 

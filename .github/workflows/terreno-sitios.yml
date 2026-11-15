@@ -1,0 +1,85 @@
+# Variables de terreno de los tres sitios (pendiente, rugosidad, ruta de
+# aproximación, distancia a sombra permanente) con productos LOLA de 20 m de
+# NASA PGDA. Lee solo ventanas alrededor de cada sitio (GeoTIFF optimizados para
+# la nube), calcula con scripts/terreno_sitios.py y sube data/terreno_sitios.json.
+#
+# Uso: pestaña Actions > "Terreno de los sitios (LOLA)" > Run workflow.
+name: Terreno de los sitios (LOLA)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: terreno-sitios
+  cancel-in-progress: false
+
+jobs:
+  calcular:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE: https://pgda.gsfc.nasa.gov/data/LOLA_20mpp
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: .TIF
+      GDAL_HTTP_MAX_RETRY: "5"
+      GDAL_HTTP_RETRY_DELAY: "5"
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Revisar el mapa de sombra permanente
+        run: |
+          python3 - <<'EOF'
+          import os, numpy as np, rasterio
+          from rasterio.windows import Window
+          ruta = f"/vsicurl/{os.environ['BASE']}/LPSR_80S_20MPP_ADJ.TIF"
+          with rasterio.open(ruta) as ds:
+              print("LPSR", ds.dtypes, "nodata", ds.nodata, "tamano", ds.width, ds.height, "paso", ds.transform.a)
+              f, c = ds.index(0, 0)
+              v = ds.read(1, window=Window(c - 500, f - 500, 1000, 1000))
+              u, n = np.unique(v, return_counts=True)
+              print("valores cerca del polo:", dict(zip(u.tolist()[:20], n.tolist()[:20])))
+          EOF
+
+      - name: Calcular variables de terreno
+        run: |
+          python3 scripts/terreno_sitios.py \
+            --dem "/vsicurl/$BASE/LDEM_80S_20MPP_ADJ.TIF" \
+            --psr "/vsicurl/$BASE/LPSR_80S_20MPP_ADJ.TIF" \
+            --rugosidad "/vsicurl/$BASE/LDRM_80S_50MPP_ADJ_ROUGH_100M.TIF"
+          cat data/terreno_sitios.json
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validar, recompilar el HTML sin conexion y probar
+        run: |
+          npm ci
+          npm run validar
+          npm run empaquetar
+          npm test
+
+      - name: Publicar en el repositorio
+        run: |
+          git add data/terreno_sitios.json web/build dist
+          if git diff --cached --quiet; then
+            echo "El terreno no cambio; no hay nada que publicar."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "datos: variables de terreno LOLA de los sitios"
+          git pull --rebase
+          git push

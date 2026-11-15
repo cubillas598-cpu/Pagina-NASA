@@ -395,7 +395,7 @@ async function iniciar() {
     if (modoMapa === '2d') mapaSitios.render(derivar());
   });
   if (sinConexion) $('#estado-terreno').textContent = 'La vista 3D necesita conexión: aquí se muestra el mapa polar 2D.';
-  else $('#modo-mapa').hidden = false;
+  else { $('#modo-mapa').hidden = false; $('#visor-completo').hidden = false; }
   $('#luna-sitios').addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;

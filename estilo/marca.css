@@ -132,3 +132,10 @@ body.m-visor .m-ilustrativo--ficha { margin: 10px 12px 0; }
 /* Visor incrustado en la demo (Sitios): sin barra del sitio; la demo ya la tiene. */
 html.m-embebido body.m-visor .m-barra { display: none; }
 html.m-embebido body.m-visor header.fixed.top-4 { top: 0.75rem !important; }
+/* Dentro de la demo el visor queda limpio: el selector de sitio, la ficha y las
+   cifras reales ya están en la demo; la versión completa abre en otra pestaña. */
+html.m-embebido body.m-visor header.fixed.top-4 > div:first-child p,
+html.m-embebido body.m-visor header.fixed.top-4 div:has(> div > #hud-lat),
+html.m-embebido body.m-visor aside.fixed,
+html.m-embebido body.m-visor #detail-panel { display: none !important; }
+html.m-embebido body.m-visor header.fixed.top-4 > div:first-child { padding: 8px 12px; }

@@ -428,6 +428,10 @@ option { background: var(--panel-solido); color: var(--texto); }
 .visor3d__marco { display: block; width: 100%; height: 100%; border: 0; }
 .visor3d__estado { margin: var(--e-2) 0 0; font-size: var(--t-xs); color: var(--texto-3); }
 .visor3d__estado:empty { display: none; }
+.mapa-acciones { display: flex; align-items: center; gap: var(--e-3); }
+.enlace-visor { font-size: var(--t-xs); color: var(--texto-2); text-underline-offset: 3px; }
+.enlace-visor:hover { color: var(--texto); }
+.enlace-visor[hidden] { display: none; }
 
 /* Móvil: la navegación pasa a una cápsula inferior y los paneles se apilan */
 @media (max-width: 760px) {

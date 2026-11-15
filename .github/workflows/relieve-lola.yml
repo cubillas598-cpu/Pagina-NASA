@@ -1,0 +1,65 @@
+# Genera el relieve real del polo sur (LOLA) que usan los visores 3D de docs/.
+# Descarga el DEM de NASA PGDA (181 MB, se guarda en cache entre corridas),
+# lo remuestrea con scripts/relieve_3d.py y sube docs/datos/relieve-lola-sur.js.
+#
+# Uso: pestana Actions > "Relieve LOLA para visores 3D" > Run workflow.
+name: Relieve LOLA para visores 3D
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: relieve-lola
+  cancel-in-progress: false
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DEM_URL: https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF
+      DEM: dem/LDEM_80S_80MPP_ADJ.TIF
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: DEM en cache
+        id: cache-dem
+        uses: actions/cache@v5
+        with:
+          path: dem/LDEM_80S_80MPP_ADJ.TIF
+          key: lola-ldem-80s-80mpp-adj-v1
+
+      - name: Descargar DEM de NASA PGDA
+        if: steps.cache-dem.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p dem
+          curl -fL --retry 3 --retry-delay 10 -o "$DEM" "$DEM_URL"
+          tamano=$(stat -c %s "$DEM")
+          echo "Descargado: $tamano bytes"
+          [ "$tamano" -gt 150000000 ] || { echo "::error::El DEM descargado es demasiado chico ($tamano bytes)"; exit 1; }
+
+      - name: Remuestrear el relieve
+        run: python3 scripts/relieve_3d.py --dem "$DEM"
+
+      - name: Publicar en el repositorio
+        run: |
+          git add docs/datos/relieve-lola-sur.js
+          if git diff --cached --quiet; then
+            echo "El relieve no cambio; no hay nada que publicar."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "datos: relieve LOLA del polo sur para los visores 3D"
+          git push

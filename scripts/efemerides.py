@@ -232,12 +232,25 @@ def main():
         print(f"Error: {err}", file=sys.stderr)
         sys.exit(1)
 
-    DATA_DIR.mkdir(exist_ok=True)
-    for resultado in resultados:
-        salida = DATA_DIR / f"{resultado['sitio']['id']}.json"
-        with open(salida, "w", encoding="utf-8") as f:
-            json.dump(resultado, f, ensure_ascii=False, indent=2)
-        print(f"[{resultado['sitio']['id']}] guardado en {salida} ({len(resultado['horas'])} horas)")
+    # Primero se escriben archivos temporales y luego se renombran: un fallo de
+    # disco o permisos no deja una mezcla de sitios nuevos y viejos.
+    temporales = []
+    try:
+        DATA_DIR.mkdir(exist_ok=True)
+        for resultado in resultados:
+            salida = DATA_DIR / f"{resultado['sitio']['id']}.json"
+            tmp = salida.with_suffix(".json.tmp")
+            temporales.append((tmp, salida, len(resultado["horas"])))
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(resultado, f, ensure_ascii=False, indent=2)
+        for tmp, salida, n in temporales:
+            tmp.replace(salida)
+            print(f"[{salida.stem}] guardado en {salida} ({n} horas)")
+    except OSError as err:
+        for tmp, _, _ in temporales:
+            tmp.unlink(missing_ok=True)
+        print(f"Error al escribir en {DATA_DIR}: {err}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

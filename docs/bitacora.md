@@ -335,3 +335,20 @@ anterior, solo se agrega abajo.
   reales (`m.sombraMax`, ya existia en el modelo, solo no se mostraba), y dos
   acciones "Ver las ventanas"/"Comparar sitios". 47 tests JS + 19 Python en
   verde despues de recompilar. Commit `5c35148`.
+
+## 2026-11-15 (tarde) — Incremento 2 de la propuesta UX/UI (Claude)
+
+- Alcance elegido por Irvin: Incremento 2 + mejoras rápidas; los incrementos 3 y 4
+  (explorador unificado, quitar Tailwind, revisar el modelo de relevo) quedan para
+  después de la entrega.
+- Comparar: tres gráficas alineadas arriba de la tabla (luz %, Tierra visible %,
+  sombra continua más larga, escala común y valores escritos) e insignias
+  específicas ("Más horas de luz", "Menor interrupción", "Mayor índice") en lugar
+  de "Mejor". En escritorio Comparar y Metodología usan todo el ancho y los
+  controles bajan.
+- Ventanas: el botón pasa a "Siguiente interrupción" (recorre las interrupciones
+  y vuelve a la primera); los eventos de fin muestran la ventana que abren
+  ("209 h de luz") en lugar de "Fin".
+- Metodología: glosario (horizonte, azimut, elevación, UTC, enlace local,
+  respaldo, sombra permanente, índice). Portada: titular "Explora dónde hay luz y
+  conexión en el polo sur lunar" y botón "Explorar los sitios".

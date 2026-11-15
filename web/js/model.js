@@ -300,6 +300,19 @@ export function hayComunicacion(m, enlaceActivo) {
   return m.tierra.visible || (enlaceActivo && m.respaldoTierra);
 }
 
+/**
+ * Índice donde empieza la próxima interrupción de comunicación después de
+ * `desde` dentro de [i0, i1]; si no queda ninguna adelante, la primera del
+ * periodo. null si el periodo no tiene interrupciones.
+ */
+export function siguienteInterrupcion(serie, i0, i1, desde, enlaceActivo) {
+  const empieza = (i) => !hayComunicacion(serie[i], enlaceActivo)
+    && (i === i0 || hayComunicacion(serie[i - 1], enlaceActivo));
+  for (let i = Math.max(i0, desde + 1); i <= i1; i++) if (empieza(i)) return i;
+  for (let i = i0; i <= Math.min(desde, i1); i++) if (empieza(i)) return i;
+  return null;
+}
+
 /** Tramo continuo mas largo donde `pred` es verdadero, dentro de [i0, i1]. */
 export function tramoMasLargo(serie, i0, i1, pred) {
   let mejor = { horas: 0, desde: null, hasta: null };
@@ -385,13 +398,13 @@ export function eventosPeriodo(serie, i0, i1, enlaceActivo) {
       const ahora = ok(serie[i]);
       if (antes === ahora) continue;
       const inicio = antes && !ahora;
-      let horas = null;
-      if (inicio) {
-        let j = i;
-        while (j <= i1 && !ok(serie[j])) j++;
-        horas = j - i;
-      }
-      eventos.push({ tipo, indice: i, inicio, horas, titulo: TIPOS_EVENTO[tipo][inicio ? 'inicio' : 'fin'] });
+      // Duración del tramo que abre el evento: la sombra o pérdida (inicio) o la
+      // ventana recuperada (fin), acotada al periodo.
+      let j = i;
+      while (j <= i1 && ok(serie[j]) === ahora) j++;
+      const horas = inicio ? j - i : null;
+      const ventana = inicio ? null : j - i;
+      eventos.push({ tipo, indice: i, inicio, horas, ventana, titulo: TIPOS_EVENTO[tipo][inicio ? 'inicio' : 'fin'] });
     }
   }
   return eventos.sort((a, b) => a.indice - b.indice || a.tipo.localeCompare(b.tipo));
@@ -410,37 +423,37 @@ export function segmentar(serie, i0, i1, clave) {
 }
 
 export const METRICAS_COMPARADOR = [
-  { clave: 'pctSol', corta: 'iluminación solar', etiqueta: 'Horas con iluminación solar', unidad: '%', mejor: 'max',
+  { clave: 'pctSol', insignia: 'Más horas de luz', corta: 'iluminación solar', etiqueta: 'Horas con iluminación solar', unidad: '%', mejor: 'max',
     frase: (s) => `${s} presenta más horas de iluminación en el periodo seleccionado.` },
-  { clave: 'pctTierra', corta: 'vista directa a la Tierra', etiqueta: 'Horas con vista directa a la Tierra', unidad: '%', mejor: 'max',
+  { clave: 'pctTierra', insignia: 'Más horas con la Tierra', corta: 'vista directa a la Tierra', etiqueta: 'Horas con vista directa a la Tierra', unidad: '%', mejor: 'max',
     frase: (s) => `${s} mantiene más horas de vista directa a la Tierra.` },
-  { clave: 'pctSolTierra', corta: 'Sol y Tierra a la vez', etiqueta: 'Horas con Sol y Tierra visibles a la vez', unidad: '%', mejor: 'max',
+  { clave: 'pctSolTierra', insignia: 'Más horas con ambos', corta: 'Sol y Tierra a la vez', etiqueta: 'Horas con Sol y Tierra visibles a la vez', unidad: '%', mejor: 'max',
     frase: (s) => `${s} tiene más horas con Sol y vista directa a la Tierra al mismo tiempo.` },
-  { clave: 'ventanaTierra', corta: 'ventana continua con la Tierra', etiqueta: 'Mayor ventana continua con la Tierra visible', unidad: 'h', mejor: 'max',
+  { clave: 'ventanaTierra', insignia: 'Ventana más larga', corta: 'ventana continua con la Tierra', etiqueta: 'Mayor ventana continua con la Tierra visible', unidad: 'h', mejor: 'max',
     frase: (s) => `${s} ofrece la ventana continua más larga con la Tierra visible.` },
-  { clave: 'sombraMax', corta: 'sombra continua más corta', etiqueta: 'Mayor periodo continuo en sombra', unidad: 'h', mejor: 'min',
+  { clave: 'sombraMax', insignia: 'Sombra más corta', corta: 'sombra continua más corta', etiqueta: 'Mayor periodo continuo en sombra', unidad: 'h', mejor: 'min',
     frase: (s) => `${s} tiene el periodo en sombra más corto.` },
-  { clave: 'pctRespaldo', corta: 'respaldo que llega a la Tierra', etiqueta: 'Horas con respaldo que llega a la Tierra', unidad: '%', mejor: 'max', enlace: true,
+  { clave: 'pctRespaldo', insignia: 'Más respaldo', corta: 'respaldo que llega a la Tierra', etiqueta: 'Horas con respaldo que llega a la Tierra', unidad: '%', mejor: 'max', enlace: true,
     frase: (s) => `${s} tiene más horas de respaldo efectivo hacia la Tierra.` },
-  { clave: 'rapido', corta: 'enlace local rápido', etiqueta: 'Enlace local rápido', unidad: 'h', mejor: 'max', enlace: true,
+  { clave: 'rapido', insignia: 'Más enlace rápido', corta: 'enlace local rápido', etiqueta: 'Enlace local rápido', unidad: 'h', mejor: 'max', enlace: true,
     frase: (s) => `${s} acumula más horas de enlace local rápido.` },
   { clave: 'robusto', etiqueta: 'Enlace local robusto', unidad: 'h', mejor: null, enlace: true },
-  { clave: 'sin_enlace', corta: 'menos horas sin enlace local', etiqueta: 'Sin enlace local', unidad: 'h', mejor: 'min', enlace: true,
+  { clave: 'sin_enlace', insignia: 'Menos horas sin enlace', corta: 'menos horas sin enlace local', etiqueta: 'Sin enlace local', unidad: 'h', mejor: 'min', enlace: true,
     frase: (s) => `${s} pasa menos horas sin enlace local.` },
-  { clave: 'brecha', corta: 'interrupción más corta', etiqueta: 'Mayor intervalo sin comunicación', unidad: 'h', mejor: 'min',
+  { clave: 'brecha', insignia: 'Menor interrupción', corta: 'interrupción más corta', etiqueta: 'Mayor intervalo sin comunicación', unidad: 'h', mejor: 'min',
     frase: (s) => `${s} tiene la interrupción continua más corta.` },
   // Terreno del sitio (LOLA 20 m, data/terreno_sitios.json): no depende del periodo.
-  { clave: 'pendienteMedia', terreno: 'pendiente_media_deg', corta: 'pendiente más suave', etiqueta: 'Pendiente media (100 m de radio)', unidad: '°', mejor: 'min',
+  { clave: 'pendienteMedia', insignia: 'Más plano', terreno: 'pendiente_media_deg', corta: 'pendiente más suave', etiqueta: 'Pendiente media (100 m de radio)', unidad: '°', mejor: 'min',
     frase: (s) => `${s} tiene la pendiente media más suave.` },
-  { clave: 'pendienteMax', terreno: 'pendiente_max_deg', corta: 'pendiente máxima más baja', etiqueta: 'Pendiente máxima (100 m de radio)', unidad: '°', mejor: 'min',
+  { clave: 'pendienteMax', insignia: 'Pendiente máxima más baja', terreno: 'pendiente_max_deg', corta: 'pendiente máxima más baja', etiqueta: 'Pendiente máxima (100 m de radio)', unidad: '°', mejor: 'min',
     frase: (s) => `${s} tiene la pendiente máxima más baja.` },
-  { clave: 'llano', terreno: 'pct_llano_500m', corta: 'más área llana', etiqueta: 'Área con menos de 10° (500 m de radio)', unidad: '%', mejor: 'max',
+  { clave: 'llano', insignia: 'Más área llana', terreno: 'pct_llano_500m', corta: 'más área llana', etiqueta: 'Área con menos de 10° (500 m de radio)', unidad: '%', mejor: 'max',
     frase: (s) => `${s} tiene más área llana alrededor.` },
-  { clave: 'rugosidad', terreno: 'rugosidad_100m_m', corta: 'terreno más liso', etiqueta: 'Rugosidad a 100 m', unidad: 'm', mejor: 'min',
+  { clave: 'rugosidad', insignia: 'Más liso', terreno: 'rugosidad_100m_m', corta: 'terreno más liso', etiqueta: 'Rugosidad a 100 m', unidad: 'm', mejor: 'min',
     frase: (s) => `${s} tiene el terreno más liso.` },
-  { clave: 'aproximacion', terreno: 'aproximacion.mejor_obstaculo_deg', corta: 'llegada más despejada', etiqueta: 'Obstáculo en la mejor ruta de llegada', unidad: '°', mejor: 'min',
+  { clave: 'aproximacion', insignia: 'Llegada más despejada', terreno: 'aproximacion.mejor_obstaculo_deg', corta: 'llegada más despejada', etiqueta: 'Obstáculo en la mejor ruta de llegada', unidad: '°', mejor: 'min',
     frase: (s) => `${s} tiene la ruta de llegada más despejada.` },
-  { clave: 'hielo', terreno: 'dist_psr_km', corta: 'hielo más cerca', etiqueta: 'Distancia a sombra permanente (posible hielo)', unidad: 'km', mejor: 'min',
+  { clave: 'hielo', insignia: 'Más cerca del hielo', terreno: 'dist_psr_km', corta: 'hielo más cerca', etiqueta: 'Distancia a sombra permanente (posible hielo)', unidad: 'km', mejor: 'min',
     frase: (s) => `${s} está más cerca de una zona en sombra permanente, donde puede haber hielo.` },
 ];
 

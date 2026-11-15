@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   horizonteEn, separacionAngular, clasificar, calcularSerie, metricasPeriodo,
   tramoMasLargo, segmentar, compararSitios, comparativoCsv, segundosPolvoEnHora, horasEventoPolvo, eventosPeriodo,
-  suitabilityScore, PESOS_SUITABILITY, desgloseIndice, puntajeLineal, problemasTerreno, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria, problemasCoordenadas,
+  suitabilityScore, PESOS_SUITABILITY, desgloseIndice, siguienteInterrupcion, METRICAS_COMPARADOR, puntajeLineal, problemasTerreno, problemasEfemerides, valorMetrica, problemasEscenario, esMarcaHoraria, problemasCoordenadas,
 } from '../web/js/model.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -348,4 +348,28 @@ test('problemasCoordenadas rechaza elevaciones no numéricas', () => {
   const coords = Object.fromEntries(escenario.sitios.map((s) => [s.id, { ...leer(s.efemerides).sitio }]));
   coords[escenario.sitios[0].id].elev_km = 'alto';
   assert.match(problemasCoordenadas(escenario, coords).join(' '), /elevación debe ser numérica/);
+});
+
+test('siguienteInterrupcion: salta al próximo inicio y vuelve al primero al final', () => {
+  const mk = (t) => ({ tierra: { visible: !!t }, respaldoTierra: false });
+  const serie = [1, 0, 0, 1, 1, 0, 1].map(mk);
+  assert.equal(siguienteInterrupcion(serie, 0, 6, 0, false), 1);
+  assert.equal(siguienteInterrupcion(serie, 0, 6, 1, false), 5);
+  assert.equal(siguienteInterrupcion(serie, 0, 6, 5, false), 1);
+  assert.equal(siguienteInterrupcion([1, 1].map(mk), 0, 1, 0, false), null);
+  // El respaldo que llega a la Tierra cuenta como comunicación con el enlace activo.
+  const conRespaldo = serie.map((m) => ({ ...m, respaldoTierra: true }));
+  assert.equal(siguienteInterrupcion(conRespaldo, 0, 6, 0, true), null);
+});
+
+test('eventos de fin llevan la ventana que abren', () => {
+  const mk = (sol) => ({ sol: { visible: sol }, tierra: { visible: true }, enlace: { estado: 'rapido' } });
+  const ev = eventosPeriodo([true, false, true, true, false].map(mk), 0, 4, false);
+  assert.deepEqual(ev.map((e) => [e.titulo, e.horas, e.ventana]), [
+    ['Inicio de sombra', 1, null], ['Vuelve el Sol', null, 2], ['Inicio de sombra', 1, null],
+  ]);
+});
+
+test('cada métrica comparable tiene una insignia específica', () => {
+  for (const d of METRICAS_COMPARADOR) if (d.mejor) assert.ok(d.insignia && !/^Mejor$/.test(d.insignia), d.clave);
 });

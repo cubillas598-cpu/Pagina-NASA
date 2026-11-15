@@ -396,6 +396,40 @@ option { background: var(--panel-solido); color: var(--texto); }
 
 .pie { width: var(--ancho-app); margin: var(--e-5) auto 0; font-size: var(--t-xs); color: var(--texto-3); text-align: center; }
 
+/* Comparar y Metodología usan todo el ancho; los controles de hora y enlace
+   quedan debajo (la tabla y la lectura necesitan espacio). */
+@media (min-width: 1181px) {
+  .app[data-vista="comparador"], .app[data-vista="metodologia"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "cab cab" "luna luna" "principal principal" "sitio eventos";
+  }
+  .app[data-vista="comparador"] .lateral-der, .app[data-vista="metodologia"] .lateral-der { display: contents; }
+  .app[data-vista="comparador"] .panel-sitio, .app[data-vista="metodologia"] .panel-sitio { grid-area: sitio; align-self: start; }
+  .app[data-vista="comparador"] .eventos, .app[data-vista="metodologia"] .eventos { grid-area: eventos; align-self: start; }
+}
+
+/* Gráficas alineadas del comparador */
+.barras-comparador { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--e-5); }
+.grafica-barras { margin: 0; }
+.grafica-barras figcaption { display: grid; gap: 2px; margin-bottom: var(--e-3); }
+.grafica-barras figcaption small { color: var(--texto-3); font-size: var(--t-xs); }
+.grafica-barras ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e-3); }
+.cbarra { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "sitio valor" "pista pista"; gap: 4px var(--e-3); font-size: var(--t-xs); }
+.cbarra__sitio { grid-area: sitio; color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cbarra__sitio b { color: var(--texto); }
+.cbarra__valor { grid-area: valor; font-variant-numeric: tabular-nums; color: var(--texto); }
+.cbarra__pista { grid-area: pista; height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.cbarra__relleno { display: block; height: 100%; border-radius: inherit; background: var(--texto-3); }
+.cbarra--mejor .cbarra__relleno { background: linear-gradient(90deg, var(--acento), var(--acento-claro)); }
+.cbarra--mejor .cbarra__valor { color: var(--acento-claro); font-weight: 600; }
+@media (max-width: 900px) { .barras-comparador { grid-template-columns: minmax(0, 1fr); } }
+
+/* Glosario de Metodología */
+.glosario { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--e-2) var(--e-4); margin: 0; }
+.glosario dt { font-weight: 600; color: var(--texto); }
+.glosario dd { margin: 0; color: var(--texto-2); }
+@media (max-width: 520px) { .glosario { grid-template-columns: minmax(0, 1fr); } .glosario dd { margin-bottom: var(--e-2); } }
+
 /* Pantallas medianas: la columna derecha pasa debajo del encabezado */
 @media (max-width: 1180px) {
   :root { --ancho-app: calc(100vw - 120px); }

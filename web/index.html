@@ -149,6 +149,10 @@
           <div class="periodo" data-periodo></div>
         </div>
         <article class="tarjeta">
+          <h3>Diferencias principales</h3>
+          <div class="barras-comparador" id="barras-comparador"></div>
+        </article>
+        <article class="tarjeta">
           <header class="tarjeta__cab">
             <p class="tarjeta__sub" id="comparador-meta"></p>
             <button type="button" class="boton boton--acento" id="exportar-csv">Exportar CSV</button>
@@ -192,6 +196,19 @@
             <p>Para cada sitio y cada hora (UTC) se compara la elevación del Sol y de la Tierra con la elevación del horizonte en ese mismo azimut. Si el astro queda por encima, cuenta como visible.</p>
             <p>Los porcentajes del periodo salen de las mismas muestras horarias que dibujan las gráficas: cada muestra vale una hora, así que el inicio y el fin de cada ventana tienen un margen de ±1 h. El script pide a JPL Horizons las horas en UT (TIME_TYPE=UT) y la página las muestra como UTC: entre ambas escalas hay menos de un segundo.</p>
             <p>El índice de conveniencia (0 a 100) es un promedio ponderado propuesto por el equipo, no un estándar de NASA: 0.25 iluminación, 0.20 Tierra directa, 0.10 respaldo, 0.10 noche más larga, 0.05 apagón más largo, 0.15 terreno, 0.05 ruta de llegada y 0.10 cercanía al hielo. Si falta un término (enlace desactivado o sin datos de terreno), los demás pesos se reparten para mantener la escala.</p>
+          </article>
+          <article class="tarjeta">
+            <h3>Glosario</h3>
+            <dl class="glosario">
+              <dt>Horizonte</dt><dd>Altura del terreno que rodea al sitio en cada dirección. Si el Sol o la Tierra quedan por debajo, no se ven.</dd>
+              <dt>Azimut</dt><dd>Dirección medida desde el norte local en sentido horario: 0° norte, 90° este, 180° sur, 270° oeste.</dd>
+              <dt>Elevación</dt><dd>Ángulo de un astro sobre el plano horizontal del sitio. En el polo sur el Sol y la Tierra van a pocos grados.</dd>
+              <dt>UTC</dt><dd>Hora universal coordinada. Todas las horas de la demo están en UTC.</dd>
+              <dt>Enlace local</dt><dd>Tramo de radio o láser entre el sitio y un punto de apoyo cercano (ubicación supuesta).</dd>
+              <dt>Respaldo</dt><dd>Horas en que el enlace local funciona y, además, el punto de apoyo ve la Tierra: solo entonces los datos llegan a la Tierra.</dd>
+              <dt>Sombra permanente</dt><dd>Zona que nunca recibe luz solar directa; en ellas puede haber hielo de agua.</dd>
+              <dt>Índice de conveniencia</dt><dd>Número de 0 a 100 que resume ocho factores con pesos propuestos por el equipo; no es un estándar de NASA.</dd>
+            </dl>
           </article>
           <article class="tarjeta">
             <h3>Variables de aterrizaje</h3>
@@ -256,7 +273,7 @@
           <button type="button" class="accion" id="t-atras"><span class="accion__circulo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13 4 6 10l7 6"/></svg></span>Anterior</button>
           <button type="button" class="accion" id="t-play" aria-pressed="false"><span class="accion__circulo accion__circulo--principal"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="icono-play" d="M7 4v12l9-6z"/><path class="icono-pausa" d="M6 4h3v12H6zM11 4h3v12h-3z"/></svg></span><span class="accion__texto">Reproducir</span></button>
           <button type="button" class="accion" id="t-adelante"><span class="accion__circulo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l7 6-7 6"/></svg></span>Siguiente</button>
-          <button type="button" class="accion" id="ir-brecha"><span class="accion__circulo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10h4l2-5 3 10 2-5h4"/></svg></span>Interrupción</button>
+          <button type="button" class="accion" id="ir-brecha"><span class="accion__circulo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10h4l2-5 3 10 2-5h4"/></svg></span>Siguiente interrupción</button>
         </div>
 
         <div class="enlace-ctl">

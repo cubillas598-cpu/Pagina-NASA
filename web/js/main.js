@@ -1,7 +1,7 @@
 import { cargarDatos } from './datos.js';
 import { HORIZONS_PROXY_URL } from './config.js';
 import { consultarHorizons } from './horizons.js';
-import { problemasEfemerides, calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo } from './model.js';
+import { problemasEfemerides, calcularSerie, metricasPeriodo, compararSitios, comparativoCsv, parseUtc, horasEventoPolvo, eventosPeriodo, siguienteInterrupcion } from './model.js';
 import { isoDia, esc } from './format.js';
 import { ENLACE, etiquetaHorizonte, codigoHorizonte } from './views/estilos.js';
 import { renderFranja, renderLectura, renderDisponibilidad, renderMiniComparativo } from './views/resumen.js';
@@ -13,7 +13,7 @@ import { crearLuna } from './views/luna.js';
 import { renderSitiosLuna, renderFichaLuna } from './views/ficha-luna.js';
 import { renderGraficaHorizonte, leyendaHorizonte } from './views/grafica-horizonte.js';
 import { crearLineaTiempo, leyendaTiempo } from './views/linea-tiempo.js';
-import { renderComparador } from './views/comparador.js';
+import { renderComparador, renderBarrasComparador } from './views/comparador.js';
 
 const $ = (sel) => document.querySelector(sel);
 const VISTAS = ['resumen', 'sitios', 'comparador', 'enlace', 'metodologia'];
@@ -318,7 +318,8 @@ async function iniciar() {
   $('#t-inicio').addEventListener('click', () => actualizar({ indice: rangoIndices()[0] }, { completo: false }));
   $('#ir-brecha').addEventListener('click', () => {
     const d = derivar();
-    if (d.metricas.brecha.horas > 0) actualizar({ indice: d.metricas.brecha.desde }, { completo: false });
+    const i = siguienteInterrupcion(d.serie, d.i0, d.i1, d.indice, estado.enlaceActivo);
+    if (i !== null) actualizar({ indice: i }, { completo: false });
   });
 
   // ---- CSV
@@ -501,7 +502,10 @@ async function iniciar() {
       if (modoMapa === '3d') avisarVisor(d); else mapaSitios.render(d);
       renderGraficaHorizonte($('#grafica-horizonte'), d);
     } else if (estado.vista === 'comparador') {
-      if (completo) renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);
+      if (completo) {
+        renderBarrasComparador($('#barras-comparador'), d);
+        renderComparador($('#tabla-comparador'), $('#comparador-meta'), $('#conclusiones'), d);
+      }
     } else if (estado.vista === 'enlace') {
       if (completo) {
         leyendaTiempo($('#leyenda-tiempo'), estado);

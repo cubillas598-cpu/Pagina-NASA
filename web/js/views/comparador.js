@@ -25,7 +25,7 @@ export function renderComparador(tabla, meta, lista, d) {
     + `<br><small class="c-neutro">de 0 a 100 · más alto es mejor</small></th>`
     + filas.map((f, k) => {
       const esMejor = Math.abs(scores[k] - mejorScore) < 1e-9;
-      return `<td class="${esMejor ? 'mejor' : ''}"><strong>${num(scores[k], 1)}</strong>${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
+      return `<td class="${esMejor ? 'mejor' : ''}"><strong>${num(scores[k], 1)}</strong>${esMejor ? '<span class="marca-mejor">Mayor índice</span>' : ''}</td>`;
     }).join('') + `</tr>`;
 
   // Desglose: puntaje 0-100 de cada término del índice, con su peso.
@@ -58,7 +58,7 @@ export function renderComparador(tabla, meta, lista, d) {
       const extra = def.clave === 'aproximacion' && ap ? `<small>llegando desde ${ap.mejor_az_deg}° (azimut)</small>`
         : def.clave === 'hielo' && f.metricas.terreno?.en_psr ? '<small>el sitio está en sombra permanente</small>'
         : def.unidad === '%' && HORAS[def.clave] ? `<small>${f.metricas[HORAS[def.clave]]} h</small>` : '';
-      return `<td class="${esMejor ? 'mejor' : ''}">${texto}${extra}${esMejor ? '<span class="marca-mejor">Mejor</span>' : ''}</td>`;
+      return `<td class="${esMejor ? 'mejor' : ''}">${texto}${extra}${esMejor ? `<span class="marca-mejor">${esc(def.insignia || 'Mejor')}</span>` : ''}</td>`;
     }).join('');
     return `<tr><th scope="row">${etiqueta}<br><small class="c-neutro">${criterio}</small></th>${celdas}</tr>`;
   }).join('');
@@ -72,4 +72,33 @@ export function renderComparador(tabla, meta, lista, d) {
   });
   const empates = comparacion.conclusiones.filter((c) => c.includes('empat'));
   lista.innerHTML = [...lineas, ...empates.map((c) => `<li>${esc(c)}</li>`)].join('');
+}
+
+/**
+ * Tres gráficas alineadas (escala común): luz, Tierra visible y sombra
+ * continua más larga. Barras HTML con el valor escrito: se leen sin color.
+ */
+export function renderBarrasComparador(cont, d) {
+  const { filas } = d;
+  const maxSombra = Math.max(1, ...filas.map((f) => f.metricas.sombraMax.horas));
+  const grupos = [
+    { titulo: 'Horas con luz solar', nota: 'Escala 0–100 %. Más es mejor.', valor: (m) => m.pctSol, max: 100, texto: (v, m) => `${num(v, 1)} % · ${m.horasSol} h`, mejor: 'max' },
+    { titulo: 'Horas con la Tierra visible', nota: 'Escala 0–100 %. Más es mejor.', valor: (m) => m.pctTierra, max: 100, texto: (v, m) => `${num(v, 1)} % · ${m.horasTierra} h`, mejor: 'max' },
+    { titulo: 'Sombra continua más larga', nota: `Escala 0–${maxSombra} h. Menos es mejor.`, valor: (m) => m.sombraMax.horas, max: maxSombra, texto: (v) => `${v} h`, mejor: 'min' },
+  ];
+  cont.innerHTML = grupos.map((g) => {
+    const vals = filas.map((f) => g.valor(f.metricas));
+    const obj = g.mejor === 'max' ? Math.max(...vals) : Math.min(...vals);
+    const barras = filas.map((f, k) => {
+      const v = vals[k];
+      const ancho = Math.max(0, Math.min(100, (v / g.max) * 100));
+      const mejor = Math.abs(v - obj) < 1e-9;
+      return `<li class="cbarra${mejor ? ' cbarra--mejor' : ''}">
+        <span class="cbarra__sitio"><b>${esc(f.sitio.etiqueta.slice(-1))}</b> ${esc(f.sitio.nombre_corto)}</span>
+        <span class="cbarra__pista" aria-hidden="true"><span class="cbarra__relleno" style="width:${ancho.toFixed(1)}%"></span></span>
+        <span class="cbarra__valor">${g.texto(v, f.metricas)}</span>
+      </li>`;
+    }).join('');
+    return `<figure class="grafica-barras"><figcaption><strong>${g.titulo}</strong><small>${g.nota}</small></figcaption><ul>${barras}</ul></figure>`;
+  }).join('');
 }

@@ -59,9 +59,10 @@ export function renderEventos(lista, total, d, eventos, alElegir, maximo = 4) {
     const m = d.serie[e.indice];
     const icono = ICONO_EVENTO[e.tipo][e.inicio ? 0 : 1];
     const color = e.inicio ? COLOR_EVENTO[e.tipo] : e.tipo === 'enlace' ? 'var(--ok)' : COLOR_EVENTO[e.tipo];
+    const QUE = { sol: 'de luz', tierra: 'con la Tierra', enlace: 'de enlace' };
     const pastilla = e.inicio
       ? `<span class="evento__duracion">${horasTexto(e.horas)}</span>`
-      : '<span class="evento__duracion evento__duracion--neutro">Fin</span>';
+      : `<span class="evento__duracion evento__duracion--neutro">${horasTexto(e.ventana)} ${QUE[e.tipo]}</span>`;
     return `<li><button type="button" class="evento" data-indice="${e.indice}">
       <span class="evento__icono" style="color:${color}">${icono}</span>
       <span><span class="evento__titulo">${e.titulo}</span><span class="evento__fecha">${fechaUtc(m.ms)}, ${horaUtc(m.ms)}</span></span>

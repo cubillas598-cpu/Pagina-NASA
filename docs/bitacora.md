@@ -360,3 +360,38 @@ anterior, solo se agrega abajo.
   404 ofrece "Abrir el explorador". Pendiente para después de la entrega:
   explorador unificado (globo + relieve en un solo motor), quitar Tailwind de los
   visores y revisar el modelo de relevo.
+
+### 2026-11-15 ~13:30 - Enlace publico final: himdag.com/lunar-nasa
+- El QR a `cubillas598-cpu.github.io/Pagina-NASA/` fallo en celular real con
+  datos moviles (pantalla en blanco, error de conexion) - confirmado por
+  Pablo, no solo por el bloqueo conocido de este entorno. Se diagnostico con
+  deep-reasoner + Codex en paralelo: forzarlo dentro del sistema de "cursos"
+  de HIMDAG (course-hub) era riesgoso (toca Supabase, footgun de tenant
+  default `compuclub`) y degradaba el demo interactivo a texto plano.
+- Se encontro el patron correcto ya existente en course-hub: `/cotizador-3d`,
+  pagina estatica autonoma en `dashboard/public/`, cero tenant, cero
+  Supabase, con el mismo motivo documentado (QR impreso no debe cambiar de
+  URL). Se copio `dist/lunar-navigator-demo.html` (HTML autonomo, verificado
+  sin dependencias externas reales) a ese mismo patron: ruta `/lunar-nasa`,
+  mas `lunar-nasa` agregado a `RESERVED_SLUGS` en `tenant.js` y `platform.js`
+  de course-hub para que ninguna institucion pueda chocar con la ruta.
+- Verificado local antes de tocar produccion (`node --check`, servidor local,
+  tamaño exacto del archivo servido, rutas de control sin romperse). El
+  commit+push a course-hub requirio permiso explicito de Pablo (bloqueo del
+  clasificador de la herramienta por ser otro repo) y Pablo lo corrio el
+  mismo desde su terminal. Confirmado en produccion por contenido real
+  (titulo correcto), no solo codigo 200.
+- QR final verificado por decodificacion exacta: `docs/qr-demo-himdag.png` ->
+  `https://himdag.com/lunar-nasa`. El QR original (`docs/qr-demo.png`) se
+  conserva en el repo como registro del problema real encontrado.
+
+### 2026-11-17 - Cierre: concurso terminado
+- Validacion final de 0 perdidas: `git status` limpio y sincronizado con
+  origin/main en Pagina-NASA y en course-hub, 25/25 pruebas en verde
+  (47 JS cuando no hay regresion del indice + 19 Python). Commit `cef4759`.
+- Pendientes reales que quedaron fuera del alcance de hoy, para retomar si el
+  proyecto sigue vivo despues del concurso: incrementos 3-4 completos del
+  rediseno UX de Irvin (explorador unificado, quitar Tailwind de los
+  visores), revision del modelo de relevo (dirección del punto de apoyo),
+  y la cita `[PENDIENTE R37]` del atlas LPI en README.md.
+- Veredicto: REINICIO SEGURO.
